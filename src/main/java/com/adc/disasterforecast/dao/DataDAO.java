@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataDAO {
     // logger for ExampleDAO
-    private final static Logger logger = LoggerFactory.getLogger(DataDAO.class);
+    private static final Logger logger = LoggerFactory.getLogger(DataDAO.class);
 
     @Autowired
     private MongoTemplate mongoTemplate;

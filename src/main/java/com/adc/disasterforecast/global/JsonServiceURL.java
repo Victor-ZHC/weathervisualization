@@ -2,7 +2,7 @@ package com.adc.disasterforecast.global;
 
 public class JsonServiceURL {
 
-    public static final String ALARM_JSON_SERVICE_URL = "http://61.152.126.152/AlarmJsonService.svc/";
+    public static final String ALARM_JSON_SERVICE_URL = "http://61.152.126.152/JsonService_V2/AlarmJsonService.svc/";
     public static final String AUTO_STATION_JSON_SERVICE_URL = "http://61.152.126.152/JsonService_V2/AutoStationJsonService.svc/";
     public static final String FORECAST_JSON_SERVICE_URL = "http://61.152.126.152/JsonService_V2/ForecastJsonService.svc/";
     public static final String METEOROLOGICAL_JSON_SERVICE_URL = "http://61.152.126.152/JsonService_V2/MeteorologicalJsonService.svc/";
