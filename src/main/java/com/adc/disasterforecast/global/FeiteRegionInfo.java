@@ -14,5 +14,6 @@ public class FeiteRegionInfo {
     public static final Double chongmingPopulation = 67.26;
     public static final Double chongmingAcreage = 1411.0;
     public static final String chongmingStationName = "崇明";
+    public static final int Hours = 24;
     
 }

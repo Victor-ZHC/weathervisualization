@@ -15,8 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class FeiteTask {
@@ -27,7 +26,7 @@ public class FeiteTask {
     @Autowired
     private DataDAO dataDAO;
 
-    @Scheduled(cron = "00 * * * * *")
+//    @Scheduled(cron = "00 * * * * *")
     public void countRegionDiff() throws InterruptedException {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
@@ -52,7 +51,7 @@ public class FeiteTask {
         dataDAO.updateExample(diff);
     }
 
-    @Scheduled(cron = "20 * * * * *")
+//    @Scheduled(cron = "20 * * * * *")
     public void countRegionRainfallDiff() throws InterruptedException {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
@@ -98,7 +97,7 @@ public class FeiteTask {
         dataDAO.updateExample(rainfall);
     }
 
-    @Scheduled(cron = "40 * * * * *")
+//    @Scheduled(cron = "40 * * * * *")
     public void countRegionDisasterDiff() throws InterruptedException {
         String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006200000/20131008120000";
 
@@ -238,5 +237,89 @@ public class FeiteTask {
         areaDisasterType.put("value", disasterTypeList);
 
         return areaDisasterType;
+    }
+
+    @Scheduled(cron = "30 * * * * *")
+    public void getRainfallTop10() throws InterruptedException{
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+        String type = "1";
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOP10));
+
+        HashMap<String, LinkedList<Double> > hs =  new HashMap<>();
+        for (int i = 0; i < FeiteRegionInfo.Hours; i++){
+            String date = DateHelper.getPostponeDateByHour(2013, 10, 7, 13, 0, 0, i);
+            String url = baseUrl + date + "/" + date + "/" + type;
+            JSONObject rainfallJson = HttpHelper.getDataByURL(url);
+            JSONArray rainfallData = (JSONArray) rainfallJson.get("Data");
+
+            for (Object obj : rainfallData) {
+                JSONObject rainfall = (JSONObject) obj;
+                LinkedList<Double> allRainfall = hs.get(rainfall.get("STATIONNAME"));
+                if (allRainfall == null) allRainfall = new LinkedList<>();
+                allRainfall.add(Double.parseDouble((String)rainfall.get("RAINHOUR")));
+                hs.put((String) rainfall.get("STATIONNAME"), allRainfall);
+            }
+        }
+        JSONArray rainfallTop10 = new JSONArray();
+        int cnt = 10;
+        Iterator iter = hs.entrySet().iterator();
+        while (iter.hasNext()){
+            Map.Entry entry = (Map.Entry) iter.next();
+            String siteName = (String)entry.getKey();
+            LinkedList<Double> rainfallVal = (LinkedList<Double>)entry.getValue();
+            Collections.sort(rainfallVal);
+            JSONObject rainfallTopBySite = new JSONObject();
+            rainfallTopBySite.put("site", siteName);
+            rainfallTopBySite.put("value", rainfallVal.getLast());
+            rainfallTop10.add(rainfallTopBySite);
+            if ((--cnt) < 0) break;
+        }
+
+        DataEntity rainfall = new DataEntity();
+        rainfall.setName(FeiteTaskName.FEITE_RAINFALL_TOP10);
+        rainfall.setValue(rainfallTop10);
+        dataDAO.updateExample(rainfall);
+    }
+
+    @Scheduled(cron = "30 * * * * *")
+    public void getGaleTop10() throws InterruptedException{
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+        String type = "1";
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOP10));
+
+        HashMap<String, LinkedList<Double> > hs =  new HashMap<>();
+        for (int i = 0; i < FeiteRegionInfo.Hours; i++){
+            String date = DateHelper.getPostponeDateByHour(2013, 10, 7, 13, 0, 0, i);
+            String url = baseUrl + date + "/" + date + "/" + type;
+            JSONObject GaleJson = HttpHelper.getDataByURL(url);
+            JSONArray GaleData = (JSONArray) GaleJson.get("Data");
+
+            for (Object obj : GaleData) {
+                JSONObject Gale = (JSONObject) obj;
+                LinkedList<Double> allGale = hs.get(Gale.get("STATIONNAME"));
+                if (allGale == null) allGale = new LinkedList<>();
+                allGale.add(Double.parseDouble((String)Gale.get("WINDSPEED")));
+                hs.put((String) Gale.get("STATIONNAME"), allGale);
+            }
+        }
+        JSONArray GaleTop10 = new JSONArray();
+        int cnt = 10;
+        Iterator iter = hs.entrySet().iterator();
+        while (iter.hasNext()){
+            Map.Entry entry = (Map.Entry) iter.next();
+            String siteName = (String)entry.getKey();
+            LinkedList<Double> rainfallVal = (LinkedList<Double>)entry.getValue();
+            Collections.sort(rainfallVal);
+            JSONObject GaleTopBySite = new JSONObject();
+            GaleTopBySite.put("site", siteName);
+            GaleTopBySite.put("value", rainfallVal.getLast());
+            GaleTop10.add(GaleTopBySite);
+            if ((--cnt) < 0) break;
+        }
+
+        DataEntity gale = new DataEntity();
+        gale.setName(FeiteTaskName.FEITE_GALE_TOP10);
+        gale.setValue(GaleTop10);
+        dataDAO.updateExample(gale);
     }
 }
