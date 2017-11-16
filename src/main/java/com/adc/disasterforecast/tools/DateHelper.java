@@ -15,4 +15,12 @@ public class DateHelper {
         return simpleDateFormat.format(base.getTime());
     }
 
+    public static String getWarningDate(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[0].split("-");
+        String[] times = parts[1].split(":");
+        return dates[1] + "/" + dates[2] + " " + times[0] + ":" + times[1];
+    }
+
 }
