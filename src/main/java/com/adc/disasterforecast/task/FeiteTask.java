@@ -5,8 +5,7 @@ import com.adc.disasterforecast.entity.DataEntity;
 import com.adc.disasterforecast.global.FeiteRegionInfo;
 import com.adc.disasterforecast.global.FeiteTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
-import com.adc.disasterforecast.tools.DateHelper;
-import com.adc.disasterforecast.tools.HttpHelper;
+import com.adc.disasterforecast.tools.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -15,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -238,5 +238,203 @@ public class FeiteTask {
         areaDisasterType.put("value", disasterTypeList);
 
         return areaDisasterType;
+    }
+
+    /**
+    * @Description 预警（但接口无返回数据）
+    * @Author lilin
+    * @Create 2017/11/16 22:25
+    **/
+    @Scheduled(cron = "20 * * * * *")
+    public void getWarning() throws InterruptedException {
+        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+
+        JSONArray resultArray = new JSONArray();
+
+        JSONArray warnings = (JSONArray) obj.get("Data");
+        for (int i = 0; i < warnings.size(); i++) {
+            JSONObject warning = (JSONObject) warnings.get(i);
+            String date = (String) warning.get("FORECASTDATE");
+            String weather = (String) warning.get("TYPE");
+            String level = (String) warning.get("LEVEL");
+            JSONObject resultObject = new JSONObject();
+            resultObject.put("date", DateHelper.getWarningDate(date));
+            resultObject.put("weather", WarningHelper.getWarningWeather(weather));
+            resultObject.put("level", WarningHelper.getWarningLevel(level));
+            resultArray.add(resultObject);
+        }
+
+        DataEntity warningsData = new DataEntity();
+        warningsData.setName(FeiteTaskName.FEITE_WARNING);
+        warningsData.setValue(resultArray);
+        dataDAO.updateExample(warningsData);
+    }
+
+    /**
+    * @Description 雨量累计&大风监测
+    * @Author lilin
+    * @Create 2017/11/16 17:51
+    **/
+    @Scheduled(cron = "20 * * * * *")
+    public void countRainfallAndMonitorWind() throws InterruptedException {
+        String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/20131006200000/20131008120000/1";
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL + " & " + FeiteTaskName.FEITE_GALE_TOTAL));
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+
+        JSONArray rainfallValueArray = new JSONArray();
+        JSONArray windValueArray = new JSONArray();
+
+        JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
+        for (int i = 0; i < autoStationDataArray.size(); i++) {
+            JSONObject autoStationData = (JSONObject) autoStationDataArray.get(i);
+            String rainfallValue = (String) autoStationData.get("RAINHOUR");
+            String windSpeedValue = (String) autoStationData.get("WINDSPEED");
+            JSONObject rainfallValueObject = new JSONObject();
+            rainfallValueObject.put("value", rainfallValue);
+            rainfallValueObject.put("level", RainfallHelper.getRainfallLevel(rainfallValue));
+            rainfallValueArray.add(rainfallValueObject);
+            JSONObject windValueObject = new JSONObject();
+            windValueObject.put("value", windSpeedValue);
+            windValueObject.put("level", WindHelper.getWindLevel(windSpeedValue));
+            windValueArray.add(windValueObject);
+        }
+
+        DataEntity rainfallTotalData = new DataEntity();
+        rainfallTotalData.setName(FeiteTaskName.FEITE_RAINFALL_TOTAL);
+        rainfallTotalData.setValue(rainfallValueArray);
+        dataDAO.updateExample(rainfallTotalData);
+
+        DataEntity galeTotalData = new DataEntity();
+        galeTotalData.setName(FeiteTaskName.FEITE_GALE_TOTAL);
+        galeTotalData.setValue(windValueArray);
+        dataDAO.updateExample(galeTotalData);
+    }
+
+    /**
+    * @Description 报灾情况
+    * @Author lilin
+    * @Create 2017/11/16 21:10
+    **/
+    @Scheduled(cron = "20 * * * * *")
+    public void countDisasterReports() throws InterruptedException {
+        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetDisasterDetailData_Geliku/20131006200000/20131008120000";
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+
+        JSONObject resultObject = new JSONObject();
+        JSONArray rainArray = new JSONArray();
+        JSONArray windArray = new JSONArray();
+        JSONArray resultArray = new JSONArray();
+
+        JSONArray disasterReports = (JSONArray) obj.get("Data");
+        int allNum = disasterReports.size();
+        int rainNum = 0;
+        int windNum = 0;
+        // 房屋进水
+        int FWJSNum = 0;
+        // 道路积水
+        int DLJSNum = 0;
+        // 小区积水
+        int XQJSNum = 0;
+        // 车辆进水
+        int CLJSNum = 0;
+        // 厂区、商铺进水
+        int CQSPJSNum = 0;
+        // 其他
+        int OtherNum = 0;
+        // 风灾1
+        int FZ1Num = 0;
+        // 风灾2
+        int FZ2Num = 0;
+        for (int i = 0; i < disasterReports.size(); i++) {
+            JSONObject disasterReport = (JSONObject) disasterReports.get(i);
+            long disasterType = (long) disasterReport.get("CODE_DISASTER");
+            String caseAddr = (String) disasterReport.get("CASE_ADDR");
+            String caseDesc = (String) disasterReport.get("CASE_DESC");
+            if (disasterType == 2) {
+                windNum++;
+                String windDisasterType = DisasterTypeHelper.getWindDisasterType(caseAddr, caseDesc);
+                if ("风灾1".equals(windDisasterType)) {
+                    FZ1Num++;
+                } else {
+                    FZ2Num++;
+                }
+            }
+            if (disasterType == 1) {
+                rainNum++;
+                String rainstormDisasterType = DisasterTypeHelper.getRainstormDisasterType(caseAddr, caseDesc);
+                if ("房屋进水".equals(rainstormDisasterType)) {
+                    FWJSNum++;
+                } else if ("道路积水".equals(rainstormDisasterType)) {
+                    DLJSNum++;
+                } else if ("小区积水".equals(rainstormDisasterType)) {
+                    XQJSNum++;
+                } else if ("车辆进水".equals(rainstormDisasterType)) {
+                    CLJSNum++;
+                } else if ("厂区、商铺进水".equals(rainstormDisasterType)) {
+                    CQSPJSNum++;
+                } else {
+                    OtherNum++;
+                }
+            }
+        }
+        JSONObject totalValue = new JSONObject();
+        totalValue.put("all", allNum);
+        totalValue.put("rain", rainNum);
+        totalValue.put("wind", windNum);
+        resultObject.put("total", totalValue);
+
+        JSONObject FWJSObject = new JSONObject();
+        JSONObject DLJSObject = new JSONObject();
+        JSONObject XQJSObject = new JSONObject();
+        JSONObject CLJSObject = new JSONObject();
+        JSONObject CQSPJSObject = new JSONObject();
+        JSONObject OtherObject = new JSONObject();
+        JSONObject FZ1Object = new JSONObject();
+        JSONObject FZ2Object = new JSONObject();
+
+        FWJSObject.put("type", "房屋进水");
+        FWJSObject.put("value", FWJSNum + "");
+        DLJSObject.put("type", "道路积水");
+        DLJSObject.put("value", DLJSNum + "");
+        XQJSObject.put("type", "小区积水");
+        XQJSObject.put("value", XQJSNum + "");
+        CLJSObject.put("type", "车辆进水");
+        CLJSObject.put("value", CLJSNum + "");
+        CQSPJSObject.put("type", "厂区、商铺进水");
+        CQSPJSObject.put("value", CQSPJSNum + "");
+        OtherObject.put("type", "其他");
+        OtherObject.put("value", OtherNum + "");
+
+        rainArray.add(FWJSObject);
+        rainArray.add(DLJSObject);
+        rainArray.add(XQJSObject);
+        rainArray.add(CLJSObject);
+        rainArray.add(CQSPJSObject);
+        rainArray.add(OtherObject);
+
+        resultObject.put("rain", rainArray);
+
+        FZ1Object.put("type", "风灾1");
+        FZ1Object.put("value", FZ1Num + "");
+        FZ2Object.put("type", "风灾2");
+        FZ2Object.put("value", FZ2Num + "");
+
+        windArray.add(FZ1Object);
+        windArray.add(FZ2Object);
+
+        resultObject.put("wind", windArray);
+
+        resultArray.add(resultObject);
+
+        DataEntity disasterReportsData = new DataEntity();
+        disasterReportsData.setName(FeiteTaskName.FEITE_DISASTER_TOTAL);
+        disasterReportsData.setValue(resultArray);
+        dataDAO.updateExample(disasterReportsData);
     }
 }
