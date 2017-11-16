@@ -2,8 +2,10 @@ package com.adc.disasterforecast.task;
 
 import com.adc.disasterforecast.dao.DataDAO;
 import com.adc.disasterforecast.entity.DataEntity;
+import com.adc.disasterforecast.global.FeiteRegionInfo;
 import com.adc.disasterforecast.global.FeiteTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
+import com.adc.disasterforecast.tools.DateHelper;
 import com.adc.disasterforecast.tools.HttpHelper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -13,26 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Component
 public class FeiteTask {
     // logger for FeiteTask
     private static final Logger logger = LoggerFactory.getLogger(FeiteTask.class);
-
-    // region info
-    private static final String yangpuDistrict = "14";
-    private static final String yangpuArea = "杨浦区";
-    private static final Double yangpuPopulation = 131.32;
-    private static final Double yangpuAcreage = 60.61;
-
-    private static final String chongmingDistrict = "10";
-    private static final String chongmingArea = "崇明区";
-    private static final Double chongmingPopulation = 67.26;
-    private static final Double chongmingAcreage = 1411.0;
 
     // dao Autowired
     @Autowired
@@ -43,14 +32,14 @@ public class FeiteTask {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
         JSONObject yangpu = new JSONObject();
-        yangpu.put("area", yangpuArea);
-        yangpu.put("population", yangpuPopulation);
-        yangpu.put("acreage", yangpuAcreage);
+        yangpu.put("area", FeiteRegionInfo.yangpuArea);
+        yangpu.put("population", FeiteRegionInfo.yangpuPopulation);
+        yangpu.put("acreage", FeiteRegionInfo.yangpuAcreage);
 
         JSONObject chongming = new JSONObject();
-        chongming.put("area", chongmingArea);
-        chongming.put("population", chongmingPopulation);
-        chongming.put("acreage", chongmingAcreage);
+        chongming.put("area", FeiteRegionInfo.chongmingArea);
+        chongming.put("population", FeiteRegionInfo.chongmingPopulation);
+        chongming.put("acreage", FeiteRegionInfo.chongmingAcreage);
 
         JSONArray diffValue = new JSONArray();
         diffValue.add(yangpu);
@@ -63,23 +52,55 @@ public class FeiteTask {
         dataDAO.updateExample(diff);
     }
 
-//    @Scheduled(cron = "20 * * * * *")
-//    public void countRegionRainfallDiff() throws InterruptedException {
-//        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006000000/20131009000000";
-//
-//        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
-//
-//        JSONObject obj = HttpHelper.getDataByURL(url);
-//
-//        JSONArray disasterData = (JSONArray) obj.get("Data");
-//
-//
-////        dataDAO.updateExample(dataEntity);
-//    }
+    @Scheduled(cron = "10 * * * * *")
+    public void countRegionRainfallDiff() throws InterruptedException {
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
-    @Scheduled(cron = "30 * * * * *")
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_RAINFALL_DIFF));
+
+        JSONArray yangpuRainfalls = new JSONArray();
+        JSONArray chongmingRainfalls = new JSONArray();
+
+        for (int i = 0; i < 24; i++) {
+            String date = DateHelper.getPostponeDateByHour(2013, 10, 7, 13, 0, 0, i);
+            String url = baseUrl + date + "/" + date + "/1";
+            JSONObject rainfallJson = HttpHelper.getDataByURL(url);
+            JSONArray rainfallData = (JSONArray) rainfallJson.get("Data");
+
+            for (Object obj : rainfallData) {
+                JSONObject rainfall = (JSONObject) obj;
+
+                if (FeiteRegionInfo.chongmingStationName.equals(rainfall.get("STATIONNAME"))) {
+                    addRainfall(chongmingRainfalls, rainfall, i);
+                } else if (FeiteRegionInfo.yangpuStationName.equals(rainfall.get("STATIONNAME"))) {
+                    addRainfall(yangpuRainfalls, rainfall, i);
+                }
+            }
+        }
+
+        JSONArray rainfallValue = new JSONArray();
+
+        JSONObject chongmingRainfall = new JSONObject();
+        chongmingRainfall.put("area", FeiteRegionInfo.chongmingArea);
+        chongmingRainfall.put("value", chongmingRainfalls);
+
+        JSONObject yangpuRainfall = new JSONObject();
+        yangpuRainfall.put("area", FeiteRegionInfo.yangpuArea);
+        yangpuRainfall.put("value", yangpuRainfalls);
+
+        rainfallValue.add(chongmingRainfall);
+        rainfallValue.add(yangpuRainfall);
+
+        DataEntity rainfall = new DataEntity();
+        rainfall.setName(FeiteTaskName.FEITE_REGION_RAINFALL_DIFF);
+        rainfall.setValue(rainfallValue);
+
+        dataDAO.updateExample(rainfall);
+    }
+
+    @Scheduled(cron = "20 * * * * *")
     public void countRegionDisasterDiff() throws InterruptedException {
-        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006000000/20131009000000";
+        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006200000/20131008120000";
 
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
@@ -94,19 +115,19 @@ public class FeiteTask {
             JSONObject disasterData = (JSONObject) disaster;
             String disasterDistrict = (String) disasterData.get("Disaster_District");
 
-            if (yangpuDistrict.equals(disasterDistrict)) {
+            if (FeiteRegionInfo.yangpuDistrict.equals(disasterDistrict)) {
                 yangpuDisasters.add(disasterData);
-            } else if (chongmingDistrict.equals(disasterDistrict)) {
+            } else if (FeiteRegionInfo.chongmingDistrict.equals(disasterDistrict)) {
                 chongmingDisasters.add(disasterData);
             }
         }
 
         JSONObject yangpuNumDiff = new JSONObject();
-        yangpuNumDiff.put("area", yangpuArea);
+        yangpuNumDiff.put("area", FeiteRegionInfo.yangpuArea);
         yangpuNumDiff.put("value", yangpuDisasters.size());
 
         JSONObject chongmingNumDiff = new JSONObject();
-        chongmingNumDiff.put("area", chongmingArea);
+        chongmingNumDiff.put("area", FeiteRegionInfo.chongmingArea);
         chongmingNumDiff.put("value", chongmingDisasters.size());
 
         JSONArray numDiffValue = new JSONArray();
@@ -121,12 +142,12 @@ public class FeiteTask {
 
         // 统计两地受灾密度
         JSONObject yangpuDensityDiff = new JSONObject();
-        yangpuDensityDiff.put("area", yangpuArea);
-        yangpuDensityDiff.put("value", ((double) yangpuDisasters.size()) / yangpuAcreage);
+        yangpuDensityDiff.put("area", FeiteRegionInfo.yangpuArea);
+        yangpuDensityDiff.put("value", ((double) yangpuDisasters.size()) / FeiteRegionInfo.yangpuAcreage);
 
         JSONObject chongmingDensityDiff = new JSONObject();
-        chongmingDensityDiff.put("area", chongmingArea);
-        chongmingDensityDiff.put("value", ((double) chongmingDisasters.size()) / chongmingAcreage);
+        chongmingDensityDiff.put("area", FeiteRegionInfo.chongmingArea);
+        chongmingDensityDiff.put("value", ((double) chongmingDisasters.size()) / FeiteRegionInfo.chongmingAcreage);
 
         JSONArray densityDiffValue = new JSONArray();
         densityDiffValue.add(yangpuDensityDiff);
@@ -139,8 +160,8 @@ public class FeiteTask {
         dataDAO.updateExample(densityDiff);
 
         // 统计两地受灾种类数
-        JSONObject yangpuDisasterType = getAreaDisasterType(yangpuArea, yangpuDisasters);
-        JSONObject chongmingDisasterType = getAreaDisasterType(chongmingArea, chongmingDisasters);
+        JSONObject yangpuDisasterType = getAreaDisasterType(FeiteRegionInfo.yangpuArea, yangpuDisasters);
+        JSONObject chongmingDisasterType = getAreaDisasterType(FeiteRegionInfo.chongmingArea, chongmingDisasters);
 
         JSONArray typeDiffValue = new JSONArray();
         typeDiffValue.add(yangpuDisasterType);
@@ -166,6 +187,16 @@ public class FeiteTask {
 //
 ////        dataDAO.updateExample(dataEntity);
 //    }
+
+    private void addRainfall(JSONArray areaRainfalls, JSONObject rainfall, int date) {
+        JSONObject jsonObject = new JSONObject();
+        double rainHour = Double.parseDouble((String) rainfall.get("RAINHOUR"));
+
+        jsonObject.put("date", date);
+        jsonObject.put("value", (int) (rainHour * 10));
+
+        areaRainfalls.add(jsonObject);
+    }
 
     private JSONObject getAreaDisasterType(String area, List<JSONObject> disasters) {
         int[] disasterType = new int[7];
