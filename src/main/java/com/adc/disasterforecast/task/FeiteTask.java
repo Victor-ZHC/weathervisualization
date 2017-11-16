@@ -26,7 +26,7 @@ public class FeiteTask {
     @Autowired
     private DataDAO dataDAO;
 
-//    @Scheduled(cron = "00 * * * * *")
+    @Scheduled(cron = "00 * * * * *")
     public void countRegionDiff() throws InterruptedException {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
@@ -51,7 +51,7 @@ public class FeiteTask {
         dataDAO.updateExample(diff);
     }
 
-//    @Scheduled(cron = "20 * * * * *")
+    @Scheduled(cron = "20 * * * * *")
     public void countRegionRainfallDiff() throws InterruptedException {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
@@ -97,7 +97,7 @@ public class FeiteTask {
         dataDAO.updateExample(rainfall);
     }
 
-//    @Scheduled(cron = "40 * * * * *")
+    @Scheduled(cron = "40 * * * * *")
     public void countRegionDisasterDiff() throws InterruptedException {
         String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006200000/20131008120000";
 
