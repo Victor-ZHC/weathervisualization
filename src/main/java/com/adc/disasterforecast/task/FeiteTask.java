@@ -240,7 +240,7 @@ public class FeiteTask {
         return areaDisasterType;
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void getRainfallTop10() throws InterruptedException{
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
         String type = "1";
@@ -282,7 +282,7 @@ public class FeiteTask {
         dataDAO.updateExample(rainfall);
     }
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     public void getGaleTop10() throws InterruptedException {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
         String type = "1";
