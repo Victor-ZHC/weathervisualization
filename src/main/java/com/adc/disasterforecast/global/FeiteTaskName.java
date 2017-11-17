@@ -7,11 +7,9 @@ public class FeiteTaskName {
     public static final String FEITE_REGION_DISASTER_DENSITY_DIFF = "KPI_FEITE_REGION_DISASTER_DENSITY_DIFF";
     public static final String FEITE_REGION_DISASTER_TYPE_DIFF = "KPI_FEITE_REGION_DISASTER_TYPE_DIFF";
     public static final String FEITE_REGION_SEEPER_DIFF = "KPI_FEITE_REGION_SEEPER_DIFF";
-<<<<<<< HEAD
     public static final String FEITE_RAINFALL_TOP10 = "KPI_FEITE_RAINFALL_TOP10";
     public static final String FEITE_GALE_TOP10 = "KPI_FEITE_GALE_TOP10";
     public static final String FEITE_RAINFALL_LOCATION = "KPI_FEITE_RAINFALL_LOCATION";
-=======
     // 预警
     public static final String FEITE_WARNING = "KPI_FEITE_WARNING";
     // 雨量累计
@@ -20,5 +18,4 @@ public class FeiteTaskName {
     public static final String FEITE_GALE_TOTAL = "KPI_FEITE_GALE_TOTAL";
     // 报灾情况
     public static final String FEITE_DISASTER_TOTAL = "KPI_FEITE_DISASTER_TOTAL";
->>>>>>> 379ac8bb1b9eeff0de59c301b28d02d5f86c36dc
 }
