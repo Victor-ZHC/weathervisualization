@@ -18,12 +18,25 @@ public class Controller {
     /**
      * handle all GET request from "feite" page
      * @param name data name
-     * @return
+     * @return dataEntity
      */
     @RequestMapping(value = "/feite/{name}", method = RequestMethod.GET)
     @ResponseBody
     public DataEntity getFeiteData(@PathVariable("name") String name) {
         logger.info("get request from /feite/" + name);
+        DataEntity dataEntity = dataDAO.findExampleByName(name);
+        return dataEntity;
+    }
+
+    /**
+     * handle all GET request from "ypcase" page
+     * @param name data name
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/ypcase/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public DataEntity getYPCaseData(@PathVariable("name") String name) {
+        logger.info("get request from /ypcase/" + name);
         DataEntity dataEntity = dataDAO.findExampleByName(name);
         return dataEntity;
     }
