@@ -328,18 +328,18 @@ public class FeiteTask {
         dataDAO.updateExample(gale);
     }
     /**
-    * @Description 预警（但接口无返回数据）
+    * @Description 预警（使用手动导出的数据）
     * @Author lilin
     * @Create 2017/11/16 22:25
     **/
 
     @Scheduled(cron = "20 * * * * *")
     public void getWarning() throws InterruptedException {
-        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
+        // String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-
+        //JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONObject obj = WarningHelper.getWarningContent();
         JSONArray resultArray = new JSONArray();
 
         JSONArray warnings = (JSONArray) obj.get("Data");
@@ -352,6 +352,7 @@ public class FeiteTask {
             resultObject.put("date", DateHelper.getWarningDate(date));
             resultObject.put("weather", WarningHelper.getWarningWeather(weather));
             resultObject.put("level", WarningHelper.getWarningLevel(level));
+            resultObject.put("ID", "ID" + String.valueOf(i + 1));
             resultArray.add(resultObject);
         }
 
@@ -382,14 +383,20 @@ public class FeiteTask {
             JSONObject autoStationData = (JSONObject) autoStationDataArray.get(i);
             String rainfallValue = (String) autoStationData.get("RAINHOUR");
             String windSpeedValue = (String) autoStationData.get("WINDSPEED");
-            JSONObject rainfallValueObject = new JSONObject();
-            rainfallValueObject.put("value", rainfallValue);
-            rainfallValueObject.put("level", RainfallHelper.getRainfallLevel(rainfallValue));
-            rainfallValueArray.add(rainfallValueObject);
-            JSONObject windValueObject = new JSONObject();
-            windValueObject.put("value", windSpeedValue);
-            windValueObject.put("level", WindHelper.getWindLevel(windSpeedValue));
-            windValueArray.add(windValueObject);
+            double rainfallValueNum = Double.valueOf(rainfallValue);
+            double windSpeedValueNum = Double.valueOf(windSpeedValue);
+            if (rainfallValueNum >= 0) {
+                JSONObject rainfallValueObject = new JSONObject();
+                rainfallValueObject.put("value", rainfallValueNum);
+                rainfallValueObject.put("level", RainfallHelper.getRainfallLevel(rainfallValue));
+                rainfallValueArray.add(rainfallValueObject);
+            }
+            if (windSpeedValueNum >= 0) {
+                JSONObject windValueObject = new JSONObject();
+                windValueObject.put("value", windSpeedValueNum);
+                windValueObject.put("level", WindHelper.getWindLevel(windSpeedValue));
+                windValueArray.add(windValueObject);
+            }
         }
 
         DataEntity rainfallTotalData = new DataEntity();
@@ -436,10 +443,18 @@ public class FeiteTask {
         int CQSPJSNum = 0;
         // 其他
         int OtherNum = 0;
-        // 风灾1
-        int FZ1Num = 0;
-        // 风灾2
-        int FZ2Num = 0;
+        // 树木倒伏
+        int SMDFNum = 0;
+        // 广告牌受损
+        int GGPSSNum = 0;
+        // 房屋受损
+        int FWSSNum = 0;
+        // 电线断裂
+        int DXDLNum = 0;
+        // 信号灯受损
+        int XHDSSNum = 0;
+        // 构筑物受损
+        int GZWSSNum = 0;
         for (int i = 0; i < disasterReports.size(); i++) {
             JSONObject disasterReport = (JSONObject) disasterReports.get(i);
             long disasterType = (long) disasterReport.get("CODE_DISASTER");
@@ -448,10 +463,18 @@ public class FeiteTask {
             if (disasterType == 2) {
                 windNum++;
                 String windDisasterType = DisasterTypeHelper.getWindDisasterType(caseAddr, caseDesc);
-                if ("风灾1".equals(windDisasterType)) {
-                    FZ1Num++;
-                } else {
-                    FZ2Num++;
+                if ("树木倒伏".equals(windDisasterType)) {
+                    SMDFNum++;
+                } else if ("广告牌受损".equals(windDisasterType)) {
+                    GGPSSNum++;
+                } else if ("房屋受损".equals(windDisasterType)) {
+                    FWSSNum++;
+                } else if ("电线断裂".equals(windDisasterType)) {
+                    DXDLNum++;
+                } else if ("信号灯受损".equals(windDisasterType)) {
+                    XHDSSNum++;
+                } else if ("构筑物受损".equals(windDisasterType)) {
+                    GZWSSNum++;
                 }
             }
             if (disasterType == 1) {
@@ -484,8 +507,13 @@ public class FeiteTask {
         JSONObject CLJSObject = new JSONObject();
         JSONObject CQSPJSObject = new JSONObject();
         JSONObject OtherObject = new JSONObject();
-        JSONObject FZ1Object = new JSONObject();
-        JSONObject FZ2Object = new JSONObject();
+
+        JSONObject SMDFObject = new JSONObject();
+        JSONObject GGPSSObject = new JSONObject();
+        JSONObject FWSSObject = new JSONObject();
+        JSONObject DXDLObject = new JSONObject();
+        JSONObject XHDSSObject = new JSONObject();
+        JSONObject GZWSSObject = new JSONObject();
 
         FWJSObject.put("type", "房屋进水");
         FWJSObject.put("value", FWJSNum + "");
@@ -509,13 +537,25 @@ public class FeiteTask {
 
         resultObject.put("rain", rainArray);
 
-        FZ1Object.put("type", "风灾1");
-        FZ1Object.put("value", FZ1Num + "");
-        FZ2Object.put("type", "风灾2");
-        FZ2Object.put("value", FZ2Num + "");
+        SMDFObject.put("type", "树木倒伏");
+        SMDFObject.put("value", SMDFNum + "");
+        GGPSSObject.put("type", "广告牌受损");
+        GGPSSObject.put("value", GGPSSNum + "");
+        FWSSObject.put("type", "房屋受损");
+        FWSSObject.put("value", FWSSNum + "");
+        DXDLObject.put("type", "电线断裂");
+        DXDLObject.put("value", DXDLNum + "");
+        XHDSSObject.put("type", "信号灯受损");
+        XHDSSObject.put("value", XHDSSNum + "");
+        GZWSSObject.put("type", "构筑物受损");
+        GZWSSObject.put("value", GZWSSNum + "");
 
-        windArray.add(FZ1Object);
-        windArray.add(FZ2Object);
+        windArray.add(SMDFObject);
+        windArray.add(GGPSSObject);
+        windArray.add(FWSSObject);
+        windArray.add(DXDLObject);
+        windArray.add(XHDSSObject);
+        windArray.add(GZWSSObject);
 
         resultObject.put("wind", windArray);
 

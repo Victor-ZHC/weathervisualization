@@ -26,10 +26,18 @@ public class DisasterTypeHelper {
 
     public static String getWindDisasterType(String caseAddr, String caseDesc) {
         String caseStr = caseAddr + caseDesc;
-        if (caseStr.contains("道路") || caseStr.contains("树")) {
-            return "风灾1";
+        if (caseStr.contains("树")) {
+            return "树木倒伏";
+        } else if (caseStr.contains("广告") || caseStr.contains("牌")) {
+            return "广告牌受损";
+        } else if (caseStr.contains("房屋") || caseStr.contains("家") || caseStr.contains("幢")) {
+            return "房屋受损";
+        } else if (caseStr.contains("电线")) {
+            return "电线断裂";
+        } else if (caseStr.contains("信号灯") || caseStr.contains("红绿灯") || caseStr.contains("指示灯")) {
+            return "信号灯受损";
         } else {
-            return "风灾2";
+            return "构筑物受损";
         }
     }
 }
