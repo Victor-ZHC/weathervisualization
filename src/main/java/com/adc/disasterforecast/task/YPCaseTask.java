@@ -1,10 +1,11 @@
 package com.adc.disasterforecast.task;
 
-import com.adc.disasterforecast.dao.DataDAO;
-import com.adc.disasterforecast.entity.DataEntity;
+import com.adc.disasterforecast.dao.YPCaseDataDAO;
+import com.adc.disasterforecast.entity.YPCaseDataEntity;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.global.YPCaseTaskName;
 import com.adc.disasterforecast.global.YPRegionInfo;
+import com.adc.disasterforecast.tools.DateHelper;
 import com.adc.disasterforecast.tools.HttpHelper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.Calendar;
 
 @Component
@@ -23,10 +25,10 @@ public class YPCaseTask {
 
     // dao Autowired
     @Autowired
-    private DataDAO dataDAO;
+    private YPCaseDataDAO ypCaseDataDAO;
 
-    @Scheduled(cron = "00 * * * * *")
-    public void countSurvey() throws InterruptedException {
+    @PostConstruct
+    public void countSurvey() {
         String baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetCommunityListByDistrict/";
 
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_SURVEY));
@@ -45,14 +47,15 @@ public class YPCaseTask {
 
         surveyValue.add(ypSurvey);
 
-        DataEntity survey = new DataEntity();
+        YPCaseDataEntity survey = new YPCaseDataEntity();
         survey.setName(YPCaseTaskName.YPCASE_SURVEY);
         survey.setValue(surveyValue);
 
-        dataDAO.updateExample(survey);
+        ypCaseDataDAO.updateYPCaseDataByName(survey);
     }
 
-    @Scheduled(cron = "20 * * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * *")
     public void countHistoryDisaster() throws InterruptedException {
         String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
@@ -61,29 +64,40 @@ public class YPCaseTask {
         JSONArray ypHistoryDisasterValue = new JSONArray();
 
         // 获取开始年份
-        int baseYear = Calendar.getInstance().get(Calendar.YEAR) - 5;
-        for (int i = 0; i < 6; i++) {
-            String beginTime = (baseYear + i) + "0101000000";
-            String endTime = (baseYear + i + 1) + "0101000000";
+        int years = Calendar.getInstance().get(Calendar.YEAR) - 2011;
 
-            String url = baseUrl + beginTime + "/" + endTime;
-            JSONObject historyDisasterJson = HttpHelper.getDataByURL(url);
-            JSONArray historyDisasters = (JSONArray) historyDisasterJson.get("Data");
+        for (int i = 0; i < 12; i++) {
+            int monthDisasterSum = 0;
 
-            JSONObject ypAnnualHistoryDisaster = getYPAnnualHistoryDisaster(historyDisasters, baseYear + i);
+            for (int j = 0; j < years; j++) {
+                String beginTime = DateHelper.getPostponeDateByMonth(2012 + j, 1, 1, 0, 0, 0, i);
+                String endTime = DateHelper.getPostponeDateByMonth(2012 + j, 1, 1, 0, 0, 0, i + 1);
 
-            ypHistoryDisasterValue.add(ypAnnualHistoryDisaster);
+                String url = baseUrl + beginTime + "/" + endTime;
+                JSONObject historyDisasterJson = HttpHelper.getDataByURL(url);
+                JSONArray historyDisasters = (JSONArray) historyDisasterJson.get("Data");
+
+                monthDisasterSum += getYPMonthlyHistoryDisaster(historyDisasters);
+            }
+
+            int mouthAvg = monthDisasterSum / years;
+
+            JSONObject ypMonthlyAvgHistoryDisaster = new JSONObject();
+            ypMonthlyAvgHistoryDisaster.put("month", i + 1);
+            ypMonthlyAvgHistoryDisaster.put("value", mouthAvg);
+
+            ypHistoryDisasterValue.add(ypMonthlyAvgHistoryDisaster);
         }
 
-        DataEntity historyDisaster = new DataEntity();
+        YPCaseDataEntity historyDisaster = new YPCaseDataEntity();
         historyDisaster.setName(YPCaseTaskName.YPCASE_HISTROY_DISASTER);
         historyDisaster.setValue(ypHistoryDisasterValue);
 
-        dataDAO.updateExample(historyDisaster);
+        ypCaseDataDAO.updateYPCaseDataByName(historyDisaster);
     }
 
-    @Scheduled(cron = "50 * * * * *")
-    public void countNotice() throws InterruptedException {
+    @PostConstruct
+    public void countNotice() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_NOTICE));
 
         JSONArray noticeValue = new JSONArray();
@@ -94,16 +108,17 @@ public class YPCaseTask {
 
         noticeValue.add(ypNotice);
 
-        DataEntity notice = new DataEntity();
+        YPCaseDataEntity notice = new YPCaseDataEntity();
         notice.setName(YPCaseTaskName.YPCASE_NOTICE);
         notice.setValue(noticeValue);
 
-        dataDAO.updateExample(notice);
+        ypCaseDataDAO.updateYPCaseDataByName(notice);
     }
 
-    private JSONObject getYPAnnualHistoryDisaster(JSONArray historyDisasters, int year) {
+    private int getYPMonthlyHistoryDisaster(JSONArray historyDisasters) {
         int disasterNum = 0;
         int ypDistrict = Integer.valueOf(YPRegionInfo.YP_DISTRICT);
+
         for (Object obj : historyDisasters) {
             JSONObject annualHistoryDisaster = (JSONObject) obj;
             if (((Number) annualHistoryDisaster.get("DISTRICT")).intValue() == ypDistrict) {
@@ -111,10 +126,6 @@ public class YPCaseTask {
             }
         }
 
-        JSONObject historyDisasterResult = new JSONObject();
-        historyDisasterResult.put("year", year);
-        historyDisasterResult.put("value", disasterNum);
-
-        return historyDisasterResult;
+        return disasterNum;
     }
 }

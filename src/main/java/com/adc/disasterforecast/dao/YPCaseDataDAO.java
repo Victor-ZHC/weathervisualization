@@ -1,6 +1,6 @@
 package com.adc.disasterforecast.dao;
 
-import com.adc.disasterforecast.entity.DataEntity;
+import com.adc.disasterforecast.entity.YPCaseDataEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +11,9 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataDAO {
+public class YPCaseDataDAO {
     // logger for ExampleDAO
-    private static final Logger logger = LoggerFactory.getLogger(DataDAO.class);
+    private static final Logger logger = LoggerFactory.getLogger(YPCaseDataDAO.class);
 
     @Autowired
     private MongoTemplate mongoTemplate;
@@ -23,26 +23,26 @@ public class DataDAO {
      * @param name
      * @return
      */
-    public DataEntity findExampleByName(String name) {
+    public YPCaseDataEntity findYPCaseDataByName(String name) {
         Query query = new Query(Criteria.where("name").is(name));
-        DataEntity dataEntity = mongoTemplate.findOne(query, DataEntity.class);
-        return dataEntity;
+        YPCaseDataEntity ypCaseDataEntity = mongoTemplate.findOne(query, YPCaseDataEntity.class);
+        return ypCaseDataEntity;
     }
 
     /**
      * 更新对象
-     * @param dataEntity
+     * @param ypCaseDataEntity
      */
-    public void updateExample(DataEntity dataEntity) {
-        if (findExampleByName(dataEntity.getName()) == null) {
+    public void updateYPCaseDataByName(YPCaseDataEntity ypCaseDataEntity) {
+        if (findYPCaseDataByName(ypCaseDataEntity.getName()) == null) {
             logger.info("---add---");
-            mongoTemplate.save(dataEntity);
+            mongoTemplate.save(ypCaseDataEntity);
         } else {
             logger.info("---update---");
-            Query query = new Query(Criteria.where("name").is(dataEntity.getName()));
-            Update update = new Update().set("value", dataEntity.getValue());
+            Query query = new Query(Criteria.where("name").is(ypCaseDataEntity.getName()));
+            Update update = new Update().set("value", ypCaseDataEntity.getValue());
             //更新查询返回结果集的第一条
-            mongoTemplate.updateFirst(query, update, DataEntity.class);
+            mongoTemplate.updateFirst(query, update, YPCaseDataEntity.class);
         }
     }
 }

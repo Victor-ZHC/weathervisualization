@@ -1,20 +1,21 @@
 package com.adc.disasterforecast.task;
 
-import com.adc.disasterforecast.dao.DataDAO;
-import com.adc.disasterforecast.entity.DataEntity;
+import com.adc.disasterforecast.dao.FeiteDataDAO;
+import com.adc.disasterforecast.entity.FeiteDataEntity;
 import com.adc.disasterforecast.global.FeiteRegionInfo;
 import com.adc.disasterforecast.global.FeiteTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.tools.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
 import java.util.*;
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,45 +26,46 @@ public class FeiteTask {
 
     // dao Autowired
     @Autowired
-    private DataDAO dataDAO;
+    private FeiteDataDAO feiteDataDAO;
 
-    @Scheduled(cron = "0 * * * * *")
-    public void countRegionDiff() throws InterruptedException {
+    @PostConstruct
+    public void countRegionDiff() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
-
-        JSONObject mh = new JSONObject();
-        mh.put("area", FeiteRegionInfo.MH_AREA);
-        mh.put("population", FeiteRegionInfo.MH_POPULATION);
-        mh.put("acreage", FeiteRegionInfo.MH_ACREAGE);
 
         JSONObject xh = new JSONObject();
         xh.put("area", FeiteRegionInfo.XH_AREA);
         xh.put("population", FeiteRegionInfo.XH_POPULATION);
         xh.put("acreage", FeiteRegionInfo.XH_ACREAGE);
 
-        JSONArray diffValue = new JSONArray();
-        diffValue.add(mh);
-        diffValue.add(xh);
+        JSONObject cm = new JSONObject();
+        cm.put("area", FeiteRegionInfo.CM_AREA);
+        cm.put("population", FeiteRegionInfo.CM_POPULATION);
+        cm.put("acreage", FeiteRegionInfo.CM_ACREAGE);
 
-        DataEntity diff = new DataEntity();
+        JSONArray diffValue = new JSONArray();
+        diffValue.add(xh);
+        diffValue.add(cm);
+
+        FeiteDataEntity diff = new FeiteDataEntity();
         diff.setName(FeiteTaskName.FEITE_REGION_DIFF);
         diff.setValue(diffValue);
 
-        dataDAO.updateExample(diff);
+        feiteDataDAO.updateFeiteDataByName(diff);
     }
 
-    @Scheduled(cron = "20 * * * * *")
-    public void countRegionRainfallDiff() throws InterruptedException {
+    @PostConstruct
+    public void countRegionRainfallDiff() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_RAINFALL_DIFF));
 
-        JSONArray mhRainfalls = new JSONArray();
-        JSONArray xhRainfalls = new JSONArray();
+        Map<String, JSONObject> xhRainfalls = new HashMap<>();
+        Map<String, JSONObject> cmRainfalls = new HashMap<>();
 
-        for (int i = 0; i < 48; i++) {
-            String beginDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 10, 0, 0, i);
-            String endDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 11, 0, 0, i);
+        for (int i = 0; i < 41; i++) {
+            String beginDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 19, 0, 0, i);
+            String endDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 20, 0, 0, i);
+
             String url = baseUrl + beginDate + "/" + endDate + "/1";
             JSONObject rainfallJson = HttpHelper.getDataByURL(url);
             JSONArray rainfallData = (JSONArray) rainfallJson.get("Data");
@@ -72,125 +74,59 @@ public class FeiteTask {
                 JSONObject rainfall = (JSONObject) obj;
                 String stationName = (String) rainfall.get("STATIONNAME");
 
-                if (FeiteRegionInfo.MH_STATION_NAME.equals(stationName)) {
-                    addRainfall(mhRainfalls, rainfall, i);
-                } else if (FeiteRegionInfo.XH_STATION_NAME.equals(stationName)) {
-                    addRainfall(xhRainfalls, rainfall, i);
+                if (FeiteRegionInfo.XH_STATION_NAME.equals(stationName)) {
+                    xhRainfalls.put(endDate, rainfall);
+                } else if (FeiteRegionInfo.CM_STATION_NAME.equals(stationName)) {
+                    cmRainfalls.put(endDate, rainfall);
                 }
             }
+        }
+        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+
+        for (Object obj : alarms) {
+            Map<String, String> alarm = (Map<String, String>) obj;
+            String beginDate = alarm.get("beginDate").substring(0, 10) + "0000";
+            String endDate = alarm.get("endDate").substring(0, 10) + "0000";
+            String alarmId = alarm.get("alarmId");
+            countRegionRainfallDiffByAlarmId(beginDate, endDate, alarmId, xhRainfalls, cmRainfalls);
+        }
+    }
+
+    private void countRegionRainfallDiffByAlarmId(String beginDate, String endDate, String alarmId, Map<String, JSONObject> xhRainfalls, Map<String, JSONObject> cmRainfalls) {
+        JSONArray xhRainfallsByAlarmId = new JSONArray();
+        JSONArray cmRainfallsByAlarmId = new JSONArray();
+
+        int delayHour = 0;
+        String date = "";
+        while (!date.equals(endDate)) {
+            date = DateHelper.getPostponeDateByHour(beginDate, delayHour);
+
+            addRainfall(xhRainfallsByAlarmId, xhRainfalls.get(date), delayHour);
+            addRainfall(cmRainfallsByAlarmId, cmRainfalls.get(date), delayHour);
+
+            delayHour++;
         }
 
         JSONArray rainfallValue = new JSONArray();
 
-        JSONObject mhRainfall = new JSONObject();
-        mhRainfall.put("area", FeiteRegionInfo.MH_AREA);
-        mhRainfall.put("value", mhRainfalls);
+        JSONObject xhRainfallById = new JSONObject();
+        xhRainfallById.put("area", FeiteRegionInfo.XH_AREA);
+        xhRainfallById.put("value", xhRainfallsByAlarmId);
 
-        JSONObject xhRainfall = new JSONObject();
-        xhRainfall.put("area", FeiteRegionInfo.XH_AREA);
-        xhRainfall.put("value", xhRainfalls);
+        JSONObject cmRainfallById = new JSONObject();
+        cmRainfallById.put("area", FeiteRegionInfo.CM_AREA);
+        cmRainfallById.put("value", cmRainfallsByAlarmId);
 
-        rainfallValue.add(xhRainfall);
-        rainfallValue.add(mhRainfall);
+        rainfallValue.add(xhRainfallById);
+        rainfallValue.add(cmRainfallById);
 
-        DataEntity rainfall = new DataEntity();
+        FeiteDataEntity rainfall = new FeiteDataEntity();
         rainfall.setName(FeiteTaskName.FEITE_REGION_RAINFALL_DIFF);
         rainfall.setValue(rainfallValue);
+        rainfall.setAlarmId(alarmId);
 
-        dataDAO.updateExample(rainfall);
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(rainfall);
     }
-
-    @Scheduled(cron = "40 * * * * *")
-    public void countRegionDisasterDiff() throws InterruptedException {
-        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006110000/20131008110000";
-
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
-
-        JSONObject obj = HttpHelper.getDataByURL(url);
-
-        // 统计两地受灾数
-        List<JSONObject> mhDisasters = new ArrayList<>();
-        List<JSONObject> xhDisasters = new ArrayList<>();
-
-        JSONArray disasters = (JSONArray) obj.get("Data");
-        for (Object disaster : disasters) {
-            JSONObject disasterData = (JSONObject) disaster;
-            String disasterDistrict = (String) disasterData.get("Disaster_District");
-            double lon = ((Number) disasterData.get("Longitude")).doubleValue();
-            double lat = ((Number) disasterData.get("Latitude")).doubleValue();
-
-            if (FeiteRegionInfo.MH_DISTRICT.equals(disasterDistrict)) {
-                mhDisasters.add(disasterData);
-            } else if (DistanceHelper.getDistance(FeiteRegionInfo.XH_STATION_LON, FeiteRegionInfo.XH_STATION_LAT, lon, lat) < 3.0) {
-                xhDisasters.add(disasterData);
-            }
-        }
-
-        JSONObject mhNumDiff = new JSONObject();
-        mhNumDiff.put("area", FeiteRegionInfo.MH_AREA);
-        mhNumDiff.put("value", mhDisasters.size());
-
-        JSONObject xhNumDiff = new JSONObject();
-        xhNumDiff.put("area", FeiteRegionInfo.XH_AREA);
-        xhNumDiff.put("value", xhDisasters.size());
-
-        JSONArray numDiffValue = new JSONArray();
-        numDiffValue.add(mhNumDiff);
-        numDiffValue.add(xhNumDiff);
-
-        DataEntity numDiff = new DataEntity();
-        numDiff.setName(FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF);
-        numDiff.setValue(numDiffValue);
-
-        dataDAO.updateExample(numDiff);
-
-        // 统计两地受灾密度
-        JSONObject mhDensityDiff = new JSONObject();
-        mhDensityDiff.put("area", FeiteRegionInfo.MH_AREA);
-        mhDensityDiff.put("value", ((double) mhDisasters.size()) / FeiteRegionInfo.MH_ACREAGE);
-
-        JSONObject xhDensityDiff = new JSONObject();
-        xhDensityDiff.put("area", FeiteRegionInfo.XH_AREA);
-        xhDensityDiff.put("value", ((double) xhDisasters.size()) / FeiteRegionInfo.XH_ACREAGE);
-
-        JSONArray densityDiffValue = new JSONArray();
-        densityDiffValue.add(mhDensityDiff);
-        densityDiffValue.add(xhDensityDiff);
-
-        DataEntity densityDiff = new DataEntity();
-        densityDiff.setName(FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF);
-        densityDiff.setValue(densityDiffValue);
-
-        dataDAO.updateExample(densityDiff);
-
-        // 统计两地受灾种类数
-        JSONObject mhDisasterType = getAreaDisasterType(FeiteRegionInfo.MH_AREA, mhDisasters);
-        JSONObject xhDisasterType = getAreaDisasterType(FeiteRegionInfo.XH_AREA, xhDisasters);
-
-        JSONArray typeDiffValue = new JSONArray();
-        typeDiffValue.add(mhDisasterType);
-        typeDiffValue.add(xhDisasterType);
-
-        DataEntity typeDiff = new DataEntity();
-        typeDiff.setName(FeiteTaskName.FEITE_REGION_DISASTER_TYPE_DIFF);
-        typeDiff.setValue(typeDiffValue);
-
-        dataDAO.updateExample(typeDiff);
-    }
-
-//    @Scheduled(cron = "* * * * * *")
-//    public void countRegionSeeperDiff() throws InterruptedException {
-//        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/20131006000000/20131009000000";
-//
-//        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
-//
-//        JSONObject obj = HttpHelper.getDataByURL(url);
-//
-//        JSONArray disasterData = (JSONArray) obj.get("Data");
-//
-//
-////        dataDAO.updateExample(dataEntity);
-//    }
 
     private void addRainfall(JSONArray areaRainfalls, JSONObject rainfall, int date) {
         JSONObject jsonObject = new JSONObject();
@@ -200,6 +136,99 @@ public class FeiteTask {
         jsonObject.put("value", (int) (rainHour * 10));
 
         areaRainfalls.add(jsonObject);
+    }
+
+    @PostConstruct
+    public void countRegionDisasterDiff() {
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF));
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF));
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_TYPE_DIFF));
+
+        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+
+        for (Object obj : alarms) {
+            Map<String, String> alarm = (Map<String, String>) obj;
+            String beginDate = alarm.get("beginDate");
+            String endDate = alarm.get("endDate");
+            String alarmId = alarm.get("alarmId");
+            countRegionDisasterDiffByAlarmId(beginDate, endDate, alarmId);
+        }
+    }
+
+    private void countRegionDisasterDiffByAlarmId(String beginDate, String endDate, String alarmId) {
+        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/" + beginDate + "/" + endDate;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+
+        // 统计两地受灾数
+        List<JSONObject> xhDisasters = new ArrayList<>();
+        List<JSONObject> cmDisasters = new ArrayList<>();
+
+        JSONArray disasters = (JSONArray) obj.get("Data");
+        for (Object disaster : disasters) {
+            JSONObject disasterData = (JSONObject) disaster;
+            String disasterDistrict = (String) disasterData.get("Disaster_District");
+
+            if (FeiteRegionInfo.XH_DISTRICT.equals(disasterDistrict)) {
+                xhDisasters.add(disasterData);
+            } else if (FeiteRegionInfo.CM_DISTRICT.equals(disasterDistrict)) {
+                cmDisasters.add(disasterData);
+            }
+        }
+
+        JSONObject xhNumDiff = new JSONObject();
+        xhNumDiff.put("area", FeiteRegionInfo.XH_AREA);
+        xhNumDiff.put("value", xhDisasters.size());
+
+        JSONObject cmNumDiff = new JSONObject();
+        cmNumDiff.put("area", FeiteRegionInfo.CM_AREA);
+        cmNumDiff.put("value", cmDisasters.size());
+
+        JSONArray numDiffValue = new JSONArray();
+        numDiffValue.add(xhNumDiff);
+        numDiffValue.add(cmNumDiff);
+
+        FeiteDataEntity numDiff = new FeiteDataEntity();
+        numDiff.setName(FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF);
+        numDiff.setValue(numDiffValue);
+        numDiff.setAlarmId(alarmId);
+
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(numDiff);
+
+        // 统计两地受灾密度
+        JSONObject xhDensityDiff = new JSONObject();
+        xhDensityDiff.put("area", FeiteRegionInfo.XH_AREA);
+        xhDensityDiff.put("value", ((double) xhDisasters.size()) / FeiteRegionInfo.XH_ACREAGE);
+
+        JSONObject cmDensityDiff = new JSONObject();
+        cmDensityDiff.put("area", FeiteRegionInfo.CM_AREA);
+        cmDensityDiff.put("value", ((double) cmDisasters.size()) / FeiteRegionInfo.CM_ACREAGE);
+
+        JSONArray densityDiffValue = new JSONArray();
+        densityDiffValue.add(xhDensityDiff);
+        densityDiffValue.add(cmDensityDiff);
+
+        FeiteDataEntity densityDiff = new FeiteDataEntity();
+        densityDiff.setName(FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF);
+        densityDiff.setValue(densityDiffValue);
+        densityDiff.setAlarmId(alarmId);
+
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(densityDiff);
+
+        // 统计两地受灾种类数
+        JSONObject xhDisasterType = getAreaDisasterType(FeiteRegionInfo.XH_AREA, xhDisasters);
+        JSONObject cmDisasterType = getAreaDisasterType(FeiteRegionInfo.CM_AREA, cmDisasters);
+
+        JSONArray typeDiffValue = new JSONArray();
+        typeDiffValue.add(xhDisasterType);
+        typeDiffValue.add(cmDisasterType);
+
+        FeiteDataEntity typeDiff = new FeiteDataEntity();
+        typeDiff.setName(FeiteTaskName.FEITE_REGION_DISASTER_TYPE_DIFF);
+        typeDiff.setValue(typeDiffValue);
+        typeDiff.setAlarmId(alarmId);
+
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(typeDiff);
     }
 
     private JSONObject getAreaDisasterType(String area, List<JSONObject> disasters) {
@@ -244,8 +273,8 @@ public class FeiteTask {
         return areaDisasterType;
     }
 
-    @Scheduled(cron = "0 * * * * *")
-    public void getRainfallTop10() throws InterruptedException{
+    @PostConstruct
+    public void getRainfallTop10() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
         String type = "1";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOP10));
@@ -280,14 +309,14 @@ public class FeiteTask {
             if ((--cnt) < 0) break;
         }
 
-        DataEntity rainfall = new DataEntity();
+        FeiteDataEntity rainfall = new FeiteDataEntity();
         rainfall.setName(FeiteTaskName.FEITE_RAINFALL_TOP10);
         rainfall.setValue(rainfallTop10);
-        dataDAO.updateExample(rainfall);
+        feiteDataDAO.updateFeiteDataByName(rainfall);
     }
 
-    @Scheduled(cron = "0 * * * * *")
-    public void getGaleTop10() throws InterruptedException {
+    @PostConstruct
+    public void getGaleTop10() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
         String type = "1";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOP10));
@@ -322,10 +351,10 @@ public class FeiteTask {
             if ((--cnt) < 0) break;
         }
 
-        DataEntity gale = new DataEntity();
+        FeiteDataEntity gale = new FeiteDataEntity();
         gale.setName(FeiteTaskName.FEITE_GALE_TOP10);
         gale.setValue(GaleTop10);
-        dataDAO.updateExample(gale);
+        feiteDataDAO.updateFeiteDataByName(gale);
     }
     /**
     * @Description 预警（使用手动导出的数据）
@@ -333,8 +362,8 @@ public class FeiteTask {
     * @Create 2017/11/16 22:25
     **/
 
-    @Scheduled(cron = "20 * * * * *")
-    public void getWarning() throws InterruptedException {
+    @PostConstruct
+    public void getWarning() {
         // String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
 
@@ -356,10 +385,10 @@ public class FeiteTask {
             resultArray.add(resultObject);
         }
 
-        DataEntity warningsData = new DataEntity();
+        FeiteDataEntity warningsData = new FeiteDataEntity();
         warningsData.setName(FeiteTaskName.FEITE_WARNING);
         warningsData.setValue(resultArray);
-        dataDAO.updateExample(warningsData);
+        feiteDataDAO.updateFeiteDataByName(warningsData);
     }
 
     /**
@@ -368,8 +397,8 @@ public class FeiteTask {
     * @Create 2017/11/16 17:51
     **/
 
-    @Scheduled(cron = "20 * * * * *")
-    public void countRainfallAndMonitorWind() throws InterruptedException {
+    @PostConstruct
+    public void countRainfallAndMonitorWind() {
         String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/20131006200000/20131008120000/1";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL + " & " + FeiteTaskName.FEITE_GALE_TOTAL));
 
@@ -399,15 +428,15 @@ public class FeiteTask {
             }
         }
 
-        DataEntity rainfallTotalData = new DataEntity();
+        FeiteDataEntity rainfallTotalData = new FeiteDataEntity();
         rainfallTotalData.setName(FeiteTaskName.FEITE_RAINFALL_TOTAL);
         rainfallTotalData.setValue(rainfallValueArray);
-        dataDAO.updateExample(rainfallTotalData);
+        feiteDataDAO.updateFeiteDataByName(rainfallTotalData);
 
-        DataEntity galeTotalData = new DataEntity();
+        FeiteDataEntity galeTotalData = new FeiteDataEntity();
         galeTotalData.setName(FeiteTaskName.FEITE_GALE_TOTAL);
         galeTotalData.setValue(windValueArray);
-        dataDAO.updateExample(galeTotalData);
+        feiteDataDAO.updateFeiteDataByName(galeTotalData);
     }
 
     /**
@@ -415,8 +444,8 @@ public class FeiteTask {
     * @Author lilin
     * @Create 2017/11/16 21:10
     **/
-    @Scheduled(cron = "20 * * * * *")
-    public void countDisasterReports() throws InterruptedException {
+    @PostConstruct
+    public void countDisasterReports() {
         String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetDisasterDetailData_Geliku/20131006200000/20131008120000";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
 
@@ -561,9 +590,9 @@ public class FeiteTask {
 
         resultArray.add(resultObject);
 
-        DataEntity disasterReportsData = new DataEntity();
+        FeiteDataEntity disasterReportsData = new FeiteDataEntity();
         disasterReportsData.setName(FeiteTaskName.FEITE_DISASTER_TOTAL);
         disasterReportsData.setValue(resultArray);
-        dataDAO.updateExample(disasterReportsData);
+        feiteDataDAO.updateFeiteDataByName(disasterReportsData);
     }
 }

@@ -15,6 +15,26 @@ public class DateHelper {
         return simpleDateFormat.format(base.getTime());
     }
 
+    public static String getPostponeDateByHour(String date, int delayHour) {
+        return getPostponeDateByHour(Integer.valueOf(date.substring(0, 4)),
+                Integer.valueOf(date.substring(4, 6)),
+                Integer.valueOf(date.substring(6, 8)),
+                Integer.valueOf(date.substring(8, 10)),
+                Integer.valueOf(date.substring(10, 12)),
+                Integer.valueOf(date.substring(12, 14)),
+                delayHour);
+    }
+
+    public static String getPostponeDateByMonth(int year, int month, int date, int hourOfDay, int minute, int second, int delayMonth) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+        Calendar base = Calendar.getInstance();
+        base.set(year, month - 1, date, hourOfDay, minute, second);
+        base.add(Calendar.MONTH, delayMonth);
+
+        return simpleDateFormat.format(base.getTime());
+    }
+
     public static String getWarningDate(String date) {
         // 2017-08-04T13:15:00
         String[] parts = date.split("T");

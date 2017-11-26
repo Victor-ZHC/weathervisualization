@@ -1,7 +1,9 @@
 package com.adc.disasterforecast.controller;
 
-import com.adc.disasterforecast.dao.DataDAO;
-import com.adc.disasterforecast.entity.DataEntity;
+import com.adc.disasterforecast.dao.FeiteDataDAO;
+import com.adc.disasterforecast.dao.YPCaseDataDAO;
+import com.adc.disasterforecast.entity.FeiteDataEntity;
+import com.adc.disasterforecast.entity.YPCaseDataEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,31 +15,48 @@ public class Controller {
     private static final Logger logger = LoggerFactory.getLogger(Controller.class);
 
     @Autowired
-    DataDAO dataDAO;
+    FeiteDataDAO feiteDataDAO;
+
+    @Autowired
+    YPCaseDataDAO ypCaseDataDAO;
 
     /**
-     * handle all GET request from "feite" page
+     * handle all GET request from "feite" page by name
      * @param name data name
      * @return dataEntity
      */
     @RequestMapping(value = "/feite/{name}", method = RequestMethod.GET)
     @ResponseBody
-    public DataEntity getFeiteData(@PathVariable("name") String name) {
+    public FeiteDataEntity getFeiteDataByName(@PathVariable("name") String name) {
         logger.info("get request from /feite/" + name);
-        DataEntity dataEntity = dataDAO.findExampleByName(name);
-        return dataEntity;
+        FeiteDataEntity feiteDataEntity = feiteDataDAO.findFeiteDataByName(name);
+        return feiteDataEntity;
     }
 
     /**
-     * handle all GET request from "ypcase" page
+     * handle all GET request from "feite" page by name and alarmId
+     * @param name data name
+     * @param alarmId data alarmId
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/feite/{name}/{alarmId}", method = RequestMethod.GET)
+    @ResponseBody
+    public FeiteDataEntity getFeiteDataByNameAndAlarmId(@PathVariable("name") String name, @PathVariable("alarmId") String alarmId) {
+        logger.info("get request from /feite/" + name + "/" + alarmId);
+        FeiteDataEntity feiteDataEntity = feiteDataDAO.findFeiteDataByNameAndAlarmId(name, alarmId);
+        return feiteDataEntity;
+    }
+
+    /**
+     * handle all GET request from "ypcase" page by name
      * @param name data name
      * @return dataEntity
      */
     @RequestMapping(value = "/ypcase/{name}", method = RequestMethod.GET)
     @ResponseBody
-    public DataEntity getYPCaseData(@PathVariable("name") String name) {
+    public YPCaseDataEntity getYPCaseData(@PathVariable("name") String name) {
         logger.info("get request from /ypcase/" + name);
-        DataEntity dataEntity = dataDAO.findExampleByName(name);
-        return dataEntity;
+        YPCaseDataEntity ypCaseDataEntity = ypCaseDataDAO.findYPCaseDataByName(name);
+        return ypCaseDataEntity;
     }
 }
