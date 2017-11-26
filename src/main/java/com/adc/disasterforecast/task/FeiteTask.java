@@ -304,7 +304,7 @@ public class FeiteTask {
             Collections.sort(rainfallVal);
             JSONObject rainfallTopBySite = new JSONObject();
             rainfallTopBySite.put("site", siteName);
-            rainfallTopBySite.put("value", rainfallVal.getLast());
+            rainfallTopBySite.put("value", Math.max(rainfallVal.getLast(), 0));
             rainfallTop10.add(rainfallTopBySite);
             if ((--cnt) < 0) break;
         }
@@ -346,7 +346,7 @@ public class FeiteTask {
             Collections.sort(rainfallVal);
             JSONObject GaleTopBySite = new JSONObject();
             GaleTopBySite.put("site", siteName);
-            GaleTopBySite.put("value", rainfallVal.getLast());
+            GaleTopBySite.put("value", Math.max(rainfallVal.getLast(), 0));
             GaleTop10.add(GaleTopBySite);
             if ((--cnt) < 0) break;
         }

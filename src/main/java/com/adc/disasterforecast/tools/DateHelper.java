@@ -1,5 +1,6 @@
 package com.adc.disasterforecast.tools;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -43,4 +44,14 @@ public class DateHelper {
         return dates[1] + "/" + dates[2] + " " + times[0] + ":" + times[1];
     }
 
+    public static String getTimeMillis(String date) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Calendar cal = Calendar.getInstance();
+        try{
+            cal.setTime(simpleDateFormat.parse(date));
+        }catch (ParseException e){
+            return null;
+        }
+        return String.valueOf(cal.getTimeInMillis());
+    }
 }

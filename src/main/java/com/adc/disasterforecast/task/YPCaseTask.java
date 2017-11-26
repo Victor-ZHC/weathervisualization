@@ -7,6 +7,7 @@ import com.adc.disasterforecast.global.YPCaseTaskName;
 import com.adc.disasterforecast.global.YPRegionInfo;
 import com.adc.disasterforecast.tools.DateHelper;
 import com.adc.disasterforecast.tools.HttpHelper;
+import com.adc.disasterforecast.tools.CsvHelper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -16,7 +17,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.Calendar;
+import java.util.*;
 
 @Component
 public class YPCaseTask {
@@ -127,5 +128,96 @@ public class YPCaseTask {
         }
 
         return disasterNum;
+    }
+    /**
+    * @description:
+    * @author: zhichengliu
+    * @date: 17/11/26
+    **/
+    @PostConstruct
+    public void getRainFall() {
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+        logger.info(String.format("began task: %s", YPCaseTaskName.YPCASE_RAIN_TIME));
+
+        JSONArray rainfallVal = new JSONArray();
+        for (int i = 0; i < YPRegionInfo.Hours; i++){
+            String beginDate = DateHelper.getPostponeDateByHour(2015, 6, 16, 12, 0, 0, i);
+            String endDate = DateHelper.getPostponeDateByHour(2015, 6, 16, 13, 0, 0, i);
+            String url = baseUrl + beginDate + "/" + endDate + "/1";
+            JSONArray rainfallData = (JSONArray) HttpHelper.getDataByURL(url).get("Data");
+
+            Double rainfallSum = 0.0;
+            HashMap<String, Double> hs = new HashMap<>();
+            for (Object obj: rainfallData){
+                JSONObject rainfall = (JSONObject) obj;
+
+                for (String s: YPRegionInfo.YANGPU_RAIN_STATIONNAME) {
+                    if (s.equals(rainfall.get("STATIONNAME"))) {
+                        if (hs.get(s) == null) hs.put(s, Double.parseDouble((String) rainfall.get("RAINHOUR")));
+                        else hs.put(s, Math.max(Double.parseDouble((String) rainfall.get("RAINHOUR")), hs.get(s)));
+                    }
+                }
+            }
+            Iterator iter = hs.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                rainfallSum += (Double) entry.getValue();
+//                System.out.println(entry.getKey() + String.valueOf(entry.getValue()));
+            }
+            JSONObject rainfallAvg = new JSONObject();
+            rainfallAvg.put("time", DateHelper.getTimeMillis(endDate));
+            rainfallAvg.put("value", String.valueOf(rainfallSum / YPRegionInfo.YANGPU_RAIN_STATIONNAME.length));
+            rainfallVal.add(rainfallAvg);
+        }
+        YPCaseDataEntity rainfall = new YPCaseDataEntity();
+        rainfall.setName(YPCaseTaskName.YPCASE_RAIN_TIME);
+        rainfall.setValue(rainfallVal);
+        ypCaseDataDAO.updateYPCaseDataByName(rainfall);
+    }
+    /**
+    * @description:
+    * @author: zhichengliu
+    * @date: 17/11/26
+    **/
+    @PostConstruct
+    public void getSeeper() {
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationDataByDatetime_Geliku/";
+        logger.info(String.format("began task: %s", YPCaseTaskName.YPCASE_SEEPER_TIME));
+
+        JSONArray seeperVal = new JSONArray();
+        for (int i = 0; i < YPRegionInfo.Hours; i++){
+            String beginDate = DateHelper.getPostponeDateByHour(2015, 6, 16, 12, 0, 0, i);
+            String endDate = DateHelper.getPostponeDateByHour(2015, 6, 16, 13, 0, 0, i);
+            String url = baseUrl + beginDate + "/" + endDate;
+            String DataUrl = (String)HttpHelper.getDataByURL(url).get("Data");
+            JSONArray seeperData = CsvHelper.getDataByURL(DataUrl);
+            Double seeperSum = 0.0;
+            HashMap<String, Double> hs = new HashMap<>();
+            for (Object obj: seeperData){
+                JSONObject seeper = (JSONObject) obj;
+
+                for (String s: YPRegionInfo.YANGPU_SEEPER_STATIONNAME) {
+                    if (s.equals(seeper.get("STATIONNAME"))){
+                        if (hs.get(s) == null) hs.put(s, Double.parseDouble((String) seeper.get("WATERDEPTH")));
+                        else hs.put(s, Math.max(Double.parseDouble((String) seeper.get("WATERDEPTH")), hs.get(s)));
+                    }
+                }
+            }
+            Iterator iter = hs.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                seeperSum += (Double) entry.getValue();
+            }
+            JSONObject seeperAvg = new JSONObject();
+            seeperAvg.put("time", DateHelper.getTimeMillis(endDate));
+            seeperAvg.put("value", String.valueOf(seeperSum / YPRegionInfo.YANGPU_SEEPER_STATIONNAME.length));
+//            System.out.println(seeperAvg);
+            seeperVal.add(seeperAvg);
+        }
+        YPCaseDataEntity seeper = new YPCaseDataEntity();
+        seeper.setName(YPCaseTaskName.YPCASE_SEEPER_TIME);
+        seeper.setValue(seeperVal);
+        ypCaseDataDAO.updateYPCaseDataByName(seeper);
+
     }
 }
