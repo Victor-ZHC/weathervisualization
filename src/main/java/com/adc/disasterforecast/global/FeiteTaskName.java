@@ -16,6 +16,8 @@ public class FeiteTaskName {
     public static final String FEITE_RAINFALL_TOTAL = "KPI_FEITE_RAINFALL_TOTAL";
     // 大风监测
     public static final String FEITE_GALE_TOTAL = "KPI_FEITE_GALE_TOTAL";
+    // 监测点个数
+    public static final String FEITE_MONITORING_SITE = "KPI_FEITE_MONITORING_SITE";
     // 报灾情况
     public static final String FEITE_DISASTER_TOTAL = "KPI_FEITE_DISASTER_TOTAL";
 }

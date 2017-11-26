@@ -392,20 +392,35 @@ public class FeiteTask {
     }
 
     /**
-    * @Description 雨量累计&大风监测
+    * @Description 根据告警ID获取分时段的数据 雨量预测 & 大风监测 & 监测点统计
     * @Author lilin
-    * @Create 2017/11/16 17:51
+    * @Create 2017/11/26 21:20
     **/
-
-    @PostConstruct
-    public void countRainfallAndMonitorWind() {
-        String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/20131006200000/20131008120000/1";
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL + " & " + FeiteTaskName.FEITE_GALE_TOTAL));
+    public void countRainfallAndMonitorWindByAlarmId(String beginDate, String endDate, String alarmId) {
+        String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
+                beginDate + "/" + endDate + "/1";
 
         JSONObject obj = HttpHelper.getDataByURL(url);
 
         JSONArray rainfallValueArray = new JSONArray();
         JSONArray windValueArray = new JSONArray();
+        JSONArray monitorPointsNumArray = new JSONArray();
+
+        Map<Integer, String> rainfallLevelMap = new HashMap<Integer, String>();
+        rainfallLevelMap.put(0, "0-50");
+        rainfallLevelMap.put(1, "50-100");
+        rainfallLevelMap.put(2, "100-150");
+        rainfallLevelMap.put(3, "150-200");
+        rainfallLevelMap.put(4, "200");
+
+        Map<String, Integer> rainfallValueMap = new HashMap<String, Integer>();
+        for (int i = 0; i < 5; i++) {
+            rainfallValueMap.put(rainfallLevelMap.get(i), 0);
+        }
+        Map<String, Integer> windSpeedValueMap = new HashMap<String, Integer>();
+        for (int i = 0; i < 18; i++) {
+            windSpeedValueMap.put(i + "", 0);
+        }
 
         JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
         for (int i = 0; i < autoStationDataArray.size(); i++) {
@@ -414,40 +429,97 @@ public class FeiteTask {
             String windSpeedValue = (String) autoStationData.get("WINDSPEED");
             double rainfallValueNum = Double.valueOf(rainfallValue);
             double windSpeedValueNum = Double.valueOf(windSpeedValue);
+            if (rainfallValueNum < 0) {
+                rainfallValueNum = 0;
+            }
+            if (windSpeedValueNum < 0) {
+                windSpeedValueNum = 0;
+            }
             if (rainfallValueNum >= 0) {
-                JSONObject rainfallValueObject = new JSONObject();
-                rainfallValueObject.put("value", rainfallValueNum);
-                rainfallValueObject.put("level", RainfallHelper.getRainfallLevel(rainfallValue));
-                rainfallValueArray.add(rainfallValueObject);
+                String level = RainfallHelper.getRainfallLevel(rainfallValue);
+                Integer num = (Integer) rainfallValueMap.get(level);
+                num ++;
+                rainfallValueMap.put(level, num);
             }
             if (windSpeedValueNum >= 0) {
-                JSONObject windValueObject = new JSONObject();
-                windValueObject.put("value", windSpeedValueNum);
-                windValueObject.put("level", WindHelper.getWindLevel(windSpeedValue));
-                windValueArray.add(windValueObject);
+                String level = WindHelper.getWindLevel(windSpeedValue);
+                Integer num = (Integer) windSpeedValueMap.get(level);
+                num ++;
+                windSpeedValueMap.put(level, num);
             }
         }
+
+        for (int i = 0; i < 5; i++) {
+            String level = rainfallLevelMap.get(i);
+            JSONObject rainfallValueObject = new JSONObject();
+            rainfallValueObject.put("level", level);
+            rainfallValueObject.put("value", rainfallValueMap.get(level));
+            rainfallValueArray.add(rainfallValueObject);
+        }
+        for (int i = 0; i < 18; i++) {
+            String level = i + "";
+            JSONObject windSpeedValueObject = new JSONObject();
+            windSpeedValueObject.put("level", level);
+            windSpeedValueObject.put("value", windSpeedValueMap.get(level));
+            windValueArray.add(windSpeedValueObject);
+        }
+
+        JSONObject rainfallMonitorPointsNumObject = new JSONObject();
+        rainfallMonitorPointsNumObject.put("rain", autoStationDataArray.size());
+        JSONObject windSpeedMonitorPointsNumObject = new JSONObject();
+        windSpeedMonitorPointsNumObject.put("wind", autoStationDataArray.size());
+        monitorPointsNumArray.add(rainfallMonitorPointsNumObject);
+        monitorPointsNumArray.add(windSpeedMonitorPointsNumObject);
 
         FeiteDataEntity rainfallTotalData = new FeiteDataEntity();
         rainfallTotalData.setName(FeiteTaskName.FEITE_RAINFALL_TOTAL);
         rainfallTotalData.setValue(rainfallValueArray);
-        feiteDataDAO.updateFeiteDataByName(rainfallTotalData);
+        rainfallTotalData.setAlarmId(alarmId);
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(rainfallTotalData);
 
         FeiteDataEntity galeTotalData = new FeiteDataEntity();
         galeTotalData.setName(FeiteTaskName.FEITE_GALE_TOTAL);
         galeTotalData.setValue(windValueArray);
-        feiteDataDAO.updateFeiteDataByName(galeTotalData);
+        galeTotalData.setAlarmId(alarmId);
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(galeTotalData);
+
+        FeiteDataEntity monitorPointsNumData = new FeiteDataEntity();
+        monitorPointsNumData.setAlarmId(alarmId);
+        monitorPointsNumData.setValue(monitorPointsNumArray);
+        monitorPointsNumData.setName(FeiteTaskName.FEITE_MONITORING_SITE);
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(monitorPointsNumData);
     }
 
     /**
-    * @Description 报灾情况
+    * @Description 雨量累计 & 大风监测 & 监测点个数
     * @Author lilin
-    * @Create 2017/11/16 21:10
+    * @Create 2017/11/16 17:51
     **/
+
     @PostConstruct
-    public void countDisasterReports() {
-        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetDisasterDetailData_Geliku/20131006200000/20131008120000";
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
+    public void countRainfallAndMonitorWind() {
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL));
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOTAL));
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_MONITORING_SITE));
+
+        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+
+        for (Object obj : alarms) {
+            Map<String, String> alarm = (Map<String, String>) obj;
+            String beginDate = alarm.get("beginDate");
+            String endDate = alarm.get("endDate");
+            String alarmId = alarm.get("alarmId");
+            countRainfallAndMonitorWindByAlarmId(beginDate, endDate, alarmId);
+        }
+    }
+
+    /**
+    * @Description 获取分时段报灾情况
+    * @Author lilin
+    * @Create 2017/11/26 22:31
+    **/
+    public void countDisasterReportsByAlarmId(String beginDate, String endDate, String alarmId) {
+        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetDisasterDetailData_Geliku/" + beginDate + "/" + endDate;
 
         JSONObject obj = HttpHelper.getDataByURL(url);
 
@@ -545,17 +617,17 @@ public class FeiteTask {
         JSONObject GZWSSObject = new JSONObject();
 
         FWJSObject.put("type", "房屋进水");
-        FWJSObject.put("value", FWJSNum + "");
+        FWJSObject.put("value", FWJSNum);
         DLJSObject.put("type", "道路积水");
-        DLJSObject.put("value", DLJSNum + "");
+        DLJSObject.put("value", DLJSNum);
         XQJSObject.put("type", "小区积水");
-        XQJSObject.put("value", XQJSNum + "");
+        XQJSObject.put("value", XQJSNum);
         CLJSObject.put("type", "车辆进水");
-        CLJSObject.put("value", CLJSNum + "");
+        CLJSObject.put("value", CLJSNum);
         CQSPJSObject.put("type", "厂区、商铺进水");
-        CQSPJSObject.put("value", CQSPJSNum + "");
+        CQSPJSObject.put("value", CQSPJSNum);
         OtherObject.put("type", "其他");
-        OtherObject.put("value", OtherNum + "");
+        OtherObject.put("value", OtherNum);
 
         rainArray.add(FWJSObject);
         rainArray.add(DLJSObject);
@@ -567,17 +639,17 @@ public class FeiteTask {
         resultObject.put("rain", rainArray);
 
         SMDFObject.put("type", "树木倒伏");
-        SMDFObject.put("value", SMDFNum + "");
+        SMDFObject.put("value", SMDFNum);
         GGPSSObject.put("type", "广告牌受损");
-        GGPSSObject.put("value", GGPSSNum + "");
+        GGPSSObject.put("value", GGPSSNum);
         FWSSObject.put("type", "房屋受损");
-        FWSSObject.put("value", FWSSNum + "");
+        FWSSObject.put("value", FWSSNum);
         DXDLObject.put("type", "电线断裂");
-        DXDLObject.put("value", DXDLNum + "");
+        DXDLObject.put("value", DXDLNum);
         XHDSSObject.put("type", "信号灯受损");
-        XHDSSObject.put("value", XHDSSNum + "");
+        XHDSSObject.put("value", XHDSSNum);
         GZWSSObject.put("type", "构筑物受损");
-        GZWSSObject.put("value", GZWSSNum + "");
+        GZWSSObject.put("value", GZWSSNum);
 
         windArray.add(SMDFObject);
         windArray.add(GGPSSObject);
@@ -593,6 +665,27 @@ public class FeiteTask {
         FeiteDataEntity disasterReportsData = new FeiteDataEntity();
         disasterReportsData.setName(FeiteTaskName.FEITE_DISASTER_TOTAL);
         disasterReportsData.setValue(resultArray);
-        feiteDataDAO.updateFeiteDataByName(disasterReportsData);
+        disasterReportsData.setAlarmId(alarmId);
+        feiteDataDAO.updateFeiteDataByNameAndAlarmId(disasterReportsData);
+    }
+
+    /**
+    * @Description 报灾情况
+    * @Author lilin
+    * @Create 2017/11/16 21:10
+    **/
+    @PostConstruct
+    public void countDisasterReports() {
+        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
+
+        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+
+        for (Object obj : alarms) {
+            Map<String, String> alarm = (Map<String, String>) obj;
+            String beginDate = alarm.get("beginDate");
+            String endDate = alarm.get("endDate");
+            String alarmId = alarm.get("alarmId");
+            countDisasterReportsByAlarmId(beginDate, endDate, alarmId);
+        }
     }
 }
