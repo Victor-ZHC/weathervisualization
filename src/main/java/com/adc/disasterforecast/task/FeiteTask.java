@@ -421,6 +421,8 @@ public class FeiteTask {
         for (int i = 0; i < 18; i++) {
             windSpeedValueMap.put(i + "", 0);
         }
+        int rainfallMonitorPointsNum = 0;
+        int windSpeedMonitorPointsNum = 0;
 
         JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
         for (int i = 0; i < autoStationDataArray.size(); i++) {
@@ -435,17 +437,19 @@ public class FeiteTask {
             if (windSpeedValueNum < 0) {
                 windSpeedValueNum = 0;
             }
-            if (rainfallValueNum >= 0) {
+            if (rainfallValueNum > 0) {
                 String level = RainfallHelper.getRainfallLevel(rainfallValue);
                 Integer num = (Integer) rainfallValueMap.get(level);
                 num ++;
                 rainfallValueMap.put(level, num);
+                rainfallMonitorPointsNum ++;
             }
-            if (windSpeedValueNum >= 0) {
+            if (windSpeedValueNum > 0) {
                 String level = WindHelper.getWindLevel(windSpeedValue);
                 Integer num = (Integer) windSpeedValueMap.get(level);
                 num ++;
                 windSpeedValueMap.put(level, num);
+                windSpeedMonitorPointsNum ++;
             }
         }
 
@@ -465,9 +469,9 @@ public class FeiteTask {
         }
 
         JSONObject rainfallMonitorPointsNumObject = new JSONObject();
-        rainfallMonitorPointsNumObject.put("rain", autoStationDataArray.size());
+        rainfallMonitorPointsNumObject.put("rain", rainfallMonitorPointsNum);
         JSONObject windSpeedMonitorPointsNumObject = new JSONObject();
-        windSpeedMonitorPointsNumObject.put("wind", autoStationDataArray.size());
+        windSpeedMonitorPointsNumObject.put("wind", windSpeedMonitorPointsNum);
         monitorPointsNumArray.add(rainfallMonitorPointsNumObject);
         monitorPointsNumArray.add(windSpeedMonitorPointsNumObject);
 
