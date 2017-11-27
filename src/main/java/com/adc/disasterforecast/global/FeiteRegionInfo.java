@@ -15,6 +15,6 @@ public class FeiteRegionInfo {
     public static final Double CM_ACREAGE = 1411.0;
     public static final String CM_STATION_NAME = "崇明";
 
-    public static final int Hours = 24;
-    
+    public static final int Hours = 41;
+    public static final int Top10 = 10;
 }
