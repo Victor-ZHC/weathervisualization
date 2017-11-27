@@ -15,7 +15,7 @@ public class WindHelper {
 //    private static final String levelDesc_9 = "超强台风";
 
     public static String getWindLevel(String windSpeed) {
-        float windSpeedNum = Float.parseFloat(windSpeed);
+        double windSpeedNum = Double.parseDouble(windSpeed);
         if (windSpeedNum >= 0.0 && windSpeedNum <= 0.2) {
             return "0";
         }
@@ -70,6 +70,6 @@ public class WindHelper {
         if (windSpeedNum >= 56.1) {
             return "17";
         }
-        return "";
+        return "0";
     }
 }

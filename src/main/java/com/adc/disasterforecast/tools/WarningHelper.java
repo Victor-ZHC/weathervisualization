@@ -65,10 +65,10 @@ public class WarningHelper {
         String[] warning8 = {"2013-10-08T11:50:00", "撤销", "", "取消", "", "暴雨", "", "", ""};
         // String[] warning9 = {"2013-10-08T15:45:00", "撤销", "", "取消", "", "大风", "", "", ""};
         List<String[]> warnings = new ArrayList<>(Arrays.asList(warning1, warning2, warning3, warning4, warning5,
-                warning6, warning7, warning8));
+                warning6, warning7));
         JSONObject result = new JSONObject();
         JSONArray datas = new JSONArray();
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 7; i++) {
             JSONObject data = new JSONObject();
             data.put("FORECASTDATE", warnings.get(i)[0]);
             data.put("OPERATION", warnings.get(i)[1]);

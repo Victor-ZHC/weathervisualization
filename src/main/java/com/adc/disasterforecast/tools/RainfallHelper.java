@@ -14,7 +14,7 @@ public class RainfallHelper {
     private static final String level_5 = "200";
 
     public static String getRainfallLevel(String rainfall) {
-        float rainfallNum = Float.parseFloat(rainfall);
+        double rainfallNum = Double.parseDouble(rainfall);
         if (rainfallNum >= 0 && rainfallNum < 50) {
             return level_1;
         }
