@@ -216,8 +216,8 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByNameAndAlarmId(densityDiff);
 
         // 统计两地受灾种类数
-        JSONObject xhDisasterType = getAreaDisasterType(FeiteRegionInfo.XH_AREA, xhDisasters);
-        JSONObject cmDisasterType = getAreaDisasterType(FeiteRegionInfo.CM_AREA, cmDisasters);
+        JSONObject xhDisasterType = DisasterTypeHelper.getAreaDisasterType(FeiteRegionInfo.XH_AREA, xhDisasters);
+        JSONObject cmDisasterType = DisasterTypeHelper.getAreaDisasterType(FeiteRegionInfo.CM_AREA, cmDisasters);
 
         JSONArray typeDiffValue = new JSONArray();
         typeDiffValue.add(xhDisasterType);
@@ -231,47 +231,7 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByNameAndAlarmId(typeDiff);
     }
 
-    private JSONObject getAreaDisasterType(String area, List<JSONObject> disasters) {
-        int[] disasterType = new int[7];
-        String[] disasterTypeName = {"树倒", "河水上涨", "农田作物", "房屋进水", "小区进水", "高空坠物", "其他"};
 
-        for (JSONObject disaster : disasters) {
-            String code = (String) disaster.get("Disaster_Code");
-            if ("2".equals(code)) {
-                disasterType[0] += 1;
-            } else {
-                String description = (String) disaster.get("Disaster_Description");
-                if (description.contains("河水")) {
-                    disasterType[1] += 1;
-                } else if (description.contains("田地") || description.contains("农田")) {
-                    disasterType[2] += 1;
-                } else if (description.contains("房屋") || description.contains("家")) {
-                    disasterType[3] += 1;
-                } else if (description.contains("小区")) {
-                    disasterType[4] += 1;
-                } else if (description.contains("坠")) {
-                    disasterType[5] += 1;
-                } else {
-                    disasterType[6] += 1;
-                }
-            }
-        }
-
-        JSONArray disasterTypeList = new JSONArray();
-
-        for (int i = 0; i < disasterType.length; i++) {
-            JSONObject obj = new JSONObject();
-            obj.put("type", disasterTypeName[i]);
-            obj.put("value", disasterType[i]);
-            disasterTypeList.add(obj);
-        }
-
-        JSONObject areaDisasterType = new JSONObject();
-        areaDisasterType.put("area", area);
-        areaDisasterType.put("value", disasterTypeList);
-
-        return areaDisasterType;
-    }
 
     @PostConstruct
     public void getRainfallTop10() {
