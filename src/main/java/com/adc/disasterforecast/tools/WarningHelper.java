@@ -84,4 +84,27 @@ public class WarningHelper {
         result.put("Data", datas);
         return result;
     }
+
+    /**
+    * @Description 获取杨浦区页面预警服务过程数据 静态
+    * @Author lilin
+    * @Create 2017/11/28 17:31
+    **/
+    public static JSONObject getWarningServiceContent() {
+        String[] warning1 = {"warning1", "20150616162000", "暴雨积涝风险IV级预警"};
+        String[] warning2 = {"warning2", "20150616235300", "暴雨积涝风险III级预警"};
+        String[] warning3 = {"warning3", "20150617092900", "解除预警"};
+        List<String[]> warnings = new ArrayList<>(Arrays.asList(warning1, warning2, warning3));
+        JSONObject result = new JSONObject();
+        JSONArray dataArray = new JSONArray();
+        for (int i = 0; i < 3; i++) {
+            JSONObject data = new JSONObject();
+            data.put("id", warnings.get(i)[0]);
+            data.put("time", warnings.get(i)[1]);
+            data.put("desc", warnings.get(i)[2]);
+            dataArray.add(data);
+        }
+        result.put("Data", dataArray);
+        return result;
+    }
 }

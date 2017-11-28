@@ -8,6 +8,8 @@ import com.adc.disasterforecast.global.YPRegionInfo;
 import com.adc.disasterforecast.tools.DateHelper;
 import com.adc.disasterforecast.tools.HttpHelper;
 import com.adc.disasterforecast.tools.CsvHelper;
+import com.adc.disasterforecast.tools.WarningHelper;
+import com.mongodb.util.JSON;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -219,5 +221,138 @@ public class YPCaseTask {
         seeper.setValue(seeperVal);
         ypCaseDataDAO.updateYPCaseDataByName(seeper);
 
+    }
+
+    /**
+    * @Description 预警服务过程（使用导出的数据 静态）
+    * @Author lilin
+    * @Create 2017/11/28 17:29
+    **/
+    @PostConstruct
+    public void getWarningService() {
+        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_WARNING_SERVICE));
+
+        JSONObject obj = WarningHelper.getWarningServiceContent();
+        JSONArray resultArray = new JSONArray();
+
+        JSONArray warnings = (JSONArray) obj.get("Data");
+        for (int i = 0; i < warnings.size(); i++) {
+            JSONObject warning = (JSONObject) warnings.get(i);
+            JSONObject resultObject = new JSONObject();
+            String id = (String) warning.get("id");
+            String time = (String) warning.get("time");
+            String desc = (String) warning.get("desc");
+            resultObject.put("id", id);
+            resultObject.put("time", Long.parseLong(DateHelper.getTimeMillis(time)));
+            resultObject.put("desc", desc);
+            resultArray.add(resultObject);
+        }
+        YPCaseDataEntity warningService = new YPCaseDataEntity();
+        warningService.setName(YPCaseTaskName.YPCASE_WARNING_SERVICE);
+        warningService.setValue(resultArray);
+        ypCaseDataDAO.updateYPCaseDataByName(warningService);
+    }
+
+    /**
+    * @Description 统计分时段暴雨积水情况（新江湾城1#没有数据）
+    * @Author lilin
+    * @Create 2017/11/28 19:07
+    **/
+    public void countRainAndSeeperByAlarmId(String beginDate, String endDate, String alarmId) {
+        String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
+                beginDate + "/" + endDate + "/1";
+        JSONObject obj = HttpHelper.getDataByURL(url);
+
+        String seeperUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetWaterStationData_Geliku/" + endDate;
+        JSONObject seeperObj = HttpHelper.getDataByURL(seeperUrl);
+
+        JSONArray resultArray = new JSONArray();
+        JSONObject rainObject = new JSONObject();
+        JSONObject seeperObject = new JSONObject();
+
+        // 暴雨情况
+        JSONArray rainValueArray = new JSONArray();
+        String rainValue = "";
+
+        JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
+        for (int i = 0; i < autoStationDataArray.size(); i++) {
+            JSONObject autoStationData = (JSONObject) autoStationDataArray.get(i);
+            String stationName = (String) autoStationData.get("STATIONNAME");
+            if ("新江湾城街道".equals(stationName)) {
+                rainValue = (String) autoStationData.get("RAINHOUR");
+                break;
+            }
+        }
+        JSONObject rainValueObject = new JSONObject();
+        rainValueObject.put("site", "新江湾城街道");
+        rainValueObject.put("value", Double.parseDouble(rainValue));
+
+        rainValueArray.add(rainValueObject);
+
+        rainObject.put("type", "baoyu");
+        rainObject.put("value", rainValueArray);
+
+        // 积水情况
+        JSONArray seeperValueArray = new JSONArray();
+        // 政立路545弄
+        String seeperValue_ZLL = "";
+        // 时代花园
+        String seeperValue_SDHY = "";
+
+        JSONArray waterStationDataArray = (JSONArray) seeperObj.get("Data");
+        for (int i = 0; i < waterStationDataArray.size(); i++) {
+            JSONObject waterStationData = (JSONObject) waterStationDataArray.get(i);
+            String stationName = (String) waterStationData.get("STATIONNAME");
+            if ("政立路545弄".equals(stationName)) {
+                seeperValue_ZLL = (Double) waterStationData.get("WATERDEPTH") * 100 + "";
+            }
+            if ("时代花园".equals(stationName)) {
+                seeperValue_SDHY = (Double) waterStationData.get("WATERDEPTH") * 100 + "";
+            }
+            if (!seeperValue_ZLL.isEmpty() && !seeperValue_SDHY.isEmpty()) {
+                break;
+            }
+        }
+        JSONObject seeperValueObject_ZLL = new JSONObject();
+        seeperValueObject_ZLL.put("site", "政立路545弄");
+        seeperValueObject_ZLL.put("value", Double.parseDouble(seeperValue_ZLL));
+        JSONObject seeperValueObject_SDHY = new JSONObject();
+        seeperValueObject_SDHY.put("site", "时代花园");
+        seeperValueObject_SDHY.put("value", Double.parseDouble(seeperValue_SDHY));
+
+        seeperValueArray.add(seeperValueObject_ZLL);
+        seeperValueArray.add(seeperValueObject_SDHY);
+
+        seeperObject.put("type", "jishui");
+        seeperObject.put("value", seeperValueArray);
+
+        resultArray.add(rainObject);
+        resultArray.add(seeperObject);
+
+        YPCaseDataEntity rainSeeperData = new YPCaseDataEntity();
+        rainSeeperData.setAlarmId(alarmId);
+        rainSeeperData.setName(YPCaseTaskName.YPCASE_RAIN_SEEPER);
+        rainSeeperData.setValue(resultArray);
+        ypCaseDataDAO.updateYPCaseDataByNameAndAlarmId(rainSeeperData);
+    }
+
+    /**
+    * @Description 统计暴雨积水情况
+    * @Author lilin
+    * @Create 2017/11/28 19:58
+    **/
+    @PostConstruct
+    public void countRainAndSeeper() {
+        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_RAIN_SEEPER));
+
+        JSONArray alarms = ypCaseDataDAO.findYPCaseDataByName("YPCASE_ALARM_STAGE").getValue();
+
+        for (Object obj : alarms) {
+            Map<String, String> alarm = (Map<String, String>) obj;
+            String beginDate = alarm.get("beginDate");
+            String endDate = alarm.get("endDate");
+            String alarmId = alarm.get("alarmId");
+            countRainAndSeeperByAlarmId(beginDate, endDate, alarmId);
+        }
     }
 }

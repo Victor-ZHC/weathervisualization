@@ -59,4 +59,19 @@ public class Controller {
         YPCaseDataEntity ypCaseDataEntity = ypCaseDataDAO.findYPCaseDataByName(name);
         return ypCaseDataEntity;
     }
+
+    /**
+     * handle all GET request from "ypcase" page by name and alarmId
+     * @param name data name
+     * @param alarmId data alarmId
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/ypcase/{name}/{alarmId}", method = RequestMethod.GET)
+    @ResponseBody
+    public YPCaseDataEntity getYPCaseDataByNameAndAlarmId(@PathVariable("name") String name, @PathVariable("alarmId")
+            String alarmId) {
+        logger.info("get request from /ypcase/" + name + "/" + alarmId);
+        YPCaseDataEntity ypCaseDataEntity = ypCaseDataDAO.findYPCaseDataByNameAndAlarmId(name, alarmId);
+        return ypCaseDataEntity;
+    }
 }

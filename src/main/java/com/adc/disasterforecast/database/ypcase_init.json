@@ -1,0 +1,21 @@
+{
+  "name": "YPCASE_ALARM_STAGE",
+  "value": [
+    {
+      "alarmId": "0",
+      "beginDate": "20150616120000",
+      "endDate": "20150616162000"
+    },
+    {
+      "alarmId": "1",
+      "beginDate": "20150616120000",
+      "endDate": "20150616235300"
+    },
+    {
+      "alarmId": "2",
+      "beginDate": "20150616120000",
+      "endDate": "20150617092900"
+    }
+  ],
+  "alarmId": ""
+}
