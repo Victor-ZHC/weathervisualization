@@ -320,10 +320,10 @@ public class FeiteTask {
                 Map.Entry<String, JSONObject> gale = sortedGale.get(i);
                 tmp.put("site", gale.getValue().get("STATIONNAME"));
                 tmp.put("value", Double.parseDouble((String)gale.getValue().get("WINDSPEED")));
-//                System.out.println(gale.getValue().get("STATIONNAME") + " " + gale.getValue().get("WINDSPEED"));
+                System.out.println(gale.getValue().get("STATIONNAME") + " " + gale.getValue().get("WINDSPEED"));
                 TopVal.add(tmp);
             }
-//            System.out.println("==========================================================================");
+            System.out.println("==========================================================================");
             Top = new FeiteDataEntity();
             Top.setName(FeiteTaskName.FEITE_GALE_TOP10);
             Top.setValue(TopVal);
@@ -413,7 +413,7 @@ public class FeiteTask {
                 JSONObject disaster = (JSONObject) o;
                 JSONObject location = new JSONObject();
                 location.put("lat", disaster.get("LATITUDE"));
-                location.put("lon", disaster.get("LATITUDE"));
+                location.put("lon", disaster.get("LONTITUDE"));
                 disasterLocationVal.add(location);
 //                System.out.println(location);
             }
