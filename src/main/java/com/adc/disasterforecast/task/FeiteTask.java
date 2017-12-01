@@ -720,7 +720,7 @@ public class FeiteTask {
         DXDLObject.put("value", DXDLNum);
         XHDSSObject.put("type", "信号灯受损");
         XHDSSObject.put("value", XHDSSNum);
-        GZWSSObject.put("type", "构筑物受损");
+        GZWSSObject.put("type", "其他");
         GZWSSObject.put("value", GZWSSNum);
 
         windArray.add(SMDFObject);
