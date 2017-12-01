@@ -136,7 +136,7 @@ public class YPCaseTask {
     * @author: zhichengliu
     * @date: 17/11/26
     **/
-    public JSONArray getRainFall() {
+    private JSONArray getRainFall(String [] stationName) {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
         logger.info(String.format("began task: %s", YPCaseTaskName.YPCASE_RAIN_TIME));
 
@@ -152,7 +152,7 @@ public class YPCaseTask {
             for (Object obj: rainfallData){
                 JSONObject rainfall = (JSONObject) obj;
 
-                for (String s: YPRegionInfo.YANGPU_RAIN_STATIONNAME) {
+                for (String s: stationName) {
                     if (s.equals(rainfall.get("STATIONNAME"))) {
                         if (hs.get(s) == null) hs.put(s, Double.parseDouble((String) rainfall.get("RAINHOUR")));
                         else hs.put(s, Math.max(Double.parseDouble((String) rainfall.get("RAINHOUR")), hs.get(s)));
@@ -167,7 +167,7 @@ public class YPCaseTask {
             }
             JSONObject rainfallAvg = new JSONObject();
             rainfallAvg.put("time", beginDate);
-            rainfallAvg.put("value", rainfallSum / YPRegionInfo.YANGPU_RAIN_STATIONNAME.length);
+            rainfallAvg.put("value", rainfallSum / stationName.length);
             rainfallVal.add(rainfallAvg);
         }
         return rainfallVal;
@@ -177,7 +177,7 @@ public class YPCaseTask {
     * @author: zhichengliu
     * @date: 17/11/26
     **/
-    public JSONArray getSeeper() {
+    private JSONArray getSeeper(String [] stationName) {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationDataByDatetime_Geliku/";
         logger.info(String.format("began task: %s", YPCaseTaskName.YPCASE_SEEPER_TIME));
 
@@ -193,7 +193,7 @@ public class YPCaseTask {
             for (Object obj : seeperData) {
                 JSONObject seeper = (JSONObject) obj;
 
-                for (String s : YPRegionInfo.YANGPU_SEEPER_STATIONNAME) {
+                for (String s : stationName) {
                     if (s.equals(seeper.get("STATIONNAME"))) {
                         if (hs.get(s) == null) hs.put(s, Double.parseDouble((String) seeper.get("WATERDEPTH")));
                         else hs.put(s, Math.max(Double.parseDouble((String) seeper.get("WATERDEPTH")), hs.get(s)));
@@ -207,7 +207,7 @@ public class YPCaseTask {
             }
             JSONObject seeperAvg = new JSONObject();
             seeperAvg.put("time", beginDate);
-            seeperAvg.put("value", seeperSum / YPRegionInfo.YANGPU_SEEPER_STATIONNAME.length);
+            seeperAvg.put("value", seeperSum / stationName.length);
             seeperVal.add(seeperAvg);
         }
         return seeperVal;
@@ -350,50 +350,48 @@ public class YPCaseTask {
     * @author: zhichengliu
     * @date: 17/11/29
     **/
-    @PostConstruct
-    public void countRainAndSeeperByTime() {
-        JSONArray alarms = ypCaseDataDAO.findYPCaseDataByName("YPCASE_ALARM_STAGE").getValue();
-        JSONArray allRainfall = getRainFall();
-        JSONArray allSeeper = getSeeper();
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate");
-            String endDate = alarm.get("endDate");
-            String alarmId = alarm.get("alarmId");
-            System.out.println(alarmId);
-            JSONArray rainfallVal = new JSONArray();
+    private void countRainAndSeeperByTime(String [] rainfallStationName, String [] seeperStaionName, String rainfallTaskName, String seeperTaskName) {
+        String beginDate = YPRegionInfo.BEGINDATE;
+        String endDate = YPRegionInfo.ENDDATE;
+        JSONArray allRainfall = getRainFall(rainfallStationName);
+        JSONArray allSeeper = getSeeper(seeperStaionName);
+        JSONArray rainfallVal = new JSONArray();
 
-            for (Object o: allRainfall){
-                JSONObject rainfall = (JSONObject) o;
-                JSONObject formatRainfall = new JSONObject();
-                if (beginDate.compareTo((String)rainfall.get("time")) > 0) continue;
-                if (endDate.compareTo((String)rainfall.get("time")) <= 0) continue;
-                formatRainfall.put("value", rainfall.get("value"));
-                formatRainfall.put("time", Long.parseLong(DateHelper.getTimeMillis((String)rainfall.get("time"))));
-                rainfallVal.add(formatRainfall);
-            }
-            YPCaseDataEntity rainfallData = new YPCaseDataEntity();
-            rainfallData.setName(YPCaseTaskName.YPCASE_RAIN_TIME);
-            rainfallData.setValue(rainfallVal);
-            rainfallData.setAlarmId(alarmId);
-            ypCaseDataDAO.updateYPCaseDataByNameAndAlarmId(rainfallData);
-
-            JSONArray seeperVal = new JSONArray();
-            for (Object o: allSeeper){
-                JSONObject seeper = (JSONObject) o;
-                JSONObject formatSeeper = new JSONObject();
-                if (endDate.compareTo((String)seeper.get("time")) <= 0) continue;
-                if (beginDate.compareTo((String)seeper.get("time")) > 0) continue;
-                formatSeeper.put("value", (Double)seeper.get("value") * 100);
-                formatSeeper.put("time", Long.parseLong(DateHelper.getTimeMillis((String)seeper.get("time"))));
-                seeperVal.add(formatSeeper);
-            }
-            YPCaseDataEntity seeperData = new YPCaseDataEntity();
-            seeperData.setName(YPCaseTaskName.YPCASE_SEEPER_TIME);
-            seeperData.setValue(seeperVal);
-            seeperData.setAlarmId(alarmId);
-            ypCaseDataDAO.updateYPCaseDataByNameAndAlarmId(seeperData);
+        for (Object o: allRainfall){
+            JSONObject rainfall = (JSONObject) o;
+            JSONObject formatRainfall = new JSONObject();
+            if (beginDate.compareTo((String)rainfall.get("time")) > 0) continue;
+            if (endDate.compareTo((String)rainfall.get("time")) <= 0) continue;
+            formatRainfall.put("value", rainfall.get("value"));
+            formatRainfall.put("time", Long.parseLong(DateHelper.getTimeMillis((String)rainfall.get("time"))));
+            rainfallVal.add(formatRainfall);
         }
+        YPCaseDataEntity rainfallData = new YPCaseDataEntity();
+        rainfallData.setName(rainfallTaskName);
+        rainfallData.setValue(rainfallVal);
+        ypCaseDataDAO.updateYPCaseDataByName(rainfallData);
 
+        JSONArray seeperVal = new JSONArray();
+        for (Object o: allSeeper){
+            JSONObject seeper = (JSONObject) o;
+            JSONObject formatSeeper = new JSONObject();
+            if (endDate.compareTo((String)seeper.get("time")) <= 0) continue;
+            if (beginDate.compareTo((String)seeper.get("time")) > 0) continue;
+            formatSeeper.put("value", (Double)seeper.get("value") * 100);
+            formatSeeper.put("time", Long.parseLong(DateHelper.getTimeMillis((String)seeper.get("time"))));
+            seeperVal.add(formatSeeper);
+        }
+        YPCaseDataEntity seeperData = new YPCaseDataEntity();
+        seeperData.setName(seeperTaskName);
+        seeperData.setValue(seeperVal);
+        ypCaseDataDAO.updateYPCaseDataByName(seeperData);
+    }
+
+    @PostConstruct
+    public void countRainAndSeeperByStation(){
+        countRainAndSeeperByTime(YPRegionInfo.XINJIANGWAN_RAIN_STATIONNAME, YPRegionInfo.XINJIANGWAN_SEEPER_STATIONNAME,
+                YPCaseTaskName.YPCASE_RAIN_TIME, YPCaseTaskName.YPCASE_SEEPER_TIME);
+        countRainAndSeeperByTime(YPRegionInfo.YANGPU_RAIN_STATIONNAME, YPRegionInfo.YANGPU_SEEPER_STATIONNAME,
+                YPCaseTaskName.YPCASE_RAIN_WEEKAVG, YPCaseTaskName.YPCASE_SEEPER_WEEKAVG);
     }
 }

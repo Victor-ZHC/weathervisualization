@@ -10,6 +10,8 @@ public class YPCaseTaskName {
     // 暴雨积水情况
     public static final String YPCASE_RAIN_SEEPER = "KPI_YPCASE_RAIN_SEEPER";
     // 分时降雨 积水
-    public static final String YPCASE_RAIN_TIME= "KPI_YPCASE_RAIN_TIME";
+    public static final String YPCASE_RAIN_TIME = "KPI_YPCASE_RAIN_TIME";
+    public static final String YPCASE_RAIN_WEEKAVG = "KPI_YPCASE_RAIN_WEEKAVG";
     public static final String YPCASE_SEEPER_TIME= "KPI_YPCASE_SEEPER_TIME";
+    public static final String YPCASE_SEEPER_WEEKAVG = "KPI_YPCASE_SEEPER_WEEKAVG";
 }
