@@ -15,6 +15,11 @@ public class FeiteRegionInfo {
     public static final Double CM_ACREAGE = 1411.0;
     public static final String CM_STATION_NAME = "崇明";
 
+    public static final String[] CENTRAL_DISTRICT = {"11", "12", "13", "14", "15", "16", "17", "18"};
+    public static final String CENTRAL_AREA = "中心城区";
+    public static final Double CENTRAL_POPULATION = 1000.0;
+    public static final Double CENTRAL_ACREAGE = 660.0;
+
     public static final int Hours = 41;
     public static final int Top10 = 10;
 }

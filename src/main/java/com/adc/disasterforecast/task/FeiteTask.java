@@ -31,10 +31,10 @@ public class FeiteTask {
     public void countRegionDiff() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
-        JSONObject xh = new JSONObject();
-        xh.put("area", FeiteRegionInfo.XH_AREA);
-        xh.put("population", FeiteRegionInfo.XH_POPULATION);
-        xh.put("acreage", FeiteRegionInfo.XH_ACREAGE);
+        JSONObject central = new JSONObject();
+        central.put("area", FeiteRegionInfo.CENTRAL_AREA);
+        central.put("population", FeiteRegionInfo.CENTRAL_POPULATION);
+        central.put("acreage", FeiteRegionInfo.CENTRAL_ACREAGE);
 
         JSONObject cm = new JSONObject();
         cm.put("area", FeiteRegionInfo.CM_AREA);
@@ -42,7 +42,7 @@ public class FeiteTask {
         cm.put("acreage", FeiteRegionInfo.CM_ACREAGE);
 
         JSONArray diffValue = new JSONArray();
-        diffValue.add(xh);
+        diffValue.add(central);
         diffValue.add(cm);
 
         FeiteDataEntity diff = new FeiteDataEntity();
@@ -160,7 +160,7 @@ public class FeiteTask {
         JSONObject obj = HttpHelper.getDataByURL(url);
 
         // 统计两地受灾数
-        List<JSONObject> xhDisasters = new ArrayList<>();
+        List<JSONObject> centralDisasters = new ArrayList<>();
         List<JSONObject> cmDisasters = new ArrayList<>();
 
         JSONArray disasters = (JSONArray) obj.get("Data");
@@ -168,23 +168,23 @@ public class FeiteTask {
             JSONObject disasterData = (JSONObject) disaster;
             String disasterDistrict = (String) disasterData.get("Disaster_District");
 
-            if (FeiteRegionInfo.XH_DISTRICT.equals(disasterDistrict)) {
-                xhDisasters.add(disasterData);
-            } else if (FeiteRegionInfo.CM_DISTRICT.equals(disasterDistrict)) {
+            if (FeiteRegionInfo.CM_DISTRICT.equals(disasterDistrict)) {
                 cmDisasters.add(disasterData);
+            } else if (ArrayHelper.contains(FeiteRegionInfo.CENTRAL_DISTRICT, disasterDistrict)) {
+                centralDisasters.add(disasterData);
             }
         }
 
-        JSONObject xhNumDiff = new JSONObject();
-        xhNumDiff.put("area", FeiteRegionInfo.XH_AREA);
-        xhNumDiff.put("value", xhDisasters.size());
+        JSONObject centralNumDiff = new JSONObject();
+        centralNumDiff.put("area", FeiteRegionInfo.CENTRAL_AREA);
+        centralNumDiff.put("value", centralDisasters.size());
 
         JSONObject cmNumDiff = new JSONObject();
         cmNumDiff.put("area", FeiteRegionInfo.CM_AREA);
         cmNumDiff.put("value", cmDisasters.size());
 
         JSONArray numDiffValue = new JSONArray();
-        numDiffValue.add(xhNumDiff);
+        numDiffValue.add(centralNumDiff);
         numDiffValue.add(cmNumDiff);
 
         FeiteDataEntity numDiff = new FeiteDataEntity();
@@ -195,16 +195,16 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByNameAndAlarmId(numDiff);
 
         // 统计两地受灾密度
-        JSONObject xhDensityDiff = new JSONObject();
-        xhDensityDiff.put("area", FeiteRegionInfo.XH_AREA);
-        xhDensityDiff.put("value", ((double) xhDisasters.size()) / FeiteRegionInfo.XH_ACREAGE);
+        JSONObject centralDensityDiff = new JSONObject();
+        centralDensityDiff.put("area", FeiteRegionInfo.CENTRAL_AREA);
+        centralDensityDiff.put("value", ((double) centralDisasters.size()) / FeiteRegionInfo.CENTRAL_ACREAGE);
 
         JSONObject cmDensityDiff = new JSONObject();
         cmDensityDiff.put("area", FeiteRegionInfo.CM_AREA);
         cmDensityDiff.put("value", ((double) cmDisasters.size()) / FeiteRegionInfo.CM_ACREAGE);
 
         JSONArray densityDiffValue = new JSONArray();
-        densityDiffValue.add(xhDensityDiff);
+        densityDiffValue.add(centralDensityDiff);
         densityDiffValue.add(cmDensityDiff);
 
         FeiteDataEntity densityDiff = new FeiteDataEntity();
@@ -215,11 +215,11 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByNameAndAlarmId(densityDiff);
 
         // 统计两地受灾种类数
-        JSONObject xhDisasterType = DisasterTypeHelper.getAreaDisasterType(FeiteRegionInfo.XH_AREA, xhDisasters);
+        JSONObject centralDisasterType = DisasterTypeHelper.getAreaDisasterType(FeiteRegionInfo.CENTRAL_AREA, centralDisasters);
         JSONObject cmDisasterType = DisasterTypeHelper.getAreaDisasterType(FeiteRegionInfo.CM_AREA, cmDisasters);
 
         JSONArray typeDiffValue = new JSONArray();
-        typeDiffValue.add(xhDisasterType);
+        typeDiffValue.add(centralDisasterType);
         typeDiffValue.add(cmDisasterType);
 
         FeiteDataEntity typeDiff = new FeiteDataEntity();
