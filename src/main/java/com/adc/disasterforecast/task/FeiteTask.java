@@ -132,7 +132,7 @@ public class FeiteTask {
         double rainHour = Double.parseDouble((String) rainfall.get("RAINHOUR"));
 
         jsonObject.put("date", date);
-        jsonObject.put("value", (int) (rainHour * 10));
+        jsonObject.put("value", rainHour);
 
         areaRainfalls.add(jsonObject);
     }
