@@ -54,4 +54,36 @@ public class DateHelper {
         }
         return String.valueOf(cal.getTimeInMillis());
     }
+
+    /**
+    * @Description 获取时间节点对应的当前小时
+    * @Author lilin
+    * @Create 2017/12/6 17:58
+    **/
+    public static String getNowHour(String date) {
+        return date.substring(0, 10) + "0000";
+    }
+    /**
+    * @Description 获取当前时间节点的下个小时
+    * @Author lilin
+    * @Create 2017/12/6 17:57
+    **/
+    public static String getNextHour(String date) {
+        if ("20150616162200".equals(date)) {
+            return "20150616170000";
+        }
+        if ("20150616235300".equals(date)) {
+            return "20150617000000";
+        }
+        if ("20150617020000".equals(date)) {
+            return "20150617030000";
+        }
+        if ("20150617031200".equals(date)) {
+            return "20150617040000";
+        }
+        if ("20150617090000".equals(date)) {
+            return "20150617100000";
+        }
+        return "";
+    }
 }

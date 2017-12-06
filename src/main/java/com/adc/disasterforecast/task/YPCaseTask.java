@@ -250,7 +250,7 @@ public class YPCaseTask {
     **/
     public void countRainAndSeeperByAlarmId(String beginDate, String endDate, String alarmId) {
         String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
-                beginDate + "/" + endDate + "/1";
+                DateHelper.getNowHour(endDate) + "/" + DateHelper.getNextHour(endDate) + "/1";
         JSONObject obj = HttpHelper.getDataByURL(url);
 
         String seeperUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetWaterStationData_Geliku/" + endDate;
