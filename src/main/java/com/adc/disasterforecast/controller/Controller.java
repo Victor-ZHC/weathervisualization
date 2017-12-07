@@ -1,8 +1,10 @@
 package com.adc.disasterforecast.controller;
 
 import com.adc.disasterforecast.dao.FeiteDataDAO;
+import com.adc.disasterforecast.dao.RealTimeControlDAO;
 import com.adc.disasterforecast.dao.YPCaseDataDAO;
 import com.adc.disasterforecast.entity.FeiteDataEntity;
+import com.adc.disasterforecast.entity.RealTimeControlDataEntity;
 import com.adc.disasterforecast.entity.YPCaseDataEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,9 @@ public class Controller {
 
     @Autowired
     YPCaseDataDAO ypCaseDataDAO;
+
+    @Autowired
+    RealTimeControlDAO realTimeControlDAO;
 
     /**
      * handle all GET request from "feite" page by name
@@ -73,5 +78,18 @@ public class Controller {
         logger.info("get request from /ypcase/" + name + "/" + alarmId);
         YPCaseDataEntity ypCaseDataEntity = ypCaseDataDAO.findYPCaseDataByNameAndAlarmId(name, alarmId);
         return ypCaseDataEntity;
+    }
+
+    /**
+     * handle all GET request from "realtimecontrol" page by name
+     * @param name data name
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/realtimecontrol/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public RealTimeControlDataEntity getRealTimeControlData(@PathVariable("name") String name) {
+        logger.info("get request from /realtimecontrol/" + name);
+        RealTimeControlDataEntity realTimeControlDataEntity = realTimeControlDAO.findRealTimeControlDataByName(name);
+        return realTimeControlDataEntity;
     }
 }

@@ -96,4 +96,13 @@ public class DisasterTypeHelper {
 
         return areaDisasterType;
     }
+
+    public static String getDisasterTypeByCode(int disasterCode) {
+        switch (disasterCode) {
+                case 1: return "rain";
+                case 2: return "wind";
+                case 3: return "thunder";
+                default: return "";
+        }
+    }
 }

@@ -15,6 +15,9 @@ public class WindHelper {
 //    private static final String levelDesc_9 = "超强台风";
 
     public static String getWindLevel(String windSpeed) {
+        if (windSpeed.equals("")) {
+            return "0";
+        }
         double windSpeedNum = Double.parseDouble(windSpeed);
         if (windSpeedNum >= 0.0 && windSpeedNum <= 0.2) {
             return "0";
@@ -71,5 +74,30 @@ public class WindHelper {
             return "17";
         }
         return "0";
+    }
+
+    public static String getWindColor(String windSpeed) {
+        int level = Integer.valueOf(getWindLevel(windSpeed));
+
+        if (level < 6) {
+            return "normal";
+        } else if (level < 8) {
+            return "blue";
+        } else if (level < 10) {
+            return "yellow";
+        } else if (level < 12) {
+            return "orange";
+        } else {
+            return "red";
+        }
+    }
+
+    public static double getWindSpeed(String windSpeed) {
+        if (windSpeed.equals("")) {
+            return 0.0;
+        }
+
+        double speed = Double.valueOf(windSpeed);
+        return speed < 0 ? 0 : speed;
     }
 }
