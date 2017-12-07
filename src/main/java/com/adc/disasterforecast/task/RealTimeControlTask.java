@@ -27,8 +27,8 @@ public class RealTimeControlTask {
     @Autowired
     private RealTimeControlDAO realTimeControlDAO;
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countWeatherLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WEATHER_LIVE));
 
@@ -76,8 +76,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(weatherLiveEntity);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countRainfallAndMonitorAndWind() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.RAINFALL_LIVE));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WIND_LIVE));
@@ -237,8 +237,8 @@ public class RealTimeControlTask {
         }
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countThunderLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_LIVE));
 
@@ -266,8 +266,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(thunderLiveData);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countMonitorStatsLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITOR_STATS_LIVE));
 
@@ -314,8 +314,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(monitorStats);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countThunderStatsLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_STATS_LIVE));
 
@@ -357,8 +357,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(thunderStatsLive);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countBroadcastV1() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V1));
 
@@ -379,8 +379,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(broadcastV1);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countEarlyWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.EARLY_WARNING));
 
@@ -410,8 +410,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(earlyWarning);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countDisaster() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_LIVE));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_AREA));
@@ -533,8 +533,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(disasterTime);
     }
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countHistoryWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_AVG));
@@ -643,8 +643,8 @@ public class RealTimeControlTask {
     }
 
 
-    @PostConstruct
-//    @Scheduled(cron = "* */10 * * * *")
+    //@PostConstruct
+    @Scheduled(cron = "* */10 * * * *")
     public void countHistoryDisaster() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_AVG));
