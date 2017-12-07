@@ -105,4 +105,16 @@ public class DisasterTypeHelper {
                 default: return "";
         }
     }
+
+    public static String getDisasterType(String desc) {
+        if (desc.contains("高空")) {
+            return "高空坠物";
+        } else if (desc.contains("房屋进水")) {
+            return "房屋进水";
+        } else if (desc.contains("农田")) {
+            return "农田进水";
+        } else {
+            return "其他";
+        }
+    }
 }

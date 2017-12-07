@@ -193,6 +193,14 @@ public class DateHelper {
         return dates[1];
     }
 
+    public static String getHour(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[1].split(":");
+
+        return dates[0];
+    }
+
     public static void main(String[] args) {
         System.out.println(Calendar.getInstance().get(Calendar.MONTH));
     }
