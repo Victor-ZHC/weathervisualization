@@ -282,7 +282,7 @@ public class HistoryAnalysisTask {
     }
 
     /**
-    * @Description 统计近10年灾情年度均值、年分布、月分布、日分布、类型分析
+    * @Description 统计近10年灾情密度、灾情年度均值、年分布、月分布、日分布、类型分析
     * @Author lilin
     * @Create 2017/12/8 0:07
     **/
@@ -293,6 +293,7 @@ public class HistoryAnalysisTask {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TREND_MONTH));
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TREND_DAY));
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE));
+        logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_DENSITY));
 
         int[] recent10Years = getRecent10Years();
 
@@ -310,6 +311,10 @@ public class HistoryAnalysisTask {
         for (int i = 0; i <= 24; i++) {
             dayDisasterMap.put(i, 0);
         }
+
+        Map<String, Integer> rainDisasterDensityMap = new HashMap<String, Integer>();
+        Map<String, Integer> windDisasterDensityMap = new HashMap<String, Integer>();
+        Map<String, Integer> thunderDisasterDensityMap = new HashMap<String, Integer>();
 
         int totalNum = 0;
         int GKZWNum = 0;
@@ -352,6 +357,38 @@ public class HistoryAnalysisTask {
                 }
                 if ("其他".equals(DisasterTypeHelper.getDisasterType(desc))) {
                     OthersNum ++;
+                }
+
+                long disasterCode = (long) disaster.get("CODE_DISASTER");
+                double lontitude = (double) disaster.get("LONTITUDE");
+                double latitude = (double) disaster.get("LATITUDE");
+                String lon_lat_key = lontitude + "-" + latitude;
+                if (DisasterTypeHelper.DISASTER_RAIN_CODE == disasterCode) {
+                    int rainDisasterDensityNum = 0;
+                    if (rainDisasterDensityMap.get(lon_lat_key) != null &&
+                            rainDisasterDensityMap.get(lon_lat_key) >= 0) {
+                        rainDisasterDensityNum = rainDisasterDensityMap.get(lon_lat_key);
+                    }
+                    rainDisasterDensityNum ++;
+                    rainDisasterDensityMap.put(lon_lat_key, rainDisasterDensityNum);
+                }
+                if (DisasterTypeHelper.DISASTER_WIND_CODE == disasterCode) {
+                    int windDisasterDensityNum = 0;
+                    if (windDisasterDensityMap.get(lon_lat_key) != null &&
+                            windDisasterDensityMap.get(lon_lat_key) >= 0) {
+                        windDisasterDensityNum = windDisasterDensityMap.get(lon_lat_key);
+                    }
+                    windDisasterDensityNum ++;
+                    windDisasterDensityMap.put(lon_lat_key, windDisasterDensityNum);
+                }
+                if (DisasterTypeHelper.DISASTER_THUNDER_CODE == disasterCode) {
+                    int thunderDisasterDensityNum = 0;
+                    if (thunderDisasterDensityMap.get(lon_lat_key) != null &&
+                            thunderDisasterDensityMap.get(lon_lat_key) >= 0) {
+                        thunderDisasterDensityNum = thunderDisasterDensityMap.get(lon_lat_key);
+                    }
+                    thunderDisasterDensityNum ++;
+                    thunderDisasterDensityMap.put(lon_lat_key, thunderDisasterDensityNum);
                 }
             }
         }
@@ -437,5 +474,87 @@ public class HistoryAnalysisTask {
         recent10YearsDisasterType.setValue(disasterTypeResultArray);
 
         historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterType);
+
+        JSONArray disasterDensityResultArray = new JSONArray();
+        JSONObject disasterDensityResultObject = new JSONObject();
+        JSONArray rainDisasterDensityArray = new JSONArray();
+        JSONArray windDisasterDensityArray = new JSONArray();
+        JSONArray thunderDisasterDensityArray = new JSONArray();
+
+        for (Map.Entry<String, Integer> entry : rainDisasterDensityMap.entrySet()) {
+            String key = entry.getKey();
+            int value = entry.getValue();
+            String[] keyParts = key.split("-");
+            double lon = Double.parseDouble(keyParts[0]);
+            double lat = Double.parseDouble(keyParts[1]);
+            JSONObject rainDisasterDensityObject = new JSONObject();
+            rainDisasterDensityObject.put("lon", lon);
+            rainDisasterDensityObject.put("lat", lat);
+            rainDisasterDensityObject.put("value", value);
+            rainDisasterDensityArray.add(rainDisasterDensityObject);
+        }
+        for (Map.Entry<String, Integer> entry : windDisasterDensityMap.entrySet()) {
+            String key = entry.getKey();
+            int value = entry.getValue();
+            String[] keyParts = key.split("-");
+            double lon = Double.parseDouble(keyParts[0]);
+            double lat = Double.parseDouble(keyParts[1]);
+            JSONObject windDisasterDensityObject = new JSONObject();
+            windDisasterDensityObject.put("lon", lon);
+            windDisasterDensityObject.put("lat", lat);
+            windDisasterDensityObject.put("value", value);
+            windDisasterDensityArray.add(windDisasterDensityObject);
+        }
+        for (Map.Entry<String, Integer> entry : thunderDisasterDensityMap.entrySet()) {
+            String key = entry.getKey();
+            int value = entry.getValue();
+            String[] keyParts = key.split("-");
+            double lon = Double.parseDouble(keyParts[0]);
+            double lat = Double.parseDouble(keyParts[1]);
+            JSONObject thunderDisasterDensityObject = new JSONObject();
+            thunderDisasterDensityObject.put("lon", lon);
+            thunderDisasterDensityObject.put("lat", lat);
+            thunderDisasterDensityObject.put("value", value);
+            thunderDisasterDensityArray.add(thunderDisasterDensityObject);
+        }
+        disasterDensityResultObject.put("rain", rainDisasterDensityArray);
+        disasterDensityResultObject.put("wind", windDisasterDensityArray);
+        disasterDensityResultObject.put("thunder", thunderDisasterDensityArray);
+        disasterDensityResultArray.add(disasterDensityResultObject);
+
+        HistoryAnalysisDataEntity recent10YearsDisasterDensity = new HistoryAnalysisDataEntity();
+        recent10YearsDisasterDensity.setName(HistoryAnalysisTaskName.LSSJ_DISASTER_DENSITY);
+        recent10YearsDisasterDensity.setValue(disasterDensityResultArray);
+
+        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterDensity);
+    }
+
+    /**
+    * @Description 获取近十年历史典型天气影响事件播报（原始接口暂无数据）
+    * @Author lilin
+    * @Create 2017/12/8 12:39
+    **/
+    @Scheduled(cron = "*/5 * * * * ?")
+    public void countRecent10YearsHistoryIncident() {
+        logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT));
+
+        String url = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "GetYXYB/" + getLast10YearDate() + "/" +
+                getLastYearDate();
+        JSONObject obj = HttpHelper.getDataByURL(url);
+
+        JSONArray resultArray = new JSONArray();
+
+        JSONArray incidents = (JSONArray) obj.get("Data");
+        int size = incidents.size();
+        for (int i = 0; i < size; i++) {
+            JSONObject incident = (JSONObject) incidents.get(i);
+            resultArray.add((String) incident.get("SimpleDescription"));
+        }
+
+        HistoryAnalysisDataEntity recent10YearsHistoryIncident = new HistoryAnalysisDataEntity();
+        recent10YearsHistoryIncident.setName(HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT);
+        recent10YearsHistoryIncident.setValue(resultArray);
+
+        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsHistoryIncident);
     }
 }

@@ -12,6 +12,11 @@ import java.util.List;
  * @create 2017-11-16 21:31
  **/
 public class DisasterTypeHelper {
+
+    public static long DISASTER_RAIN_CODE = 1;
+    public static long DISASTER_WIND_CODE = 2;
+    public static long DISASTER_THUNDER_CODE = 3;
+
     public static String getRainstormDisasterType(String caseAddr, String caseDesc) {
         String caseStr = caseAddr + caseDesc;
         if (caseStr.contains("房屋") || caseStr.contains("家") || caseStr.contains("幢")) {
