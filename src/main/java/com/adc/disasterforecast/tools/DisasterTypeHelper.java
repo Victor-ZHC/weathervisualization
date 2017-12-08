@@ -16,6 +16,7 @@ public class DisasterTypeHelper {
     public static long DISASTER_RAIN_CODE = 1;
     public static long DISASTER_WIND_CODE = 2;
     public static long DISASTER_THUNDER_CODE = 3;
+    public static long DISTRICT_CODE = 13;
 
     public static String getRainstormDisasterType(String caseAddr, String caseDesc) {
         String caseStr = caseAddr + caseDesc;

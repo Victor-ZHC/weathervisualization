@@ -4,10 +4,7 @@ import com.adc.disasterforecast.dao.HistoryAnalysisDataDAO;
 import com.adc.disasterforecast.entity.HistoryAnalysisDataEntity;
 import com.adc.disasterforecast.global.HistoryAnalysisTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
-import com.adc.disasterforecast.tools.DateHelper;
-import com.adc.disasterforecast.tools.DisasterTypeHelper;
-import com.adc.disasterforecast.tools.HttpHelper;
-import com.adc.disasterforecast.tools.WarningHelper;
+import com.adc.disasterforecast.tools.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -282,6 +279,355 @@ public class HistoryAnalysisTask {
     }
 
     /**
+    * @Description 获取年度暴雨日、大风日、雷暴日数据
+    * @Author lilin
+    * @Create 2017/12/8 23:36
+    **/
+    private int[] getYearWeatherNum(String year, String code) {
+        HistoryAnalysisDataEntity weatherDisasterDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_DISASTER_INFO");
+        JSONArray weatherDisasterArray = weatherDisasterDataEntity.getValue();
+        int size = weatherDisasterArray.size();
+        int[] num = new int[3];
+        for (int i = 0; i < size; i++) {
+            Map<String, String> weatherDisasterObject = (Map<String, String>) weatherDisasterArray.get(i);
+            if (code.equals(weatherDisasterObject.get("区站号"))) {
+                if (year.equals(weatherDisasterObject.get("年"))) {
+                    int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
+                    int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
+                    int thunderNum = Integer.parseInt((String) weatherDisasterObject.get("雷暴日数"));
+                    num[0] += rainNum;
+                    num[1] += windNum;
+                    num[2] += thunderNum;
+                }
+            }
+        }
+        return num;
+    }
+
+    /**
+    * @Description 获取月份暴雨日、大风日、雷暴日数据
+    * @Author lilin
+    * @Create 2017/12/8 23:57
+    **/
+    private int[] getMonthWeatherNum(String month, String code, int[] years) {
+        HistoryAnalysisDataEntity weatherDisasterDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_DISASTER_INFO");
+        JSONArray weatherDisasterArray = weatherDisasterDataEntity.getValue();
+        int size = weatherDisasterArray.size();
+        int[] num = new int[3];
+        for (int i = 0; i < size; i++) {
+            Map<String, String> weatherDisasterObject = (Map<String, String>) weatherDisasterArray.get(i);
+            if (code.equals(weatherDisasterObject.get("区站号"))) {
+                int year = Integer.parseInt((String) weatherDisasterObject.get("年"));
+                if (month.equals(weatherDisasterObject.get("月")) && year >= years[0] && year <= years[9]) {
+                    int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
+                    int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
+                    int thunderNum = Integer.parseInt((String) weatherDisasterObject.get("雷暴日数"));
+                    num[0] += rainNum;
+                    num[1] += windNum;
+                    num[2] += thunderNum;
+                }
+            }
+        }
+        return num;
+    }
+
+    /**
+    * @Description 统计近10年气象事件造成的灾害（徐汇区）
+    * @Author lilin
+    * @Create 2017/12/8 22:47
+    **/
+    @Scheduled(cron = "*/5 * * * * ?")
+    public void countRecent10YearsWeatherDisaster() {
+        logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WEATHER_DISASTER));
+
+        int[] recent10Years = getRecent10Years();
+        int totalRainNum = 0;
+        int totalWindNum = 0;
+        int totalThunderNum = 0;
+
+        Map<Integer, JSONObject> yearRainWeatherDisasterMap = new HashMap<Integer, JSONObject>();
+        Map<Integer, JSONObject> yearWindWeatherDisasterMap = new HashMap<Integer, JSONObject>();
+        Map<Integer, JSONObject> yearThunderWeatherDisasterMap = new HashMap<Integer, JSONObject>();
+        for (int i = 0; i < 10; i++) {
+            JSONObject yearRainWeatherDisasterObject = new JSONObject();
+            int[] yearWeatherNum = getYearWeatherNum(recent10Years[i] + "", AutoStationHelper.AREA_STATION_CODE_XUJIAHUI);
+            yearRainWeatherDisasterObject.put("weatherValue", yearWeatherNum[0]);
+            yearRainWeatherDisasterObject.put("disasterValue", 0);
+            yearRainWeatherDisasterMap.put(recent10Years[i], yearRainWeatherDisasterObject);
+            JSONObject yearWindWeatherDisasterObject = new JSONObject();
+            yearWindWeatherDisasterObject.put("weatherValue", yearWeatherNum[1]);
+            yearWindWeatherDisasterObject.put("disasterValue", 0);
+            yearWindWeatherDisasterMap.put(recent10Years[i], yearWindWeatherDisasterObject);
+            JSONObject yearThunderWeatherDisasterObject = new JSONObject();
+            yearThunderWeatherDisasterObject.put("weatherValue", yearWeatherNum[2]);
+            yearThunderWeatherDisasterObject.put("disasterValue", 0);
+            yearThunderWeatherDisasterMap.put(recent10Years[i], yearThunderWeatherDisasterObject);
+        }
+
+        Map<Integer, JSONObject> monthRainWeatherDisasterMap = new HashMap<Integer, JSONObject>();
+        Map<Integer, JSONObject> monthWindWeatherDisasterMap = new HashMap<Integer, JSONObject>();
+        Map<Integer, JSONObject> monthThunderWeatherDisasterMap = new HashMap<Integer, JSONObject>();
+        for (int i = 1; i < 13; i++) {
+            JSONObject monthRainWeatherDisasterObject = new JSONObject();
+            int[] monthWeatherNum = getMonthWeatherNum(i + "", AutoStationHelper.AREA_STATION_CODE_XUJIAHUI,
+                    recent10Years);
+            monthRainWeatherDisasterObject.put("weatherValue", monthWeatherNum[0]);
+            monthRainWeatherDisasterObject.put("disasterValue", 0);
+            monthRainWeatherDisasterMap.put(i, monthRainWeatherDisasterObject);
+            JSONObject monthWindWeatherDisasterObject = new JSONObject();
+            monthWindWeatherDisasterObject.put("weatherValue", monthWeatherNum[1]);
+            monthWindWeatherDisasterObject.put("disasterValue", 0);
+            monthWindWeatherDisasterMap.put(i, monthWindWeatherDisasterObject);
+            JSONObject monthThunderWeatherDisasterObject = new JSONObject();
+            monthThunderWeatherDisasterObject.put("weatherValue", monthWeatherNum[2]);
+            monthThunderWeatherDisasterObject.put("disasterValue", 0);
+            monthThunderWeatherDisasterMap.put(i, monthThunderWeatherDisasterObject);
+        }
+
+        for (int i = 0; i < 10; i++) {
+            String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterDetailData_Geliku/" + getYearStartDate
+                    (recent10Years[i]) + "/" + getYearEndDate(recent10Years[i]);
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray disasters = (JSONArray) obj.get("Data");
+            int size = disasters.size();
+            int yearRainDisasterNum = 0;
+            int yearWindDisasterNum = 0;
+            int yearThunderDisasterNum = 0;
+
+            for (int j = 0; j < size; j++) {
+                JSONObject disaster = (JSONObject) disasters.get(j);
+                int month = Integer.parseInt(DateHelper.getMonth((String) disaster.get("DATETIME_DISASTER")));
+                if (DisasterTypeHelper.DISTRICT_CODE == (long) disaster.get("DISTRICT")) {
+                    if (DisasterTypeHelper.DISASTER_RAIN_CODE == (long) disaster.get("CODE_DISASTER")) {
+                        totalRainNum ++;
+                        yearRainDisasterNum ++;
+
+                        JSONObject monthRainWeatherDisasterObject = monthRainWeatherDisasterMap.get(month);
+                        int disasterValue = (int) monthRainWeatherDisasterObject.get("disasterValue");
+                        disasterValue ++;
+                        monthRainWeatherDisasterObject.put("disasterValue", disasterValue);
+                        monthRainWeatherDisasterMap.put(month, monthRainWeatherDisasterObject);
+                    }
+                    if (DisasterTypeHelper.DISASTER_WIND_CODE == (long) disaster.get("CODE_DISASTER")) {
+                        totalWindNum ++;
+                        yearWindDisasterNum ++;
+
+                        JSONObject monthWindWeatherDisasterObject = monthWindWeatherDisasterMap.get(month);
+                        int disasterValue = (int) monthWindWeatherDisasterObject.get("disasterValue");
+                        disasterValue ++;
+                        monthWindWeatherDisasterObject.put("disasterValue", disasterValue);
+                        monthWindWeatherDisasterMap.put(month, monthWindWeatherDisasterObject);
+                    }
+                    if (DisasterTypeHelper.DISASTER_THUNDER_CODE == (long) disaster.get("CODE_DISASTER")) {
+                        totalThunderNum ++;
+                        yearThunderDisasterNum ++;
+
+                        JSONObject monthThunderWeatherDisasterObject = monthThunderWeatherDisasterMap.get(month);
+                        int disasterValue = (int) monthThunderWeatherDisasterObject.get("disasterValue");
+                        disasterValue ++;
+                        monthThunderWeatherDisasterObject.put("disasterValue", disasterValue);
+                        monthThunderWeatherDisasterMap.put(month, monthThunderWeatherDisasterObject);
+                    }
+                }
+            }
+            JSONObject yearRainWeatherDisasterObject = yearRainWeatherDisasterMap.get(recent10Years[i]);
+            yearRainWeatherDisasterObject.put("disasterValue", yearRainDisasterNum);
+            yearRainWeatherDisasterMap.put(recent10Years[i], yearRainWeatherDisasterObject);
+            JSONObject yearWindWeatherDisasterObject = yearWindWeatherDisasterMap.get(recent10Years[i]);
+            yearWindWeatherDisasterObject.put("disasterValue", yearWindDisasterNum);
+            yearWindWeatherDisasterMap.put(recent10Years[i], yearWindWeatherDisasterObject);
+            JSONObject yearThunderWeatherDisasterObject = yearThunderWeatherDisasterMap.get(recent10Years[i]);
+            yearThunderWeatherDisasterObject.put("disasterValue", yearThunderDisasterNum);
+            yearThunderWeatherDisasterMap.put(recent10Years[i], yearThunderWeatherDisasterObject);
+        }
+
+        JSONArray resultArray = new JSONArray();
+        JSONObject resultObject = new JSONObject();
+        JSONObject totalResultObject = new JSONObject();
+        JSONObject yearResultObject = new JSONObject();
+        JSONObject monthResultObject = new JSONObject();
+        JSONArray yearRainResultArray = new JSONArray();
+        JSONArray yearWindResultArray = new JSONArray();
+        JSONArray yearThunderResultArray = new JSONArray();
+        JSONArray monthRainResultArray = new JSONArray();
+        JSONArray monthWindResultArray = new JSONArray();
+        JSONArray monthThunderResultArray = new JSONArray();
+
+        totalResultObject.put("rain", totalRainNum);
+        totalResultObject.put("wind", totalWindNum);
+        totalResultObject.put("thunder", totalThunderNum);
+
+        for (Map.Entry<Integer, JSONObject> entry : yearRainWeatherDisasterMap.entrySet()) {
+            int key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject yearRainResultObject = new JSONObject();
+            yearRainResultObject.put("date", key);
+            yearRainResultObject.put("weatherValue", value.get("weatherValue"));
+            yearRainResultObject.put("disasterValue", value.get("disasterValue"));
+            yearRainResultArray.add(yearRainResultObject);
+        }
+        for (Map.Entry<Integer, JSONObject> entry : yearWindWeatherDisasterMap.entrySet()) {
+            int key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject yearWindResultObject = new JSONObject();
+            yearWindResultObject.put("date", key);
+            yearWindResultObject.put("weatherValue", value.get("weatherValue"));
+            yearWindResultObject.put("disasterValue", value.get("disasterValue"));
+            yearWindResultArray.add(yearWindResultObject);
+        }
+        for (Map.Entry<Integer, JSONObject> entry : yearThunderWeatherDisasterMap.entrySet()) {
+            int key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject yearThunderResultObject = new JSONObject();
+            yearThunderResultObject.put("date", key);
+            yearThunderResultObject.put("weatherValue", value.get("weatherValue"));
+            yearThunderResultObject.put("disasterValue", value.get("disasterValue"));
+            yearThunderResultArray.add(yearThunderResultObject);
+        }
+        yearResultObject.put("rain", yearRainResultArray);
+        yearResultObject.put("wind", yearWindResultArray);
+        yearResultObject.put("thunder", yearThunderResultArray);
+
+        for (Map.Entry<Integer, JSONObject> entry : monthRainWeatherDisasterMap.entrySet()) {
+            int key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject monthRainResultObject = new JSONObject();
+            monthRainResultObject.put("date", key);
+            monthRainResultObject.put("weatherValue", value.get("weatherValue"));
+            monthRainResultObject.put("disasterValue", value.get("disasterValue"));
+            monthRainResultArray.add(monthRainResultObject);
+        }
+        for (Map.Entry<Integer, JSONObject> entry : monthWindWeatherDisasterMap.entrySet()) {
+            int key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject monthWindResultObject = new JSONObject();
+            monthWindResultObject.put("date", key);
+            monthWindResultObject.put("weatherValue", value.get("weatherValue"));
+            monthWindResultObject.put("disasterValue", value.get("disasterValue"));
+            monthWindResultArray.add(monthWindResultObject);
+        }
+        for (Map.Entry<Integer, JSONObject> entry : monthThunderWeatherDisasterMap.entrySet()) {
+            int key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject monthThunderResultObject = new JSONObject();
+            monthThunderResultObject.put("date", key);
+            monthThunderResultObject.put("weatherValue", value.get("weatherValue"));
+            monthThunderResultObject.put("disasterValue", value.get("disasterValue"));
+            monthThunderResultArray.add(monthThunderResultObject);
+        }
+        monthResultObject.put("rain", monthRainResultArray);
+        monthResultObject.put("wind", monthWindResultArray);
+        monthResultObject.put("thunder", monthThunderResultArray);
+
+        resultObject.put("total", totalResultObject);
+        resultObject.put("year", yearResultObject);
+        resultObject.put("month", monthResultObject);
+        resultArray.add(resultObject);
+
+        HistoryAnalysisDataEntity recent10YearsWeatherDisaster = new HistoryAnalysisDataEntity();
+        recent10YearsWeatherDisaster.setName(HistoryAnalysisTaskName.LSSJ_WEATHER_DISASTER);
+        recent10YearsWeatherDisaster.setValue(resultArray);
+
+        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsWeatherDisaster);
+    }
+
+    /**
+    * @Description 获取近十年暴雨/大风频次信息
+    * @Author lilin
+    * @Create 2017/12/9 0:38
+    **/
+    @Scheduled(cron = "*/5 * * * * ?")
+    public void countRecent10YearsDisasterFrequency() {
+        logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_FREQUENCY));
+
+        int[] recent10Years = getRecent10Years();
+
+        HistoryAnalysisDataEntity autoStationInfoDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("AUTO_STATION_INFO");
+        JSONArray autoStationInfoArray = autoStationInfoDataEntity.getValue();
+        HistoryAnalysisDataEntity weatherDisasterDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_DISASTER_INFO");
+        JSONArray weatherDisasterArray = weatherDisasterDataEntity.getValue();
+
+        int size = weatherDisasterArray.size();
+
+        Map<String, JSONObject> rainDisasterFrequencyMap = new HashMap<String, JSONObject>();
+        Map<String, JSONObject> windDisasterFrequencyMap = new HashMap<String, JSONObject>();
+        for (int i = 0; i < 11; i++) {
+            Map<String, Object> autoStationInfoObject = (Map<String, Object>) autoStationInfoArray.get(i);
+            JSONObject rainDisasterFrequencyObject = new JSONObject();
+            rainDisasterFrequencyObject.put("lon", (double) autoStationInfoObject.get("lon"));
+            rainDisasterFrequencyObject.put("lat", (double) autoStationInfoObject.get("lat"));
+            rainDisasterFrequencyObject.put("value", 0);
+            rainDisasterFrequencyMap.put((String) autoStationInfoObject.get("stationCode"),
+                    rainDisasterFrequencyObject);
+            JSONObject windDisasterFrequencyObject = new JSONObject();
+            windDisasterFrequencyObject.put("lon", (double) autoStationInfoObject.get("lon"));
+            windDisasterFrequencyObject.put("lat", (double) autoStationInfoObject.get("lat"));
+            windDisasterFrequencyObject.put("value", 0);
+            windDisasterFrequencyMap.put((String) autoStationInfoObject.get("stationCode"),
+                    windDisasterFrequencyObject);
+        }
+
+        for (int i = 0; i < size; i++) {
+            Map<String, String> weatherDisasterObject = (Map<String, String>) weatherDisasterArray.get(i);
+
+            String stationCode = weatherDisasterObject.get("区站号");
+            int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
+            int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
+            JSONObject rainObject = rainDisasterFrequencyMap.get(stationCode);
+            JSONObject windObject = windDisasterFrequencyMap.get(stationCode);
+            if (rainObject != null) {
+                int rainValue = (int) rainObject.get("value");
+                rainValue += rainNum;
+                rainObject.put("value", rainValue);
+                rainDisasterFrequencyMap.put(stationCode, rainObject);
+            }
+            if (windObject != null) {
+                int windValue = (int) windObject.get("value");
+                windValue += windNum;
+                windObject.put("value", windValue);
+                windDisasterFrequencyMap.put(stationCode, windObject);
+            }
+        }
+
+        JSONArray resultArray = new JSONArray();
+        JSONObject resultObject = new JSONObject();
+        JSONArray rainResultArray = new JSONArray();
+        JSONArray windResultArray = new JSONArray();
+
+        for (Map.Entry<String, JSONObject> entry : rainDisasterFrequencyMap.entrySet()) {
+            String key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject rainDisasterFrequencyResultObject = new JSONObject();
+            rainDisasterFrequencyResultObject.put("lon", value.get("lon"));
+            rainDisasterFrequencyResultObject.put("lat", value.get("lat"));
+            rainDisasterFrequencyResultObject.put("value", value.get("value"));
+            rainResultArray.add(rainDisasterFrequencyResultObject);
+        }
+        for (Map.Entry<String, JSONObject> entry : windDisasterFrequencyMap.entrySet()) {
+            String key = entry.getKey();
+            JSONObject value = entry.getValue();
+            JSONObject windDisasterFrequencyResultObject = new JSONObject();
+            windDisasterFrequencyResultObject.put("lon", value.get("lon"));
+            windDisasterFrequencyResultObject.put("lat", value.get("lat"));
+            windDisasterFrequencyResultObject.put("value", value.get("value"));
+            windResultArray.add(windDisasterFrequencyResultObject);
+        }
+        resultObject.put("rain", rainResultArray);
+        resultObject.put("wind", windResultArray);
+        resultArray.add(resultObject);
+
+        HistoryAnalysisDataEntity recent10YearsDisasterFrequency = new HistoryAnalysisDataEntity();
+        recent10YearsDisasterFrequency.setName(HistoryAnalysisTaskName.LSSJ_DISASTER_FREQUENCY);
+        recent10YearsDisasterFrequency.setValue(resultArray);
+
+        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterFrequency);
+    }
+
+    /**
     * @Description 统计近10年灾情密度、灾情年度均值、年分布、月分布、日分布、类型分析
     * @Author lilin
     * @Create 2017/12/8 0:07
@@ -538,7 +884,7 @@ public class HistoryAnalysisTask {
     public void countRecent10YearsHistoryIncident() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT));
 
-        String url = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "GetYXYB/" + getLast10YearDate() + "/" +
+        String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetTypicalCaseInfo/" + getLast10YearDate() + "/" +
                 getLastYearDate();
         JSONObject obj = HttpHelper.getDataByURL(url);
 
@@ -548,7 +894,7 @@ public class HistoryAnalysisTask {
         int size = incidents.size();
         for (int i = 0; i < size; i++) {
             JSONObject incident = (JSONObject) incidents.get(i);
-            resultArray.add((String) incident.get("SimpleDescription"));
+            resultArray.add((String) incident.get("NAME"));
         }
 
         HistoryAnalysisDataEntity recent10YearsHistoryIncident = new HistoryAnalysisDataEntity();
