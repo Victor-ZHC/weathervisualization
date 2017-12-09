@@ -12,6 +12,9 @@ import java.util.List;
  * @create 2017-11-16 21:31
  **/
 public class DisasterTypeHelper {
+
+    public static final String[] CODE_DISASTER = {"非灾害", "暴雨", "大风", "雷电", "高温", "暴雪", "道路结冰", "大雾", "冰雹", "霜冻", "霾", "寒潮"};
+
     public static String getRainstormDisasterType(String caseAddr, String caseDesc) {
         String caseStr = caseAddr + caseDesc;
         if (caseStr.contains("房屋") || caseStr.contains("家") || caseStr.contains("幢")) {

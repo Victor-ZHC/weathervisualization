@@ -3,6 +3,7 @@ package com.adc.disasterforecast.tools;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 public class DateHelper {
 
@@ -35,6 +36,28 @@ public class DateHelper {
 
         return simpleDateFormat.format(base.getTime());
     }
+
+    public static String getPostponeDateByYear(String date, int delayYear) {
+        return getPostponeDateByYear(Integer.valueOf(date.substring(0, 4)),
+                Integer.valueOf(date.substring(4, 6)),
+                Integer.valueOf(date.substring(6, 8)),
+                Integer.valueOf(date.substring(8, 10)),
+                Integer.valueOf(date.substring(10, 12)),
+                Integer.valueOf(date.substring(12, 14)),
+                delayYear);
+    }
+
+    public static String getPostponeDateByYear(int year, int month, int date, int hourOfDay, int minute, int second, int delayYear) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+        Calendar base = Calendar.getInstance();
+        base.set(year, month - 1, date, hourOfDay, minute, second);
+        base.add(Calendar.YEAR, delayYear);
+
+        return simpleDateFormat.format(base.getTime());
+    }
+
+
 
     public static String getWarningDate(String date) {
         // 2017-08-04T13:15:00
@@ -86,4 +109,33 @@ public class DateHelper {
         }
         return "";
     }
+
+    public static String getNow() {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        return simpleDateFormat.format(new Date());
+    }
+
+    public static String getFormatWarningMonth(String date, String year) {
+        // 2016-08-04T13:15:00
+        // return 20170801000000
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+        Calendar cal = Calendar.getInstance();
+        try{
+            cal.setTime(simpleDateFormat.parse(date));
+        }catch (ParseException e){
+            return null;
+        }
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.DATE, 1);
+        cal.set(Calendar.YEAR, Integer.parseInt(year));
+        return String.valueOf(cal.getTimeInMillis());
+    }
+
+//    public static String getFormatYear(String date, String year) {
+//        date = getFormatWarningMonth(date, year);
+//
+//    }
 }
