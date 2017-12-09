@@ -3,9 +3,7 @@ package com.adc.disasterforecast.tools;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * ${DESCRIPTION}
@@ -22,6 +20,7 @@ public class WarningHelper {
     public static final String LEVEL_YELLOW = "黄色";
     public static final String LEVEL_ORANGE = "橙色";
     public static final String LEVEL_RED = "红色";
+    private static String[] warningType = {"rain", "wind", "thunder"};
 
     public static String getWarningWeather(String type) {
         if ("雷电".equals(type)) {
@@ -115,5 +114,21 @@ public class WarningHelper {
         }
         result.put("Data", dataArray);
         return result;
+    }
+
+    public static Map<String, Integer> getWarningMap() {
+        Map<String, Integer> warningMap = new HashMap<>();
+        for (int i = 0; i < warningType.length; i++) {
+            warningMap.put(warningType[i], 0);
+        }
+        return warningMap;
+    }
+
+    public static Map<String, String> getEarlyWarningMap() {
+        Map<String, String> warningMap = new HashMap<>();
+        for (int i = 0; i < warningType.length; i++) {
+            warningMap.put(warningType[i], "normal");
+        }
+        return warningMap;
     }
 }

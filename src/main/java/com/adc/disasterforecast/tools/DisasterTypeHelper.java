@@ -3,7 +3,9 @@ package com.adc.disasterforecast.tools;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * ${DESCRIPTION}
@@ -17,6 +19,7 @@ public class DisasterTypeHelper {
     public static long DISASTER_WIND_CODE = 2;
     public static long DISASTER_THUNDER_CODE = 3;
     public static long DISTRICT_CODE = 13;
+    private static String[] disasterType = {"rain", "wind", "thunder"};
 
     public static String getRainstormDisasterType(String caseAddr, String caseDesc) {
         String caseStr = caseAddr + caseDesc;
@@ -122,5 +125,13 @@ public class DisasterTypeHelper {
         } else {
             return "其他";
         }
+    }
+
+    public static Map<String, Integer> getDisasterMap() {
+        Map<String, Integer> disasterMap = new HashMap<>();
+        for (int i = 0; i < disasterType.length; i++) {
+            disasterMap.put(disasterType[i], 0);
+        }
+        return disasterMap;
     }
 }

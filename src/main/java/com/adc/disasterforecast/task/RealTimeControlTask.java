@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -27,8 +28,8 @@ public class RealTimeControlTask {
     @Autowired
     private RealTimeControlDAO realTimeControlDAO;
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countWeatherLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WEATHER_LIVE));
 
@@ -76,8 +77,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(weatherLiveEntity);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countRainfallAndMonitorAndWind() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.RAINFALL_LIVE));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WIND_LIVE));
@@ -237,8 +238,8 @@ public class RealTimeControlTask {
         }
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countThunderLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_LIVE));
 
@@ -266,8 +267,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(thunderLiveData);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countMonitorStatsLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITOR_STATS_LIVE));
 
@@ -314,8 +315,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(monitorStats);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countThunderStatsLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_STATS_LIVE));
 
@@ -343,10 +344,7 @@ public class RealTimeControlTask {
 
             thunderData.put("strength", thunderDataObject.get("PEAK_KA"));
 
-            JSONArray location = new JSONArray();
-            thunderData.put("location", location);
-
-            thunderData.put("level", "normal");
+            thunderData.put("level", "red");
 
             thunderStatsLiveValue.add(thunderData);
         }
@@ -357,8 +355,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(thunderStatsLive);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countBroadcastV1() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V1));
 
@@ -379,8 +377,26 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(broadcastV1);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 */1 * *")
+    public void countBroadcastV2() {
+        logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V2));
+
+        RealTimeControlDataEntity entity = realTimeControlDAO.findRealTimeControlDataByName("All_ACTIVITIES");
+        JSONArray allActivities = entity.getValue();
+        int mouth = Calendar.getInstance().get(Calendar.MONTH);
+
+        JSONArray broadcastV2Value = new JSONArray();
+        broadcastV2Value.addAll(((Map<String, List>) allActivities.get(mouth)).get("content"));
+
+        RealTimeControlDataEntity broadcastV2 = new RealTimeControlDataEntity();
+        broadcastV2.setName(RealTimeControlTaskName.BROADCAST_V2);
+        broadcastV2.setValue(broadcastV2Value);
+        realTimeControlDAO.updateRealTimeControlDataByName(broadcastV2);
+    }
+
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countEarlyWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.EARLY_WARNING));
 
@@ -394,15 +410,27 @@ public class RealTimeControlTask {
         JSONObject obj = HttpHelper.getDataByURL(url);
         JSONArray earlyWarningDataArray = (JSONArray) obj.get("Data");
 
-        JSONArray earlyWarningValue = new JSONArray();
+        Map<String, String> earlyWarningMap = WarningHelper.getEarlyWarningMap();
+
         for (int i = 0; i < earlyWarningDataArray.size(); i++) {
             JSONObject earlyWarningDataObject = (JSONObject) earlyWarningDataArray.get(i);
 
-            JSONObject warning = new JSONObject();
-            warning.put("type", WarningHelper.getWarningWeather((String) earlyWarningDataObject.get("TYPE")));
-            warning.put("warning", WarningHelper.getWarningWeather((String) earlyWarningDataObject.get("LEVEL")));
-            earlyWarningValue.add(earlyWarningDataObject.get("CONTENT"));
+            String warningType = WarningHelper.getWarningWeather((String) earlyWarningDataObject.get("TYPE"));
+            String warningLevel = WarningHelper.getWarningLevel((String) earlyWarningDataObject.get("LEVEL"));
+
+            if (earlyWarningMap.containsKey(warningType)) {
+                earlyWarningMap.put(warningType, warningLevel);
+            }
+
         }
+
+        JSONArray earlyWarningValue = new JSONArray();
+        earlyWarningMap.forEach((k, v) -> {
+            JSONObject warning = new JSONObject();
+            warning.put("type", k);
+            warning.put("warning", v);
+            earlyWarningValue.add(warning);
+        });
 
         RealTimeControlDataEntity earlyWarning = new RealTimeControlDataEntity();
         earlyWarning.setName(RealTimeControlTaskName.EARLY_WARNING);
@@ -410,8 +438,26 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(earlyWarning);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 */1 * *")
+    public void countFocusActivities() {
+        logger.info(String.format("began task：%s", RealTimeControlTaskName.FOCUS_ACTIVITIES));
+
+        RealTimeControlDataEntity entity = realTimeControlDAO.findRealTimeControlDataByName("All_ACTIVITIES");
+        JSONArray allActivities = entity.getValue();
+        int mouth = Calendar.getInstance().get(Calendar.MONTH);
+
+        JSONArray focusActivitiesValue = new JSONArray();
+        focusActivitiesValue.addAll(((Map<String, List>) allActivities.get(mouth)).get("title"));
+
+        RealTimeControlDataEntity focusActivities = new RealTimeControlDataEntity();
+        focusActivities.setName(RealTimeControlTaskName.FOCUS_ACTIVITIES);
+        focusActivities.setValue(focusActivitiesValue);
+        realTimeControlDAO.updateRealTimeControlDataByName(focusActivities);
+    }
+
+    @PostConstruct
+    @Scheduled(cron = "0 */10 * * * *")
     public void countDisaster() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_LIVE));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_AREA));
@@ -433,38 +479,22 @@ public class RealTimeControlTask {
     }
 
     private void addDisasterLive(JSONArray disasterArray) {
-
-        int rain = 0;
-        int wind = 0;
-        int thunder = 0;
-
+        Map<String, Integer> disasterMap = DisasterTypeHelper.getDisasterMap();
+        int totalNum = 0;
         for (int i = 0; i < disasterArray.size(); i++) {
             JSONObject disasterObject = (JSONObject) disasterArray.get(i);
 
-            int disasterCode = ((Number) disasterObject.get("CODE_DISASTER")).intValue();
+            String disasterType = DisasterTypeHelper.getDisasterTypeByCode(((Number) disasterObject.get("CODE_DISASTER")).intValue());
 
-            switch (disasterCode) {
-                case 1: {
-                    rain++;
-                    break;
-                }
-                case 2: {
-                    wind++;
-                    break;
-                }
-                case 3: {
-                    thunder++;
-                    break;
-                }
-                default: break;
+            if (disasterMap.containsKey(disasterType)) {
+                totalNum++;
+                disasterMap.put(disasterType, disasterMap.get(disasterType) + 1);
             }
         }
 
         JSONObject disasterLiveObject = new JSONObject();
-        disasterLiveObject.put("total", disasterArray.size());
-        disasterLiveObject.put("rain", rain);
-        disasterLiveObject.put("wind", wind);
-        disasterLiveObject.put("thunder", thunder);
+        disasterMap.forEach((k, v) -> disasterLiveObject.put(k, v));
+        disasterLiveObject.put("total", totalNum);
         JSONArray disasterLiveValue = new JSONArray();
         disasterLiveValue.add(disasterLiveObject);
 
@@ -475,7 +505,7 @@ public class RealTimeControlTask {
     }
 
     private void addDisasterArea(JSONArray disasterArray) {
-        Map<String, Integer> disasterAreaMap = new HashMap<>();
+        Map<String, Integer> disasterAreaMap = AreaHelper.getAreaMap();
 
         for (int i = 0; i < disasterArray.size(); i++) {
             JSONObject disasterObject = (JSONObject) disasterArray.get(i);
@@ -484,10 +514,7 @@ public class RealTimeControlTask {
 
             if (disasterAreaMap.containsKey(district)) {
                 disasterAreaMap.put(district, disasterAreaMap.get(district) + 1);
-            } else {
-                disasterAreaMap.put(district, 1);
             }
-
         }
 
         JSONArray disasterAreaValue = new JSONArray();
@@ -512,11 +539,7 @@ public class RealTimeControlTask {
 
             long date =  DateHelper.getDateInLongByHour((String) disasterObject.get("DATETIME_DISASTER"));
 
-            if (disasterTimeMap.containsKey(date)) {
-                disasterTimeMap.put(date, disasterTimeMap.get(date) + 1);
-            } else {
-                disasterTimeMap.put(date, 1);
-            }
+            disasterTimeMap.put(date, disasterTimeMap.get(date) + 1);
         }
 
         JSONArray disasterTimeValue = new JSONArray();
@@ -533,8 +556,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(disasterTime);
     }
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 1 */1 *")
     public void countHistoryWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_AVG));
@@ -544,7 +567,7 @@ public class RealTimeControlTask {
 
         // 获取开始年份
         String beginTime = (Calendar.getInstance().get(Calendar.YEAR) - 10) + "0101000000";
-        String endTime = DateHelper.getCurrentTimeInString("minute");
+        String endTime = DateHelper.getCurrentTimeInString("year");
 
         String url = baseUrl + beginTime + "/" + endTime;
 
@@ -586,18 +609,18 @@ public class RealTimeControlTask {
     }
 
     private void addHistoryWarningAvg(JSONArray historyWarningArray, int total) {
-        Map<String, Integer> historyWarningAvgMap = new HashMap<>();
-        int totalNum = historyWarningArray.size();
+        Map<String, Integer> historyWarningAvgMap = WarningHelper.getWarningMap();
+        int totalNum = 0;
         for (int i = 0; i < historyWarningArray.size(); i++) {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
             String warningType = WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"));
 
             if (historyWarningAvgMap.containsKey(warningType)) {
+                totalNum++;
                 historyWarningAvgMap.put(warningType, historyWarningAvgMap.get(warningType) + 1);
-            } else {
-                historyWarningAvgMap.put(warningType, 1);
             }
+
         }
 
         JSONArray historyWarningAvgValue = new JSONArray();
@@ -613,20 +636,19 @@ public class RealTimeControlTask {
     }
 
     private void addHistoryWarningMouth(JSONArray historyWarningArray, int total) {
-        Map<String, Integer> historyWarningMouthMap = new HashMap<>();
+        Map<String, Integer> historyWarningMouthMap = WarningHelper.getWarningMap();
         int totalNum = 0;
         for (int i = 0; i < historyWarningArray.size(); i++) {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
             if (String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1).equals(DateHelper.getMonth((String) historyWarning.get("FORECASTDATE")))) {
-                totalNum++;
                 String warningType = WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"));
 
                 if (historyWarningMouthMap.containsKey(warningType)) {
+                    totalNum++;
                     historyWarningMouthMap.put(warningType, historyWarningMouthMap.get(warningType) + 1);
-                } else {
-                    historyWarningMouthMap.put(warningType, 1);
                 }
+
             }
         }
 
@@ -643,8 +665,8 @@ public class RealTimeControlTask {
     }
 
 
-    //@PostConstruct
-    @Scheduled(cron = "* */10 * * * *")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 1 */1 *")
     public void countHistoryDisaster() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_AVG));
@@ -654,7 +676,7 @@ public class RealTimeControlTask {
 
         // 获取开始年份
         String beginTime = (Calendar.getInstance().get(Calendar.YEAR) - 10) + "0101000000";
-        String endTime = DateHelper.getCurrentTimeInString("minute");
+        String endTime = DateHelper.getCurrentTimeInString("year");
 
         String url = baseUrl + beginTime + "/" + endTime;
 
@@ -696,18 +718,18 @@ public class RealTimeControlTask {
     }
 
     private void addHistoryDisasterAvg(JSONArray historyDisasterArray, int total) {
-        Map<String, Integer> historyDisasterAvgMap = new HashMap<>();
-        int totalNum = historyDisasterArray.size();
+        Map<String, Integer> historyDisasterAvgMap = DisasterTypeHelper.getDisasterMap();
+        int totalNum = 0;
         for (int i = 0; i < historyDisasterArray.size(); i++) {
             JSONObject historyDisaster = (JSONObject) historyDisasterArray.get(i);
 
             String disasterType = DisasterTypeHelper.getDisasterTypeByCode(((Number) historyDisaster.get("CODE_DISASTER")).intValue());
 
             if (historyDisasterAvgMap.containsKey(disasterType)) {
+                totalNum++;
                 historyDisasterAvgMap.put(disasterType, historyDisasterAvgMap.get(disasterType) + 1);
-            } else {
-                historyDisasterAvgMap.put(disasterType, 1);
             }
+
         }
 
         JSONArray historyDisasterAvgValue = new JSONArray();
@@ -723,19 +745,17 @@ public class RealTimeControlTask {
     }
 
     private void addHistoryDisasterMouth(JSONArray historyDisasterArray, int total) {
-        Map<String, Integer> historyDisasterMouthMap = new HashMap<>();
+        Map<String, Integer> historyDisasterMouthMap = DisasterTypeHelper.getDisasterMap();
         int totalNum = 0;
         for (int i = 0; i < historyDisasterArray.size(); i++) {
             JSONObject historyDisaster = (JSONObject) historyDisasterArray.get(i);
 
             if (String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1).equals(DateHelper.getMonth((String) historyDisaster.get("DATETIME_DISASTER")))) {
-                totalNum++;
                 String disasterType = DisasterTypeHelper.getDisasterTypeByCode(((Number) historyDisaster.get("CODE_DISASTER")).intValue());
 
                 if (historyDisasterMouthMap.containsKey(disasterType)) {
+                    totalNum++;
                     historyDisasterMouthMap.put(disasterType, historyDisasterMouthMap.get(disasterType) + 1);
-                } else {
-                    historyDisasterMouthMap.put(disasterType, 1);
                 }
             }
         }

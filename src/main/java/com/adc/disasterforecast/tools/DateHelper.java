@@ -100,6 +100,10 @@ public class DateHelper {
         return hour > 9 ? "" + hour : "0" + hour;
     }
 
+    private static String getNowYear(String date) {
+        return date.substring(0, 4) + "0101000000";
+    }
+
     public static String getNowDay(String date) {
         return date.substring(0, 8) + "000000";
     }
@@ -117,6 +121,7 @@ public class DateHelper {
             case "minute": return getNowMinute(date);
             case "hour": return getNowHour(date);
             case "day": return getNowDay(date);
+            case "year": return getNowYear(date);
             default: return null;
         }
     }
