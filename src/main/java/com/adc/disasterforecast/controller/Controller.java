@@ -29,6 +29,7 @@ public class Controller {
     @Autowired
     DisPreventDataDAO disPreventDataDAO;
 
+    @Autowired
     RealTimeControlDAO realTimeControlDAO;
 
     @Autowired
