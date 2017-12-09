@@ -38,6 +38,7 @@ public class DisPreventTask {
     private DisPreventDataDAO disPreventDataDAO;
 
     @PostConstruct
+    @Scheduled(cron = "0 0 0 * * *")
     public void updateJsonData() {
         String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
         String endDate = DateHelper.getNow();
@@ -65,6 +66,7 @@ public class DisPreventTask {
     }
 
     @PostConstruct
+    @Scheduled(cron = "0 0 0 * * *")
     public void getStationData() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
         String date = DateHelper.getNow();
