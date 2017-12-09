@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -306,6 +307,38 @@ public class HistoryAnalysisTask {
     }
 
     /**
+    * @Description 获取近10年的年度暴雨日、大风日、雷暴日数据
+    * @Author lilin
+    * @Create 2017/12/9 10:06
+    **/
+    private Map<Integer, int[]> getRecent10YearsWeatherNum(int[] years, String code) {
+        HistoryAnalysisDataEntity weatherDisasterDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_DISASTER_INFO");
+        JSONArray weatherDisasterArray = weatherDisasterDataEntity.getValue();
+        int size = weatherDisasterArray.size();
+
+        Map<Integer, int[]> result = new HashMap<Integer, int[]>();
+        for (int i = 0; i < 10; i++) {
+            int[] num = new int[3];
+            for (int j = 0; j < size; j++) {
+                Map<String, String> weatherDisasterObject = (Map<String, String>) weatherDisasterArray.get(j);
+                if (code.equals(weatherDisasterObject.get("区站号"))) {
+                    if ((years[i] + "").equals(weatherDisasterObject.get("年"))) {
+                        int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
+                        int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
+                        int thunderNum = Integer.parseInt((String) weatherDisasterObject.get("雷暴日数"));
+                        num[0] += rainNum;
+                        num[1] += windNum;
+                        num[2] += thunderNum;
+                    }
+                }
+            }
+            result.put(years[i], num);
+        }
+        return result;
+    }
+
+    /**
     * @Description 获取月份暴雨日、大风日、雷暴日数据
     * @Author lilin
     * @Create 2017/12/8 23:57
@@ -334,6 +367,39 @@ public class HistoryAnalysisTask {
     }
 
     /**
+    * @Description 获取近10年的月份暴雨日、大风日、雷暴日数据
+    * @Author lilin
+    * @Create 2017/12/9 10:13
+    **/
+    private Map<Integer, int[]> getRecent10YearsMonthWeatherNum(int[] years, String code) {
+        HistoryAnalysisDataEntity weatherDisasterDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_DISASTER_INFO");
+        JSONArray weatherDisasterArray = weatherDisasterDataEntity.getValue();
+        int size = weatherDisasterArray.size();
+
+        Map<Integer, int[]> result = new HashMap<Integer, int[]>();
+        for (int i = 1; i < 13; i++) {
+            int[] num = new int[3];
+            for (int j = 0; j < size; j++) {
+                Map<String, String> weatherDisasterObject = (Map<String, String>) weatherDisasterArray.get(j);
+                if (code.equals(weatherDisasterObject.get("区站号"))) {
+                    int year = Integer.parseInt((String) weatherDisasterObject.get("年"));
+                    if ((i + "").equals(weatherDisasterObject.get("月")) && year >= years[0] && year <= years[9]) {
+                        int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
+                        int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
+                        int thunderNum = Integer.parseInt((String) weatherDisasterObject.get("雷暴日数"));
+                        num[0] += rainNum;
+                        num[1] += windNum;
+                        num[2] += thunderNum;
+                    }
+                }
+            }
+            result.put(i, num);
+        }
+        return result;
+    }
+
+    /**
     * @Description 统计近10年气象事件造成的灾害（徐汇区）
     * @Author lilin
     * @Create 2017/12/8 22:47
@@ -347,41 +413,69 @@ public class HistoryAnalysisTask {
         int totalWindNum = 0;
         int totalThunderNum = 0;
 
+        Map<Integer, int[]> recent10YearsWeatherNum = getRecent10YearsWeatherNum(recent10Years, AutoStationHelper
+                .AREA_STATION_CODE_XUJIAHUI);
         Map<Integer, JSONObject> yearRainWeatherDisasterMap = new HashMap<Integer, JSONObject>();
         Map<Integer, JSONObject> yearWindWeatherDisasterMap = new HashMap<Integer, JSONObject>();
         Map<Integer, JSONObject> yearThunderWeatherDisasterMap = new HashMap<Integer, JSONObject>();
         for (int i = 0; i < 10; i++) {
             JSONObject yearRainWeatherDisasterObject = new JSONObject();
-            int[] yearWeatherNum = getYearWeatherNum(recent10Years[i] + "", AutoStationHelper.AREA_STATION_CODE_XUJIAHUI);
-            yearRainWeatherDisasterObject.put("weatherValue", yearWeatherNum[0]);
+//            int[] yearWeatherNum = getYearWeatherNum(recent10Years[i] + "", AutoStationHelper.AREA_STATION_CODE_XUJIAHUI);
+//            yearRainWeatherDisasterObject.put("weatherValue", yearWeatherNum[0]);
+//            yearRainWeatherDisasterObject.put("disasterValue", 0);
+//            yearRainWeatherDisasterMap.put(recent10Years[i], yearRainWeatherDisasterObject);
+//            JSONObject yearWindWeatherDisasterObject = new JSONObject();
+//            yearWindWeatherDisasterObject.put("weatherValue", yearWeatherNum[1]);
+//            yearWindWeatherDisasterObject.put("disasterValue", 0);
+//            yearWindWeatherDisasterMap.put(recent10Years[i], yearWindWeatherDisasterObject);
+//            JSONObject yearThunderWeatherDisasterObject = new JSONObject();
+//            yearThunderWeatherDisasterObject.put("weatherValue", yearWeatherNum[2]);
+//            yearThunderWeatherDisasterObject.put("disasterValue", 0);
+//            yearThunderWeatherDisasterMap.put(recent10Years[i], yearThunderWeatherDisasterObject);
+
+            yearRainWeatherDisasterObject.put("weatherValue", recent10YearsWeatherNum.get(recent10Years[i])[0]);
             yearRainWeatherDisasterObject.put("disasterValue", 0);
             yearRainWeatherDisasterMap.put(recent10Years[i], yearRainWeatherDisasterObject);
             JSONObject yearWindWeatherDisasterObject = new JSONObject();
-            yearWindWeatherDisasterObject.put("weatherValue", yearWeatherNum[1]);
+            yearWindWeatherDisasterObject.put("weatherValue", recent10YearsWeatherNum.get(recent10Years[i])[1]);
             yearWindWeatherDisasterObject.put("disasterValue", 0);
             yearWindWeatherDisasterMap.put(recent10Years[i], yearWindWeatherDisasterObject);
             JSONObject yearThunderWeatherDisasterObject = new JSONObject();
-            yearThunderWeatherDisasterObject.put("weatherValue", yearWeatherNum[2]);
+            yearThunderWeatherDisasterObject.put("weatherValue", recent10YearsWeatherNum.get(recent10Years[i])[2]);
             yearThunderWeatherDisasterObject.put("disasterValue", 0);
             yearThunderWeatherDisasterMap.put(recent10Years[i], yearThunderWeatherDisasterObject);
         }
 
+        Map<Integer, int[]> recent10YearsMonthWeatherNum = getRecent10YearsMonthWeatherNum(recent10Years, AutoStationHelper
+                .AREA_STATION_CODE_XUJIAHUI);
         Map<Integer, JSONObject> monthRainWeatherDisasterMap = new HashMap<Integer, JSONObject>();
         Map<Integer, JSONObject> monthWindWeatherDisasterMap = new HashMap<Integer, JSONObject>();
         Map<Integer, JSONObject> monthThunderWeatherDisasterMap = new HashMap<Integer, JSONObject>();
         for (int i = 1; i < 13; i++) {
             JSONObject monthRainWeatherDisasterObject = new JSONObject();
-            int[] monthWeatherNum = getMonthWeatherNum(i + "", AutoStationHelper.AREA_STATION_CODE_XUJIAHUI,
-                    recent10Years);
-            monthRainWeatherDisasterObject.put("weatherValue", monthWeatherNum[0]);
+//            int[] monthWeatherNum = getMonthWeatherNum(i + "", AutoStationHelper.AREA_STATION_CODE_XUJIAHUI,
+//                    recent10Years);
+//            monthRainWeatherDisasterObject.put("weatherValue", monthWeatherNum[0]);
+//            monthRainWeatherDisasterObject.put("disasterValue", 0);
+//            monthRainWeatherDisasterMap.put(i, monthRainWeatherDisasterObject);
+//            JSONObject monthWindWeatherDisasterObject = new JSONObject();
+//            monthWindWeatherDisasterObject.put("weatherValue", monthWeatherNum[1]);
+//            monthWindWeatherDisasterObject.put("disasterValue", 0);
+//            monthWindWeatherDisasterMap.put(i, monthWindWeatherDisasterObject);
+//            JSONObject monthThunderWeatherDisasterObject = new JSONObject();
+//            monthThunderWeatherDisasterObject.put("weatherValue", monthWeatherNum[2]);
+//            monthThunderWeatherDisasterObject.put("disasterValue", 0);
+//            monthThunderWeatherDisasterMap.put(i, monthThunderWeatherDisasterObject);
+
+            monthRainWeatherDisasterObject.put("weatherValue", recent10YearsMonthWeatherNum.get(i)[0]);
             monthRainWeatherDisasterObject.put("disasterValue", 0);
             monthRainWeatherDisasterMap.put(i, monthRainWeatherDisasterObject);
             JSONObject monthWindWeatherDisasterObject = new JSONObject();
-            monthWindWeatherDisasterObject.put("weatherValue", monthWeatherNum[1]);
+            monthWindWeatherDisasterObject.put("weatherValue", recent10YearsMonthWeatherNum.get(i)[1]);
             monthWindWeatherDisasterObject.put("disasterValue", 0);
             monthWindWeatherDisasterMap.put(i, monthWindWeatherDisasterObject);
             JSONObject monthThunderWeatherDisasterObject = new JSONObject();
-            monthThunderWeatherDisasterObject.put("weatherValue", monthWeatherNum[2]);
+            monthThunderWeatherDisasterObject.put("weatherValue", recent10YearsMonthWeatherNum.get(i)[2]);
             monthThunderWeatherDisasterObject.put("disasterValue", 0);
             monthThunderWeatherDisasterMap.put(i, monthThunderWeatherDisasterObject);
         }
@@ -573,23 +667,25 @@ public class HistoryAnalysisTask {
 
         for (int i = 0; i < size; i++) {
             Map<String, String> weatherDisasterObject = (Map<String, String>) weatherDisasterArray.get(i);
-
-            String stationCode = weatherDisasterObject.get("区站号");
-            int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
-            int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
-            JSONObject rainObject = rainDisasterFrequencyMap.get(stationCode);
-            JSONObject windObject = windDisasterFrequencyMap.get(stationCode);
-            if (rainObject != null) {
-                int rainValue = (int) rainObject.get("value");
-                rainValue += rainNum;
-                rainObject.put("value", rainValue);
-                rainDisasterFrequencyMap.put(stationCode, rainObject);
-            }
-            if (windObject != null) {
-                int windValue = (int) windObject.get("value");
-                windValue += windNum;
-                windObject.put("value", windValue);
-                windDisasterFrequencyMap.put(stationCode, windObject);
+            int year = Integer.parseInt((String) weatherDisasterObject.get("年"));
+            if (year >= recent10Years[0] && year <= recent10Years[9]){
+                String stationCode = weatherDisasterObject.get("区站号");
+                int rainNum = Integer.parseInt((String) weatherDisasterObject.get("暴雨日数"));
+                int windNum = Integer.parseInt((String) weatherDisasterObject.get("大风日数"));
+                JSONObject rainObject = rainDisasterFrequencyMap.get(stationCode);
+                JSONObject windObject = windDisasterFrequencyMap.get(stationCode);
+                if (rainObject != null) {
+                    int rainValue = (int) rainObject.get("value");
+                    rainValue += rainNum;
+                    rainObject.put("value", rainValue);
+                    rainDisasterFrequencyMap.put(stationCode, rainObject);
+                }
+                if (windObject != null) {
+                    int windValue = (int) windObject.get("value");
+                    windValue += windNum;
+                    windObject.put("value", windValue);
+                    windDisasterFrequencyMap.put(stationCode, windObject);
+                }
             }
         }
 
