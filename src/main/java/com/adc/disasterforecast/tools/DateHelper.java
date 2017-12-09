@@ -117,7 +117,7 @@ public class DateHelper {
 
     public static String getFormatWarningMonth(String date, String year) {
         // 2016-08-04T13:15:00
-        // return 20170801000000
+        // return 20170801000000 (2017 == year param)
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
         Calendar cal = Calendar.getInstance();
@@ -134,10 +134,6 @@ public class DateHelper {
         return String.valueOf(cal.getTimeInMillis());
     }
 
-//    public static String getFormatYear(String date, String year) {
-//        date = getFormatWarningMonth(date, year);
-//
-//    }
     public static long getPostponeDateByDay(int delayDay) {
         Calendar base = Calendar.getInstance();
         base.add(Calendar.DATE, delayDay);

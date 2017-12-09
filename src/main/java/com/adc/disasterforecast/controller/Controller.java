@@ -27,14 +27,12 @@ public class Controller {
     YPCaseDataDAO ypCaseDataDAO;
 
     @Autowired
-<<<<<<< HEAD
     DisPreventDataDAO disPreventDataDAO;
-=======
+
     RealTimeControlDAO realTimeControlDAO;
 
     @Autowired
     HistoryAnalysisDataDAO historyAnalysisDataDAO;
->>>>>>> e969163991728768b9e962ca29a25f6191641657
 
     /**
      * handle all GET request from "feite" page by name
@@ -92,7 +90,6 @@ public class Controller {
     }
 
     /**
-<<<<<<< HEAD
      * handle all GET request from "fangzaijianzai" page by name
      * @param name data name
      * @return dataEntity
@@ -103,7 +100,9 @@ public class Controller {
         logger.info("get request from /fangzaijianzai/" + name);
         DisPreventDataEntity disPreventDataEntity = disPreventDataDAO.findDisPreventDataByName(name);
         return disPreventDataEntity;
-=======
+    }
+
+    /**
      * handle all GET request from "realtimecontrol" page by name
      * @param name data name
      * @return dataEntity
@@ -127,6 +126,5 @@ public class Controller {
         logger.info("get request from /lishishuju/" + name);
         HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(name);
         return historyAnalysisDataEntity;
->>>>>>> e969163991728768b9e962ca29a25f6191641657
     }
 }
