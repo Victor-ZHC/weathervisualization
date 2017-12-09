@@ -1,0 +1,71 @@
+{
+  "name": "AUTO_STATION_INFO",
+  "value": [
+    {
+      "stationCode": "58361",
+      "stationName": "闵行区",
+      "lon": 121.3666667,
+      "lat": 31.1
+    },
+    {
+      "stationCode": "58362",
+      "stationName": "宝山区",
+      "lon": 121.4833333,
+      "lat": 31.4
+    },
+    {
+      "stationCode": "58365",
+      "stationName": "嘉定区",
+      "lon": 121.25,
+      "lat": 31.36666667
+    },
+    {
+      "stationCode": "58366",
+      "stationName": "崇明县",
+      "lon": 121.4,
+      "lat": 31.63333333
+    },
+    {
+      "stationCode": "58367",
+      "stationName": "徐家汇",
+      "lon": 121.431375,
+      "lat": 31.19239722
+    },
+    {
+      "stationCode": "58369",
+      "stationName": "南汇区",
+      "lon": 121.7833333,
+      "lat": 31.05
+    },
+    {
+      "stationCode": "58370",
+      "stationName": "浦东新区",
+      "lon": 121.5333333,
+      "lat": 31.23333333
+    },
+    {
+      "stationCode": "58460",
+      "stationName": "金山区",
+      "lon": 121.35,
+      "lat": 30.75
+    },
+    {
+      "stationCode": "58461",
+      "stationName": "青浦区",
+      "lon": 121.1221694,
+      "lat": 31.13423333
+    },
+    {
+      "stationCode": "58462",
+      "stationName": "松江区",
+      "lon": 121.2333333,
+      "lat": 31.03333333
+    },
+    {
+      "stationCode": "58463",
+      "stationName": "奉贤区",
+      "lon": 121.4955639,
+      "lat": 30.88728889
+    }
+  ]
+}

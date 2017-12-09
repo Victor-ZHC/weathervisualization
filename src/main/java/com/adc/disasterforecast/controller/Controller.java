@@ -2,9 +2,13 @@ package com.adc.disasterforecast.controller;
 
 import com.adc.disasterforecast.dao.DisPreventDataDAO;
 import com.adc.disasterforecast.dao.FeiteDataDAO;
+import com.adc.disasterforecast.dao.HistoryAnalysisDataDAO;
+import com.adc.disasterforecast.dao.RealTimeControlDAO;
 import com.adc.disasterforecast.dao.YPCaseDataDAO;
 import com.adc.disasterforecast.entity.DisPreventDataEntity;
 import com.adc.disasterforecast.entity.FeiteDataEntity;
+import com.adc.disasterforecast.entity.HistoryAnalysisDataEntity;
+import com.adc.disasterforecast.entity.RealTimeControlDataEntity;
 import com.adc.disasterforecast.entity.YPCaseDataEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +27,14 @@ public class Controller {
     YPCaseDataDAO ypCaseDataDAO;
 
     @Autowired
+<<<<<<< HEAD
     DisPreventDataDAO disPreventDataDAO;
+=======
+    RealTimeControlDAO realTimeControlDAO;
+
+    @Autowired
+    HistoryAnalysisDataDAO historyAnalysisDataDAO;
+>>>>>>> e969163991728768b9e962ca29a25f6191641657
 
     /**
      * handle all GET request from "feite" page by name
@@ -81,6 +92,7 @@ public class Controller {
     }
 
     /**
+<<<<<<< HEAD
      * handle all GET request from "fangzaijianzai" page by name
      * @param name data name
      * @return dataEntity
@@ -91,5 +103,30 @@ public class Controller {
         logger.info("get request from /fangzaijianzai/" + name);
         DisPreventDataEntity disPreventDataEntity = disPreventDataDAO.findDisPreventDataByName(name);
         return disPreventDataEntity;
+=======
+     * handle all GET request from "realtimecontrol" page by name
+     * @param name data name
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/realtimecontrol/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public RealTimeControlDataEntity getRealTimeControlData(@PathVariable("name") String name) {
+        logger.info("get request from /realtimecontrol/" + name);
+        RealTimeControlDataEntity realTimeControlDataEntity = realTimeControlDAO.findRealTimeControlDataByName(name);
+        return realTimeControlDataEntity;
+    }
+
+    /**
+     * handle all GET request from "lishishuju" page by name
+     * @param name data name
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/lishishuju/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public HistoryAnalysisDataEntity getHistoryAnalysisData(@PathVariable("name") String name) {
+        logger.info("get request from /lishishuju/" + name);
+        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(name);
+        return historyAnalysisDataEntity;
+>>>>>>> e969163991728768b9e962ca29a25f6191641657
     }
 }

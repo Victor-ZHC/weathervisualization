@@ -138,4 +138,121 @@ public class DateHelper {
 //        date = getFormatWarningMonth(date, year);
 //
 //    }
+    public static long getPostponeDateByDay(int delayDay) {
+        Calendar base = Calendar.getInstance();
+        base.add(Calendar.DATE, delayDay);
+
+        return base.getTimeInMillis();
+    }
+
+    public static String getCurrentHourInString() {
+        Calendar now = Calendar.getInstance();
+        int hour = now.get(Calendar.HOUR);
+        return hour > 9 ? "" + hour : "0" + hour;
+    }
+
+    public static String getNowDay(String date) {
+        return date.substring(0, 8) + "000000";
+    }
+
+    public static String getNowMinute(String date) {
+        return date.substring(0, 12) + "00";
+    }
+
+    public static String getCurrentTimeInString(String accuracy) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Calendar base = Calendar.getInstance();
+        String date = simpleDateFormat.format(base.getTime());
+
+        switch (accuracy) {
+            case "minute": return getNowMinute(date);
+            case "hour": return getNowHour(date);
+            case "day": return getNowDay(date);
+            default: return null;
+        }
+    }
+
+    public static long getPostponeDateByHourInLong(int year, int month, int date, int hourOfDay, int minute, int second, int delayHour) {
+        Calendar base = Calendar.getInstance();
+        base.set(year, month - 1, date, hourOfDay, minute, second);
+        base.add(Calendar.HOUR, delayHour);
+
+        return base.getTimeInMillis();
+    }
+
+    public static long getPostponeDateByHourInLong(String date,int delayHour) {
+        return getPostponeDateByHourInLong(Integer.valueOf(date.substring(0, 4)),
+                Integer.valueOf(date.substring(4, 6)),
+                Integer.valueOf(date.substring(6, 8)),
+                Integer.valueOf(date.substring(8, 10)),
+                Integer.valueOf(date.substring(10, 12)),
+                Integer.valueOf(date.substring(12, 14)),
+                delayHour);
+    }
+
+    public static String getPostponeDateByMinute(int year, int month, int date, int hourOfDay, int minute, int second, int delayMinute) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+        Calendar base = Calendar.getInstance();
+        base.set(year, month - 1, date, hourOfDay, minute, second);
+        base.add(Calendar.MINUTE, delayMinute);
+
+        return simpleDateFormat.format(base.getTime());
+    }
+
+    public static String getPostponeDateByMinute(String date, int delayMinute) {
+        return getPostponeDateByMinute(Integer.valueOf(date.substring(0, 4)),
+                Integer.valueOf(date.substring(4, 6)),
+                Integer.valueOf(date.substring(6, 8)),
+                Integer.valueOf(date.substring(8, 10)),
+                Integer.valueOf(date.substring(10, 12)),
+                Integer.valueOf(date.substring(12, 14)),
+                delayMinute);
+    }
+
+    public static long getDateInLong(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[0].split("-");
+        String[] times = parts[1].split(":");
+
+        return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + times[1] + times[2], 0);
+    }
+
+    public static long getDateInLongByHour(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[0].split("-");
+        String[] times = parts[1].split(":");
+
+        return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + "0000", 0);
+    }
+
+    public static String getYear(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[0].split("-");
+
+        return dates[0];
+    }
+
+    public static String getMonth(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[0].split("-");
+
+        return dates[1];
+    }
+
+    public static String getHour(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        String[] dates = parts[1].split(":");
+
+        return dates[0];
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Calendar.getInstance().get(Calendar.MONTH));
+    }
 }

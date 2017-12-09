@@ -14,6 +14,10 @@ import java.util.List;
 public class DisasterTypeHelper {
 
     public static final String[] CODE_DISASTER = {"非灾害", "暴雨", "大风", "雷电", "高温", "暴雪", "道路结冰", "大雾", "冰雹", "霜冻", "霾", "寒潮"};
+    public static long DISASTER_RAIN_CODE = 1;
+    public static long DISASTER_WIND_CODE = 2;
+    public static long DISASTER_THUNDER_CODE = 3;
+    public static long DISTRICT_CODE = 13;
 
     public static String getRainstormDisasterType(String caseAddr, String caseDesc) {
         String caseStr = caseAddr + caseDesc;
@@ -98,5 +102,26 @@ public class DisasterTypeHelper {
         areaDisasterType.put("value", disasterTypeList);
 
         return areaDisasterType;
+    }
+
+    public static String getDisasterTypeByCode(int disasterCode) {
+        switch (disasterCode) {
+                case 1: return "rain";
+                case 2: return "wind";
+                case 3: return "thunder";
+                default: return "";
+        }
+    }
+
+    public static String getDisasterType(String desc) {
+        if (desc.contains("高空")) {
+            return "高空坠物";
+        } else if (desc.contains("房屋进水")) {
+            return "房屋进水";
+        } else if (desc.contains("农田")) {
+            return "农田进水";
+        } else {
+            return "其他";
+        }
     }
 }

@@ -14,6 +14,15 @@ import java.util.List;
  * @create 2017-11-16 22:28
  **/
 public class WarningHelper {
+
+    public static final String TYPE_WIND = "大风";
+    public static final String TYPE_RAIN = "暴雨";
+    public static final String TYPE_THUNDER = "雷电";
+    public static final String LEVEL_BLUE = "蓝色";
+    public static final String LEVEL_YELLOW = "黄色";
+    public static final String LEVEL_ORANGE = "橙色";
+    public static final String LEVEL_RED = "红色";
+
     public static String getWarningWeather(String type) {
         if ("雷电".equals(type)) {
             return "thunder";
