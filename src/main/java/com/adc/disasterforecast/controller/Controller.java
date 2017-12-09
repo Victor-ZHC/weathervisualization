@@ -90,10 +90,10 @@ public class Controller {
      * @param name data name
      * @return dataEntity
      */
-    @RequestMapping(value = "/realtimecontrol/{name}", method = RequestMethod.GET)
+    @RequestMapping(value = "/shishiguankong/{name}", method = RequestMethod.GET)
     @ResponseBody
     public RealTimeControlDataEntity getRealTimeControlData(@PathVariable("name") String name) {
-        logger.info("get request from /realtimecontrol/" + name);
+        logger.info("get request from /shishiguankong/" + name);
         RealTimeControlDataEntity realTimeControlDataEntity = realTimeControlDAO.findRealTimeControlDataByName(name);
         return realTimeControlDataEntity;
     }
