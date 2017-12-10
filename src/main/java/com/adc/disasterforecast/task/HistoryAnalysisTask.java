@@ -744,7 +744,7 @@ public class HistoryAnalysisTask {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TREND_YEAR));
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TREND_MONTH));
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TREND_DAY));
-        logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE));
+        //logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE));
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_DENSITY));
 
         int[] recent10Years = getRecent10Years();
@@ -769,10 +769,10 @@ public class HistoryAnalysisTask {
         Map<String, Integer> thunderDisasterDensityMap = new HashMap<String, Integer>();
 
         int totalNum = 0;
-        int GKZWNum = 0;
-        int FWJSNum = 0;
-        int NTJSNum = 0;
-        int OthersNum = 0;
+//        int GKZWNum = 0;
+//        int FWJSNum = 0;
+//        int NTJSNum = 0;
+//        int OthersNum = 0;
         for (int i = 0; i < 10; i++) {
             String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterDetailData_Geliku/" + getYearStartDate
                     (recent10Years[i]) + "/" + getYearEndDate(recent10Years[i]);
@@ -796,20 +796,20 @@ public class HistoryAnalysisTask {
                 dayDisasterNum ++;
                 dayDisasterMap.put(hour, dayDisasterNum);
 
-                String desc = (String) disaster.get("CASE_ADDR") + (String) disaster.get("CASE_DESC") + (String)
-                        disaster.get("ACCEPTER");
-                if ("高空坠物".equals(DisasterTypeHelper.getDisasterType(desc))) {
-                    GKZWNum ++;
-                }
-                if ("房屋进水".equals(DisasterTypeHelper.getDisasterType(desc))) {
-                    FWJSNum ++;
-                }
-                if ("农田进水".equals(DisasterTypeHelper.getDisasterType(desc))) {
-                    NTJSNum ++;
-                }
-                if ("其他".equals(DisasterTypeHelper.getDisasterType(desc))) {
-                    OthersNum ++;
-                }
+//                String desc = (String) disaster.get("CASE_ADDR") + (String) disaster.get("CASE_DESC") + (String)
+//                        disaster.get("ACCEPTER");
+//                if ("高空坠物".equals(DisasterTypeHelper.getDisasterType(desc))) {
+//                    GKZWNum ++;
+//                }
+//                if ("房屋进水".equals(DisasterTypeHelper.getDisasterType(desc))) {
+//                    FWJSNum ++;
+//                }
+//                if ("农田进水".equals(DisasterTypeHelper.getDisasterType(desc))) {
+//                    NTJSNum ++;
+//                }
+//                if ("其他".equals(DisasterTypeHelper.getDisasterType(desc))) {
+//                    OthersNum ++;
+//                }
 
                 long disasterCode = (long) disaster.get("CODE_DISASTER");
                 double lontitude = (double) disaster.get("LONTITUDE");
@@ -903,29 +903,29 @@ public class HistoryAnalysisTask {
 
         historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterTrendDay);
 
-        JSONArray disasterTypeResultArray = new JSONArray();
-        JSONObject GKZWResultObject = new JSONObject();
-        JSONObject FWJSResultObject = new JSONObject();
-        JSONObject NTJSResultObject = new JSONObject();
-        JSONObject OthersResultObject = new JSONObject();
-        GKZWResultObject.put("type", "高空坠物");
-        GKZWResultObject.put("value", GKZWNum);
-        FWJSResultObject.put("type", "房屋进水");
-        FWJSResultObject.put("value", FWJSNum);
-        NTJSResultObject.put("type", "农田进水");
-        NTJSResultObject.put("value", NTJSNum);
-        OthersResultObject.put("type", "其他");
-        OthersResultObject.put("value", OthersNum);
-        disasterTypeResultArray.add(GKZWResultObject);
-        disasterTypeResultArray.add(FWJSResultObject);
-        disasterTypeResultArray.add(NTJSResultObject);
-        disasterTypeResultArray.add(OthersResultObject);
+//        JSONArray disasterTypeResultArray = new JSONArray();
+//        JSONObject GKZWResultObject = new JSONObject();
+//        JSONObject FWJSResultObject = new JSONObject();
+//        JSONObject NTJSResultObject = new JSONObject();
+//        JSONObject OthersResultObject = new JSONObject();
+//        GKZWResultObject.put("type", "高空坠物");
+//        GKZWResultObject.put("value", GKZWNum);
+//        FWJSResultObject.put("type", "房屋进水");
+//        FWJSResultObject.put("value", FWJSNum);
+//        NTJSResultObject.put("type", "农田进水");
+//        NTJSResultObject.put("value", NTJSNum);
+//        OthersResultObject.put("type", "其他");
+//        OthersResultObject.put("value", OthersNum);
+//        disasterTypeResultArray.add(GKZWResultObject);
+//        disasterTypeResultArray.add(FWJSResultObject);
+//        disasterTypeResultArray.add(NTJSResultObject);
+//        disasterTypeResultArray.add(OthersResultObject);
 
-        HistoryAnalysisDataEntity recent10YearsDisasterType = new HistoryAnalysisDataEntity();
-        recent10YearsDisasterType.setName(HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE);
-        recent10YearsDisasterType.setValue(disasterTypeResultArray);
-
-        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterType);
+//        HistoryAnalysisDataEntity recent10YearsDisasterType = new HistoryAnalysisDataEntity();
+//        recent10YearsDisasterType.setName(HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE);
+//        recent10YearsDisasterType.setValue(disasterTypeResultArray);
+//
+//        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterType);
 
         JSONArray disasterDensityResultArray = new JSONArray();
         JSONObject disasterDensityResultObject = new JSONObject();
@@ -1010,5 +1010,71 @@ public class HistoryAnalysisTask {
         recent10YearsHistoryIncident.setValue(resultArray);
 
         historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsHistoryIncident);
+    }
+
+    /**
+    * @Description 统计近10年的灾情类型分析
+    * @Author lilin
+    * @Create 2017/12/10 11:40
+    **/
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
+    //@Scheduled(cron = "*/5 * * * * ?")
+    public void countRecent10YearsDisasterType() {
+        logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE));
+
+        int[] recent10Years = getRecent10Years();
+
+        Map<String, Integer> disasterTypeMap = new HashMap<String, Integer>();
+        for (int i = 0; i < 10; i++) {
+            String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterDetailData_Geliku/" + getYearStartDate
+                    (recent10Years[i]) + "/" + getYearEndDate(recent10Years[i]);
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray disasters = (JSONArray) obj.get("Data");
+            int size = disasters.size();
+
+            for (int j = 0; j < size; j++) {
+                JSONObject disaster = (JSONObject) disasters.get(j);
+                String accepter = (String) disaster.get("ACCEPTER");
+                if (accepter != null) {
+                    int accepterNum = disasterTypeMap.get(accepter) != null ? disasterTypeMap.get(accepter) : 0;
+                    accepterNum++;
+                    disasterTypeMap.put(accepter, accepterNum);
+                }
+            }
+        }
+        JSONArray disasterTypeResultArray = new JSONArray();
+        int CLSSNum = (int) disasterTypeMap.get("车辆受损") + (int) disasterTypeMap.get("车辆进水") + (int) disasterTypeMap.get("车辆损坏");
+        int OthersNum = (int) disasterTypeMap.get("其他") + (int) disasterTypeMap.get("其它");
+        int NTSYNum = (int) disasterTypeMap.get("农田受淹") + (int) disasterTypeMap.get("农田积水");
+        for (Map.Entry<String, Integer> entry : disasterTypeMap.entrySet()) {
+            String key = entry.getKey();
+            int value = entry.getValue();
+            if (!("车辆受损".equals(key) || "车辆进水".equals(key) || "车辆损坏".equals(key) || "其他".equals(key) || "其它".equals
+                    (key) || "农田受淹".equals(key) || "农田积水".equals(key))) {
+                JSONObject disasterTypeResultObject = new JSONObject();
+                disasterTypeResultObject.put("type", key);
+                disasterTypeResultObject.put("value", value);
+                disasterTypeResultArray.add(disasterTypeResultObject);
+            }
+        }
+        JSONObject CLSSObject = new JSONObject();
+        JSONObject NTSYObject = new JSONObject();
+        JSONObject OthersObject = new JSONObject();
+        CLSSObject.put("type", "车辆受损");
+        CLSSObject.put("value", CLSSNum);
+        OthersObject.put("type", "其他");
+        OthersObject.put("value", OthersNum);
+        NTSYObject.put("type", "农田受淹");
+        NTSYObject.put("value", NTSYNum);
+        disasterTypeResultArray.add(CLSSObject);
+        disasterTypeResultArray.add(OthersObject);
+        disasterTypeResultArray.add(NTSYObject);
+
+        HistoryAnalysisDataEntity recent10YearsDisasterType = new HistoryAnalysisDataEntity();
+        recent10YearsDisasterType.setName(HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE);
+        recent10YearsDisasterType.setValue(disasterTypeResultArray);
+
+        historyAnalysisDataDAO.updateHistoryAnalysisDataByName(recent10YearsDisasterType);
     }
 }
