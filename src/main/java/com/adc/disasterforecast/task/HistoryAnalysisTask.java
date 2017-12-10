@@ -482,6 +482,7 @@ public class HistoryAnalysisTask {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WEATHER_DISASTER));
 
         int[] recent10Years = getRecent10Years();
+
         int totalRainNum = 0;
         int totalWindNum = 0;
         int totalThunderNum = 0;
@@ -626,33 +627,60 @@ public class HistoryAnalysisTask {
         totalResultObject.put("wind", totalWindNum);
         totalResultObject.put("thunder", totalThunderNum);
 
-        for (Map.Entry<Integer, JSONObject> entry : yearRainWeatherDisasterMap.entrySet()) {
-            int key = entry.getKey();
-            JSONObject value = entry.getValue();
+        for (int index = 0; index < 10; index++) {
+            int key = recent10Years[index];
+            JSONObject value = yearRainWeatherDisasterMap.get(key);
             JSONObject yearRainResultObject = new JSONObject();
             yearRainResultObject.put("date", key);
             yearRainResultObject.put("weatherValue", value.get("weatherValue"));
             yearRainResultObject.put("disasterValue", value.get("disasterValue"));
             yearRainResultArray.add(yearRainResultObject);
         }
-        for (Map.Entry<Integer, JSONObject> entry : yearWindWeatherDisasterMap.entrySet()) {
-            int key = entry.getKey();
-            JSONObject value = entry.getValue();
+        for (int index = 0; index < 10; index++) {
+            int key = recent10Years[index];
+            JSONObject value = yearWindWeatherDisasterMap.get(key);
             JSONObject yearWindResultObject = new JSONObject();
             yearWindResultObject.put("date", key);
             yearWindResultObject.put("weatherValue", value.get("weatherValue"));
             yearWindResultObject.put("disasterValue", value.get("disasterValue"));
             yearWindResultArray.add(yearWindResultObject);
         }
-        for (Map.Entry<Integer, JSONObject> entry : yearThunderWeatherDisasterMap.entrySet()) {
-            int key = entry.getKey();
-            JSONObject value = entry.getValue();
+        for (int index = 0; index < 10; index++) {
+            int key = recent10Years[index];
+            JSONObject value = yearThunderWeatherDisasterMap.get(key);
             JSONObject yearThunderResultObject = new JSONObject();
             yearThunderResultObject.put("date", key);
             yearThunderResultObject.put("weatherValue", value.get("weatherValue"));
             yearThunderResultObject.put("disasterValue", value.get("disasterValue"));
             yearThunderResultArray.add(yearThunderResultObject);
         }
+//        for (Map.Entry<Integer, JSONObject> entry : yearRainWeatherDisasterMap.entrySet()) {
+//            int key = entry.getKey();
+//            JSONObject value = entry.getValue();
+//            JSONObject yearRainResultObject = new JSONObject();
+//            yearRainResultObject.put("date", key);
+//            yearRainResultObject.put("weatherValue", value.get("weatherValue"));
+//            yearRainResultObject.put("disasterValue", value.get("disasterValue"));
+//            yearRainResultArray.add(yearRainResultObject);
+//        }
+//        for (Map.Entry<Integer, JSONObject> entry : yearWindWeatherDisasterMap.entrySet()) {
+//            int key = entry.getKey();
+//            JSONObject value = entry.getValue();
+//            JSONObject yearWindResultObject = new JSONObject();
+//            yearWindResultObject.put("date", key);
+//            yearWindResultObject.put("weatherValue", value.get("weatherValue"));
+//            yearWindResultObject.put("disasterValue", value.get("disasterValue"));
+//            yearWindResultArray.add(yearWindResultObject);
+//        }
+//        for (Map.Entry<Integer, JSONObject> entry : yearThunderWeatherDisasterMap.entrySet()) {
+//            int key = entry.getKey();
+//            JSONObject value = entry.getValue();
+//            JSONObject yearThunderResultObject = new JSONObject();
+//            yearThunderResultObject.put("date", key);
+//            yearThunderResultObject.put("weatherValue", value.get("weatherValue"));
+//            yearThunderResultObject.put("disasterValue", value.get("disasterValue"));
+//            yearThunderResultArray.add(yearThunderResultObject);
+//        }
         yearResultObject.put("rain", yearRainResultArray);
         yearResultObject.put("wind", yearWindResultArray);
         yearResultObject.put("thunder", yearThunderResultArray);
