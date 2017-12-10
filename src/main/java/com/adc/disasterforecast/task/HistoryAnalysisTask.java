@@ -100,7 +100,37 @@ public class HistoryAnalysisTask {
                 redNum ++;
             }
         }
-        amountObject.put("total", warnings.size());
+
+        HistoryAnalysisDataEntity weatherWarningDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_WARNING_INFO");
+        JSONArray weatherWarningArray = weatherWarningDataEntity.getValue();
+        int size = weatherWarningArray.size();
+        for (int i = 0; i < size; i++) {
+            Map<String, String> weatherWarningObject = (Map<String, String>) weatherWarningArray.get(i);
+            if (WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))) {
+                windNum ++;
+            }
+            if (WarningHelper.TYPE_RAIN.equals(weatherWarningObject.get("TYPE"))) {
+                rainNum ++;
+            }
+            if (WarningHelper.TYPE_THUNDER.equals(weatherWarningObject.get("TYPE"))) {
+                thunderNum ++;
+            }
+            if (WarningHelper.LEVEL_BLUE.equals(weatherWarningObject.get("LEVEL"))) {
+                blueNum ++;
+            }
+            if (WarningHelper.LEVEL_YELLOW.equals(weatherWarningObject.get("LEVEL"))) {
+                yellowNum ++;
+            }
+            if (WarningHelper.LEVEL_ORANGE.equals(weatherWarningObject.get("LEVEL"))) {
+                orangeNum ++;
+            }
+            if (WarningHelper.LEVEL_RED.equals(weatherWarningObject.get("LEVEL"))) {
+                redNum ++;
+            }
+        }
+
+        amountObject.put("total", warnings.size() + weatherWarningArray.size());
         amountObject.put("wind", windNum);
         amountObject.put("rain", rainNum);
         amountObject.put("thunder", thunderNum);
@@ -214,6 +244,43 @@ public class HistoryAnalysisTask {
                 monthRainMap.put(month, monthRainNum);
             }
             if (WarningHelper.TYPE_THUNDER.equals(warning.get("TYPE"))) {
+                int yearThunderNum = yearThunderMap.get(year);
+                yearThunderNum ++;
+                yearThunderMap.put(year, yearThunderNum);
+
+                int monthThunderNum = monthThunderMap.get(month);
+                monthThunderNum ++;
+                monthThunderMap.put(month, monthThunderNum);
+            }
+        }
+
+        HistoryAnalysisDataEntity weatherWarningDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName
+                ("WEATHER_WARNING_INFO");
+        JSONArray weatherWarningArray = weatherWarningDataEntity.getValue();
+        int weatherWarningArraySize = weatherWarningArray.size();
+        for (int i = 0; i < weatherWarningArraySize; i++) {
+            Map<String, String> weatherWarningObject = (Map<String, String>) weatherWarningArray.get(i);
+            int year = Integer.parseInt(DateHelper.getYear((String) weatherWarningObject.get("FORECASTDATE")));
+            int month = Integer.parseInt(DateHelper.getMonth((String) weatherWarningObject.get("FORECASTDATE")));
+            if (WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))) {
+                int yearWindNum = yearWindMap.get(year);
+                yearWindNum ++;
+                yearWindMap.put(year, yearWindNum);
+
+                int monthWindNum = monthWindMap.get(month);
+                monthWindNum ++;
+                monthWindMap.put(month, monthWindNum);
+            }
+            if (WarningHelper.TYPE_RAIN.equals(weatherWarningObject.get("TYPE"))) {
+                int yearRainNum = yearRainMap.get(year);
+                yearRainNum ++;
+                yearRainMap.put(year, yearRainNum);
+
+                int monthRainNum = monthRainMap.get(month);
+                monthRainNum ++;
+                monthRainMap.put(month, monthRainNum);
+            }
+            if (WarningHelper.TYPE_THUNDER.equals(weatherWarningObject.get("TYPE"))) {
                 int yearThunderNum = yearThunderMap.get(year);
                 yearThunderNum ++;
                 yearThunderMap.put(year, yearThunderNum);
