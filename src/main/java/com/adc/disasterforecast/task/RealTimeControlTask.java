@@ -534,6 +534,12 @@ public class RealTimeControlTask {
     private void addDisasterTime(JSONArray disasterArray) {
         Map<Long, Integer> disasterTimeMap = new HashMap<>();
 
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        String time = DateHelper.getCurrentTimeInString("day");
+        for (int i = 0; i < hour + 1; i++) {
+            disasterTimeMap.put(DateHelper.getDateInLongByHour(time, i), 0);
+        }
+
         for (int i = 0; i < disasterArray.size(); i++) {
             JSONObject disasterObject = (JSONObject) disasterArray.get(i);
 

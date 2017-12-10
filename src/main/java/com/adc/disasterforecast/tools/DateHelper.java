@@ -229,6 +229,10 @@ public class DateHelper {
         return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + "0000", 0);
     }
 
+    public static long getDateInLongByHour(String date, int delayHour) {
+        return getPostponeDateByHourInLong(date, delayHour);
+    }
+
     public static String getYear(String date) {
         // 2017-08-04T13:15:00
         String[] parts = date.split("T");
