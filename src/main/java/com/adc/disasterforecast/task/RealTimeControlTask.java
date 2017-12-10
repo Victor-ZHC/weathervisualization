@@ -14,10 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class RealTimeControlTask {
@@ -548,13 +545,24 @@ public class RealTimeControlTask {
             disasterTimeMap.put(date, disasterTimeMap.get(date) + 1);
         }
 
-        JSONArray disasterTimeValue = new JSONArray();
+        List<JSONObject> disasterTimeList = new ArrayList<>();
         disasterTimeMap.forEach((k, v) -> {
             JSONObject disasterTimeObject = new JSONObject();
             disasterTimeObject.put("time", k);
             disasterTimeObject.put("value", v);
-            disasterTimeValue.add(disasterTimeObject);
+            disasterTimeList.add(disasterTimeObject);
         });
+
+        Collections.sort(disasterTimeList, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+
+                return (int) (((Number) o1.get("time")).longValue() - ((Number) o2.get("time")).longValue());
+            }
+        });
+
+        JSONArray disasterTimeValue = new JSONArray();
+        disasterTimeValue.addAll(disasterTimeList);
 
         RealTimeControlDataEntity disasterTime = new RealTimeControlDataEntity();
         disasterTime.setName(RealTimeControlTaskName.DISASTER_TIME_PERIOD);
