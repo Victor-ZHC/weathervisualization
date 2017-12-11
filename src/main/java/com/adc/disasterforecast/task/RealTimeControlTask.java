@@ -422,7 +422,7 @@ public class RealTimeControlTask {
         }
 
         JSONArray earlyWarningValue = new JSONArray();
-        earlyWarningMap.forEach((k, v) -> {
+        earlyWarningMap.forEach((String k, String v) -> {
             JSONObject warning = new JSONObject();
             warning.put("type", k);
             warning.put("warning", v);
@@ -490,7 +490,7 @@ public class RealTimeControlTask {
         }
 
         JSONObject disasterLiveObject = new JSONObject();
-        disasterMap.forEach((k, v) -> disasterLiveObject.put(k, v));
+        disasterMap.forEach((String k, Integer v) -> disasterLiveObject.put(k, v));
         disasterLiveObject.put("total", totalNum);
         JSONArray disasterLiveValue = new JSONArray();
         disasterLiveValue.add(disasterLiveObject);
@@ -515,7 +515,7 @@ public class RealTimeControlTask {
         }
 
         JSONArray disasterAreaValue = new JSONArray();
-        disasterAreaMap.forEach((k, v) -> {
+        disasterAreaMap.forEach((String k, Integer v) -> {
             JSONObject disasterAreaObject = new JSONObject();
             disasterAreaObject.put("area", k);
             disasterAreaObject.put("value", v);
@@ -546,7 +546,7 @@ public class RealTimeControlTask {
         }
 
         List<JSONObject> disasterTimeList = new ArrayList<>();
-        disasterTimeMap.forEach((k, v) -> {
+        disasterTimeMap.forEach((Long k, Integer v) -> {
             JSONObject disasterTimeObject = new JSONObject();
             disasterTimeObject.put("time", k);
             disasterTimeObject.put("value", v);
@@ -588,12 +588,12 @@ public class RealTimeControlTask {
         JSONObject obj = HttpHelper.getDataByURL(url);
         JSONArray historyWarningArray = (JSONArray) obj.get("Data");
 
-        addHistoryWarning(historyWarningArray);
-        addHistoryWarningAvg(historyWarningArray, 10);
-        addHistoryWarningMouth(historyWarningArray, 10);
+        int total = addHistoryWarningAndGetTotalYear(historyWarningArray);
+        addHistoryWarningAvg(historyWarningArray, total);
+        addHistoryWarningMouth(historyWarningArray, total);
     }
 
-    private void addHistoryWarning(JSONArray historyWarningArray) {
+    private int addHistoryWarningAndGetTotalYear(JSONArray historyWarningArray) {
         Map<Integer, Integer> historyWarningMap = new HashMap<>();
         for (int i = 0; i < historyWarningArray.size(); i++) {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
@@ -607,19 +607,30 @@ public class RealTimeControlTask {
             }
         }
 
-        JSONArray historyWarningValue = new JSONArray();
-        historyWarningMap.forEach((k, v) -> {
+        List<JSONObject> historyWarningList = new ArrayList<>();
+        historyWarningMap.forEach((Integer k, Integer v) -> {
             JSONObject historyWarningObject = new JSONObject();
             historyWarningObject.put("time", k);
             historyWarningObject.put("value", v);
-            historyWarningValue.add(historyWarningObject);
+            historyWarningList.add(historyWarningObject);
         });
+
+        Collections.sort(historyWarningList, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                return ((Number) o1.get("time")).intValue() - ((Number) o2.get("time")).intValue();
+            }
+        });
+
+        JSONArray historyWarningValue = new JSONArray();
+        historyWarningValue.addAll(historyWarningList);
 
         RealTimeControlDataEntity historyWarning = new RealTimeControlDataEntity();
         historyWarning.setName(RealTimeControlTaskName.HISTORY_WARNING);
         historyWarning.setValue(historyWarningValue);
         realTimeControlDAO.updateRealTimeControlDataByName(historyWarning);
 
+        return historyWarningList.size();
     }
 
     private void addHistoryWarningAvg(JSONArray historyWarningArray, int total) {
@@ -668,7 +679,7 @@ public class RealTimeControlTask {
 
         JSONArray historyWarningMonthValue = new JSONArray();
         JSONObject historyWarningMonthObject = new JSONObject();
-        historyWarningMouthMap.forEach((k, v) -> historyWarningMonthObject.put(k, v / total));
+        historyWarningMouthMap.forEach((String k, Integer v) -> historyWarningMonthObject.put(k, v / total));
         historyWarningMonthObject.put("total", totalNum / total);
         historyWarningMonthValue.add(historyWarningMonthObject);
 
@@ -697,12 +708,12 @@ public class RealTimeControlTask {
         JSONObject obj = HttpHelper.getDataByURL(url);
         JSONArray historyDisasterArray = (JSONArray) obj.get("Data");
 
-        addHistoryDisaster(historyDisasterArray);
-        addHistoryDisasterAvg(historyDisasterArray, 10);
-        addHistoryDisasterMouth(historyDisasterArray, 10);
+        int total = addHistoryDisasterAndGetTotalYear(historyDisasterArray);
+        addHistoryDisasterAvg(historyDisasterArray, total);
+        addHistoryDisasterMouth(historyDisasterArray, total);
     }
 
-    private void addHistoryDisaster(JSONArray historyDisasterArray) {
+    private int addHistoryDisasterAndGetTotalYear(JSONArray historyDisasterArray) {
         Map<Integer, Integer> historyWarningMap = new HashMap<>();
         for (int i = 0; i < historyDisasterArray.size(); i++) {
             JSONObject historyDisaster = (JSONObject) historyDisasterArray.get(i);
@@ -716,19 +727,30 @@ public class RealTimeControlTask {
             }
         }
 
-        JSONArray historyDisasterValue = new JSONArray();
+        List<JSONObject> historyDisasterList = new ArrayList<>();
         historyWarningMap.forEach((k, v) -> {
             JSONObject historyDisasterObject = new JSONObject();
             historyDisasterObject.put("time", k);
             historyDisasterObject.put("value", v);
-            historyDisasterValue.add(historyDisasterObject);
+            historyDisasterList.add(historyDisasterObject);
         });
+
+        Collections.sort(historyDisasterList, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                return ((Number) o1.get("time")).intValue() - ((Number) o2.get("time")).intValue();
+            }
+        });
+
+        JSONArray historyDisasterValue = new JSONArray();
+        historyDisasterValue.addAll(historyDisasterList);
 
         RealTimeControlDataEntity historyDisaster = new RealTimeControlDataEntity();
         historyDisaster.setName(RealTimeControlTaskName.HISTORY_DISASTER);
         historyDisaster.setValue(historyDisasterValue);
         realTimeControlDAO.updateRealTimeControlDataByName(historyDisaster);
 
+        return historyDisasterList.size();
     }
 
     private void addHistoryDisasterAvg(JSONArray historyDisasterArray, int total) {
@@ -740,15 +762,15 @@ public class RealTimeControlTask {
             String disasterType = DisasterTypeHelper.getDisasterTypeByCode(((Number) historyDisaster.get("CODE_DISASTER")).intValue());
 
             if (historyDisasterAvgMap.containsKey(disasterType)) {
-                totalNum++;
                 historyDisasterAvgMap.put(disasterType, historyDisasterAvgMap.get(disasterType) + 1);
+                totalNum++;
             }
 
         }
 
         JSONArray historyDisasterAvgValue = new JSONArray();
         JSONObject historyDisasterAvgObject = new JSONObject();
-        historyDisasterAvgMap.forEach((k, v) -> historyDisasterAvgObject.put(k, v / total));
+        historyDisasterAvgMap.forEach((String k, Integer v) -> historyDisasterAvgObject.put(k, v / total));
         historyDisasterAvgObject.put("total", totalNum / total);
         historyDisasterAvgValue.add(historyDisasterAvgObject);
 
@@ -776,7 +798,7 @@ public class RealTimeControlTask {
 
         JSONArray historyDisasterMonthValue = new JSONArray();
         JSONObject historyDisasterMonthObject = new JSONObject();
-        historyDisasterMouthMap.forEach((k, v) -> historyDisasterMonthObject.put(k, v / total));
+        historyDisasterMouthMap.forEach((String k, Integer v) -> historyDisasterMonthObject.put(k, v / total));
         historyDisasterMonthObject.put("total", totalNum / total);
         historyDisasterMonthValue.add(historyDisasterMonthObject);
 
