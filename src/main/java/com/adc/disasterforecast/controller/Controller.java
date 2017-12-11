@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
+
 @RestController
 public class Controller {
     // logger for controller
@@ -113,6 +115,7 @@ public class Controller {
     public RealTimeControlDataEntity getRealTimeControlData(@PathVariable("name") String name) {
         logger.info("get request from /shishiguankong/" + name);
         RealTimeControlDataEntity realTimeControlDataEntity = realTimeControlDAO.findRealTimeControlDataByName(name);
+        realTimeControlDataEntity.setTimestamp(new Date().getTime());
         return realTimeControlDataEntity;
     }
 
