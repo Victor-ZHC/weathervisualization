@@ -147,10 +147,7 @@ public class RealTimeControlTask {
 
             if (!rainfallLiveValue.equals("")) {
                 double rainfallValueNum = Double.valueOf(rainfallValue);
-                if (rainfallValueNum < 0) {
-                    rainfallValueNum = 0;
-                }
-                if (rainfallValueNum > 0) {
+                if (rainfallValueNum >= 0) {
                     String level = RainfallHelper.getRainfallLevel(rainfallValue);
                     Integer num = rainfallValueMap.get(level);
                     num ++;
@@ -185,10 +182,7 @@ public class RealTimeControlTask {
 
             if (!windSpeedValue.equals("")) {
                 double windSpeedValueNum = Double.valueOf(windSpeedValue);
-                if (windSpeedValueNum < 0) {
-                    windSpeedValueNum = 0;
-                }
-                if (windSpeedValueNum > 0) {
+                if (windSpeedValueNum >= 0) {
                     String level = WindHelper.getWindLevel(windSpeedValue);
                     Integer num = windSpeedValueMap.get(level);
                     num ++;
@@ -229,7 +223,12 @@ public class RealTimeControlTask {
 
     private int monitoringSiteAvailable(String value) {
         if (! value.equals("")) {
-            return 1;
+            double doubleValue = Double.valueOf(value);
+            if (doubleValue < 0) {
+                return 0;
+            } else {
+                return 1;
+            }
         } else {
             return 0;
         }
@@ -650,8 +649,8 @@ public class RealTimeControlTask {
 
         JSONArray historyWarningAvgValue = new JSONArray();
         JSONObject historyWarningAvgObject = new JSONObject();
-        historyWarningAvgMap.forEach((k, v) -> historyWarningAvgObject.put(k, v / total));
-        historyWarningAvgObject.put("total", totalNum / total);
+        historyWarningAvgMap.forEach((k, v) -> historyWarningAvgObject.put(k, ((double) v) / total));
+        historyWarningAvgObject.put("total", ((double) totalNum) / total);
         historyWarningAvgValue.add(historyWarningAvgObject);
 
         RealTimeControlDataEntity historyWarningAvg = new RealTimeControlDataEntity();
@@ -679,8 +678,8 @@ public class RealTimeControlTask {
 
         JSONArray historyWarningMonthValue = new JSONArray();
         JSONObject historyWarningMonthObject = new JSONObject();
-        historyWarningMouthMap.forEach((String k, Integer v) -> historyWarningMonthObject.put(k, v / total));
-        historyWarningMonthObject.put("total", totalNum / total);
+        historyWarningMouthMap.forEach((String k, Integer v) -> historyWarningMonthObject.put(k, ((double) v) / total));
+        historyWarningMonthObject.put("total", ((double) totalNum) / total);
         historyWarningMonthValue.add(historyWarningMonthObject);
 
         RealTimeControlDataEntity historyWarningMonth = new RealTimeControlDataEntity();
@@ -770,8 +769,8 @@ public class RealTimeControlTask {
 
         JSONArray historyDisasterAvgValue = new JSONArray();
         JSONObject historyDisasterAvgObject = new JSONObject();
-        historyDisasterAvgMap.forEach((String k, Integer v) -> historyDisasterAvgObject.put(k, v / total));
-        historyDisasterAvgObject.put("total", totalNum / total);
+        historyDisasterAvgMap.forEach((String k, Integer v) -> historyDisasterAvgObject.put(k, ((double) v) / total));
+        historyDisasterAvgObject.put("total", ((double) totalNum) / total);
         historyDisasterAvgValue.add(historyDisasterAvgObject);
 
         RealTimeControlDataEntity historyDisasterAvg = new RealTimeControlDataEntity();
@@ -798,8 +797,8 @@ public class RealTimeControlTask {
 
         JSONArray historyDisasterMonthValue = new JSONArray();
         JSONObject historyDisasterMonthObject = new JSONObject();
-        historyDisasterMouthMap.forEach((String k, Integer v) -> historyDisasterMonthObject.put(k, v / total));
-        historyDisasterMonthObject.put("total", totalNum / total);
+        historyDisasterMouthMap.forEach((String k, Integer v) -> historyDisasterMonthObject.put(k, ((double) v) / total));
+        historyDisasterMonthObject.put("total", ((double) totalNum) / total);
         historyDisasterMonthValue.add(historyDisasterMonthObject);
 
         RealTimeControlDataEntity historyDisasterMonth = new RealTimeControlDataEntity();
