@@ -5,6 +5,7 @@ import com.adc.disasterforecast.entity.RealTimeControlDataEntity;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.global.RealTimeControlTaskName;
 import com.adc.disasterforecast.tools.*;
+import org.apache.poi.ss.usermodel.Row;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -579,13 +580,33 @@ public class RealTimeControlTask {
         String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
 
         // 获取开始年份
-        String beginTime = (Calendar.getInstance().get(Calendar.YEAR) - 10) + "0101000000";
+        int baseTime = Calendar.getInstance().get(Calendar.YEAR) - 10;
+        String beginTime = (baseTime > 2016 ? baseTime : 2016) + "0101000000";
         String endTime = DateHelper.getCurrentTimeInString("year");
 
         String url = baseUrl + beginTime + "/" + endTime;
 
         JSONObject obj = HttpHelper.getDataByURL(url);
         JSONArray historyWarningArray = (JSONArray) obj.get("Data");
+
+        List<Row> historyWarningFromExcel = ExcelHelper.loadAllExcelFile();
+
+        for (Row row : historyWarningFromExcel) {
+            String content = ExcelHelper.getCellContent(row, 0);
+
+            if (content.contains("发布") && baseTime <= ExcelHelper.getWarningYear(content)) {
+                String date = ExcelHelper.getWarningDate(content);
+                String type = ExcelHelper.getWarningType(content);
+
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("FORECASTDATE", date);
+                jsonObject.put("TYPE", type);
+                jsonObject.put("OPERATION", "发布");
+
+                historyWarningArray.add(jsonObject);
+            }
+
+        }
 
         int total = addHistoryWarningAndGetTotalYear(historyWarningArray);
         addHistoryWarningAvg(historyWarningArray, total);
@@ -598,11 +619,16 @@ public class RealTimeControlTask {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
             int warningYear = Integer.valueOf(DateHelper.getYear((String) historyWarning.get("FORECASTDATE")));
+            String warningOperation = (String) historyWarning.get("OPERATION");
 
             if (historyWarningMap.containsKey(warningYear)) {
-                historyWarningMap.put(warningYear, historyWarningMap.get(warningYear) + 1);
+                if ("发布".equals(warningOperation)) {
+                    historyWarningMap.put(warningYear, historyWarningMap.get(warningYear) + 1);
+                }
             } else {
-                historyWarningMap.put(warningYear, 1);
+                if ("发布".equals(warningOperation)) {
+                    historyWarningMap.put(warningYear, 1);
+                }
             }
         }
 
@@ -639,8 +665,9 @@ public class RealTimeControlTask {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
             String warningType = WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"));
+            String warningOperation = (String) historyWarning.get("OPERATION");
 
-            if (historyWarningAvgMap.containsKey(warningType)) {
+            if (historyWarningAvgMap.containsKey(warningType) && "发布".equals(warningOperation)) {
                 totalNum++;
                 historyWarningAvgMap.put(warningType, historyWarningAvgMap.get(warningType) + 1);
             }
@@ -667,10 +694,10 @@ public class RealTimeControlTask {
 
             if (String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1).equals(DateHelper.getMonth((String) historyWarning.get("FORECASTDATE")))) {
                 String warningType = WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"));
-
-                if (historyWarningMouthMap.containsKey(warningType)) {
-                    totalNum++;
+                String warningOperation = (String) historyWarning.get("OPERATION");
+                if (historyWarningMouthMap.containsKey(warningType) && "发布".equals(warningOperation)) {
                     historyWarningMouthMap.put(warningType, historyWarningMouthMap.get(warningType) + 1);
+                    totalNum++;
                 }
 
             }
