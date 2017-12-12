@@ -40,8 +40,6 @@ public class ExcelHelper {
                     }
                 }
             }
-
-            System.out.println(result.size());
         } catch (Exception e) {
             e.printStackTrace();
         }finally{
