@@ -257,6 +257,26 @@ public class DateHelper {
         return dates[0];
     }
 
+    public static String getPostponeDateByDay(int year, int month, int date, int hourOfDay, int minute, int second, int delayDay) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+
+        Calendar base = Calendar.getInstance();
+        base.set(year, month - 1, date, hourOfDay, minute, second);
+        base.add(Calendar.DATE, delayDay);
+
+        return simpleDateFormat.format(base.getTime());
+    }
+
+    public static String getPostponeDateByDay(String date, int delayDay) {
+        return getPostponeDateByDay(Integer.valueOf(date.substring(0, 4)),
+                Integer.valueOf(date.substring(4, 6)),
+                Integer.valueOf(date.substring(6, 8)),
+                Integer.valueOf(date.substring(8, 10)),
+                Integer.valueOf(date.substring(10, 12)),
+                Integer.valueOf(date.substring(12, 14)),
+                delayDay);
+    }
+
     public static void main(String[] args) {
         System.out.println(Calendar.getInstance().get(Calendar.MONTH));
     }
