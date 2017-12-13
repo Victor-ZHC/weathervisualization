@@ -393,6 +393,26 @@ public class RealTimeControlTask {
     }
 
     @PostConstruct
+    public void countWarningRiskForecast() {
+        logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
+
+        JSONObject data = new JSONObject();
+        data.put("baoyuneilao", "normal");
+        data.put("hangkongqixiang", "normal");
+        data.put("jiankangqixiang", "normal");
+        data.put("jiaotongqixiang", "normal");
+        data.put("haiyangqixiang", "normal");
+
+        JSONArray warningRiskForecastValue = new JSONArray();
+        warningRiskForecastValue.add(data);
+
+        RealTimeControlDataEntity warningRiskForecast = new RealTimeControlDataEntity();
+        warningRiskForecast.setName(RealTimeControlTaskName.WARNING_RISK_FORECAST);
+        warningRiskForecast.setValue(warningRiskForecastValue);
+        realTimeControlDAO.updateRealTimeControlDataByName(warningRiskForecast);
+    }
+
+    @PostConstruct
     @Scheduled(cron = "0 */10 * * * *")
     public void countEarlyWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.EARLY_WARNING));
