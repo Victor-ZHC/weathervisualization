@@ -40,7 +40,7 @@ public class RealTimeControlTask {
 
         JSONObject todayData = (JSONObject) todayDataList.get(0);
         todayLive.put("weather", todayData.get("Weather"));
-        todayLive.put("currentTemp", todayData.get("HighTmp"));
+        todayLive.put("currentTemp", todayData.get("LowTmp"));
 
         String futureUrl = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
         JSONObject future = HttpHelper.getDataByURL(futureUrl);
