@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class HttpHelper {
     // logger for HttpHelper
@@ -18,7 +19,11 @@ public class HttpHelper {
     public static JSONObject getDataByURL(String url) {
         logger.info("download JSON data from " + url);
 
-        OkHttpClient okHttpClient = new OkHttpClient();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.SECONDS)
+                .build();
+
         Request request = new Request.Builder()
                 .url(url)
                 .build();
