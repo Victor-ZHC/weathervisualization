@@ -29,46 +29,263 @@ public class RainfallTask {
     @Autowired
     private BackUpDataDAO backUpDataDAO;
 
-//    @PostConstruct
-//    @Scheduled(cron = "0 */10 * * * *")
-//    public void countSeeperSiteTOP10AndMax() {
-//        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_TOP10));
-//        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_MAX));
-//
-//        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationByTime/";
-//        String benginDate = DateHelper.getCurrentTimeInString("day");
-//        String endDate = DateHelper.getCurrentTimeInString("minute");
-//
-//        //Q:只有很少的积水站
-//
-//    }
-//
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * *")
-//    public void countNLInfluenceTOP10() {
-//        logger.info(String.format("began task：%s", RainfallTaskName.NL_INFLUENCE_TOP10));
-//        //http://61.152.126.152/JsonService_V2/AlarmJsonService.svc/GetPSQKForecastModel/{strStart}/{strEnd}
-//        //http://61.152.126.152/JsonService_V2/AlarmJsonService.svc/GetPSQKForecast/{strStart}/{strEnd}
-//        //疑似可以
-//    }
-//
-//   @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * *")
-//    public void countNLTOP10() {
-//       logger.info(String.format("began task：%s", RainfallTaskName.NL_TOP10));
-//        //http://61.152.126.152/JsonService_V2/AlarmJsonService.svc/GetPSQKForecastModel/{strStart}/{strEnd}
-//        //http://61.152.126.152/JsonService_V2/AlarmJsonService.svc/GetPSQKForecast/{strStart}/{strEnd}
-//        //疑似可以
-//    }
-//
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * *")
-//    public void countSeeperRankTOP10() {
-//        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_RANK_TOP10));
-//        //Q:只有很少的积水站
-//    }
-
     @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    public void countSeeperSiteTOP10AndMax() {
+        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_TOP10));
+        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_MAX));
+
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationData/";
+        String date = DateHelper.getCurrentTimeInString("minute");
+        String url = baseUrl + date;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) obj.get("Data");
+
+        List<JSONObject> list = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject station = (JSONObject) array.get(i);
+
+            JSONObject seeper = new JSONObject();
+            seeper.put("id", station.get("STATIONID"));
+            seeper.put("site", station.get("STATIONNAME"));
+            seeper.put("value", station.get("WATERDEPTH"));
+
+            list.add(seeper);
+        }
+
+        Collections.sort(list, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                if (((Number) o1.get("value")).doubleValue() - ((Number) o2.get("value")).doubleValue() > 0){
+                    return -1;
+                } else if (((Number) o1.get("value")).doubleValue() - ((Number) o2.get("value")).doubleValue() < 0) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+
+        JSONArray value = new JSONArray();
+        for (int i = 0; i < 10 && i < list.size(); i++) {
+            value.add(list.get(i));
+        }
+
+        RainfallDataEntity seeperSiteTOP10 = new RainfallDataEntity();
+        seeperSiteTOP10.setName(RainfallTaskName.SEEPER_SITE_TOP10);
+        seeperSiteTOP10.setValue(value);
+        rainfallDataDAO.updateRainfallDataByName(seeperSiteTOP10);
+
+        // get max
+        String maxSeeperSetId = ((String) list.get(0).get("id")).trim();
+
+        String maxBaseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
+        String beginDate = DateHelper.getCurrentTimeInString("day");
+        String maxurl = maxBaseUrl + beginDate + "/" + date;
+
+        JSONObject maxObj = HttpHelper.getDataByURL(maxurl);
+        JSONArray maxArray = (JSONArray) maxObj.get("Data");
+
+        List<JSONObject> maxList = new ArrayList<>();
+        for (int i = 0; i < maxArray.size(); i++) {
+            JSONObject maxData = (JSONObject) maxArray.get(i);
+            String seeperSetId = ((String) maxData.get("STATIONID")).trim();
+
+            if (maxSeeperSetId.equals(seeperSetId)) {
+                JSONObject max = new JSONObject();
+                max.put("date", DateHelper.getDateInLong((String) maxData.get("DATATIME")));
+                max.put("value", maxData.get("WATERDEPTH"));
+                maxList.add(max);
+            }
+        }
+
+        Collections.sort(maxList, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                return ((Number) o1.get("date")).longValue() - ((Number) o2.get("date")).longValue() > 0 ? 1 : -1;
+            }
+        });
+
+        JSONArray maxValue = new JSONArray();
+        maxValue.addAll(maxList);
+
+        RainfallDataEntity seeperSiteMax = new RainfallDataEntity();
+        seeperSiteMax.setName(RainfallTaskName.SEEPER_SITE_MAX);
+        seeperSiteMax.setValue(maxValue);
+        rainfallDataDAO.updateRainfallDataByName(seeperSiteMax);
+    }
+
+    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    public void countNLInfluenceTOP10() {
+        logger.info(String.format("began task：%s", RainfallTaskName.NL_INFLUENCE_TOP10));
+
+        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRiskAlarmByTime/";
+        String beginDate = "20150101000000";
+        String endDate = DateHelper.getCurrentTimeInString("day");
+
+        String url = baseUrl + beginDate + "/" + endDate;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) obj.get("Data");
+
+        Map<String, int[]> map = new HashMap<>();
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject data = (JSONObject) array.get(i);
+
+            if (! "解除".equals(data.get("State"))) {
+                String name = (String) data.get("ObjectName");
+                int level = ((Number) data.get("Level")).intValue() - 1;
+
+                if (map.containsKey(name)) {
+                    int[] levels = map.get(name);
+                    levels[level] += 1;
+                    map.put(name, levels);
+                } else {
+                    int[] levels = new int[4];
+                    levels[level] += 1;
+                    map.put(name, levels);
+                }
+            }
+        }
+
+        List<JSONObject> list = new ArrayList<>();
+        map.forEach((String k, int[] v) -> {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("zone", k);
+            jsonObject.put("level1", v[0]);
+            jsonObject.put("level2", v[1]);
+            jsonObject.put("level3", v[2]);
+            jsonObject.put("level4", v[3]);
+            jsonObject.put("sum", v[0] + v[1] + v[2] + v[3]);
+
+            list.add(jsonObject);
+        });
+
+        Collections.sort(list, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                return ((Number) o2.get("sum")).intValue() - ((Number) o1.get("sum")).intValue();
+            }
+        });
+
+        JSONArray value = new JSONArray();
+        for (int i = 0; i < 10 && i < list.size(); i++) {
+            value.add(list.get(i));
+        }
+
+        RainfallDataEntity NLInfluenceTOP10 = new RainfallDataEntity();
+        NLInfluenceTOP10.setName(RainfallTaskName.NL_INFLUENCE_TOP10);
+        NLInfluenceTOP10.setValue(value);
+        rainfallDataDAO.updateRainfallDataByName(NLInfluenceTOP10);
+    }
+
+    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    public void countNLTOP10() {
+        logger.info(String.format("began task：%s", RainfallTaskName.NL_TOP10));
+
+        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetPSQKForecastModelAreaByTime/";
+        String beginDate = "20150101000000";
+        String endDate = DateHelper.getCurrentTimeInString("day");
+
+        String url = baseUrl + beginDate + "/" + endDate;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) obj.get("Data");
+
+        Map<String, Integer> map = new HashMap<>();
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject data = (JSONObject) array.get(i);
+            String name = (String) data.get("AreaName");
+
+            if (map.containsKey(name)) {
+                map.put(name, map.get(name) + 1);
+            } else {
+                map.put(name, 1);
+            }
+        }
+
+        List<JSONObject> list = new ArrayList<>();
+        map.forEach((String k, Integer v) -> {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("zone", k);
+            jsonObject.put("value", v);
+
+            list.add(jsonObject);
+        });
+
+        Collections.sort(list, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                return ((Number) o2.get("value")).intValue() - ((Number) o1.get("value")).intValue();
+            }
+        });
+
+        JSONArray value = new JSONArray();
+        for (int i = 0; i < 10 && i < list.size(); i++) {
+            value.add(list.get(i));
+        }
+
+        RainfallDataEntity NLTOP10 = new RainfallDataEntity();
+        NLTOP10.setName(RainfallTaskName.NL_TOP10);
+        NLTOP10.setValue(value);
+        rainfallDataDAO.updateRainfallDataByName(NLTOP10);
+    }
+
+    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    public void countSeeperRankTOP10() {
+        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_RANK_TOP10));
+
+//        Set<String> seeperSetIdSet = StationHelper.getYPWaterStation();
+
+        String maxBaseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
+        String beginDate = "20150101000000";
+        String endDate = DateHelper.getCurrentTimeInString("day");
+        String url = maxBaseUrl + beginDate + "/" + endDate;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+//        JSONArray array = CsvHelper.getDataByURL((String) obj.get("Data"));
+        JSONArray array = (JSONArray) obj.get("Data");
+
+        List<JSONObject> list = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject data = (JSONObject) array.get(i);
+//            String seeperSetId = ((String) maxData.get("STATIONID")).trim();
+//
+//            if (seeperSetIdSet.contains(seeperSetId)) {
+//
+//            }
+            JSONObject max = new JSONObject();
+            max.put("date", DateHelper.getCsvDateInLong((String) data.get("DATATIME")));
+            max.put("value", Double.valueOf((String) data.get("WATERDEPTH")));
+            list.add(max);
+
+        }
+
+        Collections.sort(list, new Comparator<JSONObject>() {
+            @Override
+            public int compare(JSONObject o1, JSONObject o2) {
+                if (((Number) o1.get("value")).longValue() - ((Number) o2.get("value")).longValue() > 0) {
+                    return -1;
+                } else if (((Number) o1.get("value")).longValue() - ((Number) o2.get("value")).longValue() < 0) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        });
+
+        JSONArray value = new JSONArray();
+        for (int i = 0; i < 10 && i < list.size(); i++) {
+            value.add(list.get(i));
+        }
+
+        RainfallDataEntity seeperRankTOP10 = new RainfallDataEntity();
+        seeperRankTOP10.setName(RainfallTaskName.SEEPER_RANK_TOP10);
+        seeperRankTOP10.setValue(value);
+        rainfallDataDAO.updateRainfallDataByName(seeperRankTOP10);
+    }
+
+    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void countRainRankTOP10() {
         logger.info(String.format("began task：%s", RainfallTaskName.RAIN_RANK_TOP10));
 
@@ -357,7 +574,7 @@ public class RainfallTask {
         });
 
         RainfallDataEntity warning = new RainfallDataEntity();
-        warning.setName(RainfallTaskName.WARNING_NOTICE);
+        warning.setName(RainfallTaskName.WARNING);
         warning.setValue(earlyWarningValue);
         rainfallDataDAO.updateRainfallDataByName(warning);
     }
@@ -398,43 +615,39 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(disasterArea);
     }
 
-//    @PostConstruct
-//    @Scheduled(cron = "0 */10 * * * *")
-//    public void countSeeperSpread() {
-//        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SPREAD));
-//
-//        // 不知道从哪里获取
-//        // String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
-//
-////        String beginDate = DateHelper.getCurrentTimeInString("day");
-////        String endDate = DateHelper.getCurrentTimeInString("minute");
-////
-////        String url = baseUrl + beginDate + "/" + endDate;
-////
-////        JSONObject obj = HttpHelper.getDataByURL(url);
-////        JSONArray disasterArray = (JSONArray) obj.get("Data");
-////
-////        JSONArray value = new JSONArray();
-////        for (int i = 0; i < disasterArray.size(); i++) {
-////            JSONObject disasterObject = (JSONObject) disasterArray.get(i);
-////
-////            int district = ((Number) disasterObject.get("DISTRICT")).intValue();
-////
-////            if (district == 14) {
-////                JSONObject object = new JSONObject();
-////                JSONObject pos = new JSONObject();
-////                pos.put("lon", disasterObject.get("LONTITUDE"));
-////                pos.put("lat", disasterObject.get("LATITUDE"));
-////                object.put("pos", pos);
-////                value.add(object);
-////            }
-////        }
-////
-////        RainfallDataEntity disasterArea = new RainfallDataEntity();
-////        disasterArea.setName(RainfallTaskName.DISASTER_SPREAD);
-////        disasterArea.setValue(value);
-////        rainfallDataDAO.updateRainfallDataByName(disasterArea);
-//    }
+    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    public void countSeeperSpread() {
+        logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SPREAD));
+
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationData/";
+        String date = DateHelper.getCurrentTimeInString("minute");
+        String url = baseUrl + date;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) obj.get("Data");
+
+        JSONArray value = new JSONArray();
+        for (int i = 0; i < array.size(); i++) {
+            JSONObject seeperStation = (JSONObject) array.get(i);
+
+            JSONObject object = new JSONObject();
+            JSONObject pos = new JSONObject();
+            pos.put("lon", seeperStation.get("LON"));
+            pos.put("lat", seeperStation.get("LAT"));
+            object.put("pos", pos);
+
+            object.put("name", seeperStation.get("STATIONNAME"));
+
+            object.put("value", seeperStation.get("WATERDEPTH"));
+
+            value.add(object);
+        }
+
+        RainfallDataEntity seeperStationArea = new RainfallDataEntity();
+        seeperStationArea.setName(RainfallTaskName.SEEPER_SPREAD);
+        seeperStationArea.setValue(value);
+        rainfallDataDAO.updateRainfallDataByName(seeperStationArea);
+    }
 
     @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countRainSpread() {
