@@ -79,7 +79,13 @@ public class RainfallTask {
         Collections.sort(list, new Comparator<Map<String, Number>>() {
             @Override
             public int compare(Map<String, Number> o1, Map<String, Number> o2) {
-                return (o1.get("value")).doubleValue() - (o2.get("value")).doubleValue() > 0 ? -1 : 1;
+                if ((o1.get("value")).doubleValue() - (o2.get("value")).doubleValue() > 0) {
+                    return -1;
+                } else if ((o1.get("value")).doubleValue() - (o2.get("value")).doubleValue() < 0) {
+                    return 1;
+                } else {
+                    return 0;
+                }
             }
         });
 
