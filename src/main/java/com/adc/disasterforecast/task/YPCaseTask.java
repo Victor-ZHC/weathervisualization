@@ -15,10 +15,11 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Component
@@ -30,7 +31,7 @@ public class YPCaseTask {
     @Autowired
     private YPCaseDataDAO ypCaseDataDAO;
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countSurvey() {
         String baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetCommunityListByDistrict/";
 
@@ -98,7 +99,7 @@ public class YPCaseTask {
         ypCaseDataDAO.updateYPCaseDataByName(historyDisaster);
     }
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countNotice() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_NOTICE));
 
@@ -217,7 +218,7 @@ public class YPCaseTask {
     * @Author lilin
     * @Create 2017/11/28 17:29
     **/
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void getWarningService() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_WARNING_SERVICE));
 
@@ -330,7 +331,7 @@ public class YPCaseTask {
     * @Author lilin
     * @Create 2017/11/28 19:58
     **/
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countRainAndSeeper() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_RAIN_SEEPER));
 
@@ -386,7 +387,7 @@ public class YPCaseTask {
         ypCaseDataDAO.updateYPCaseDataByName(seeperData);
     }
 
-    @PostConstruct
+    @EventListener(ApplicationReadyEvent.class)
     public void countRainAndSeeperByStation(){
         countRainAndSeeperByTime(YPRegionInfo.XINJIANGWAN_RAIN_STATIONNAME, YPRegionInfo.XINJIANGWAN_SEEPER_STATIONNAME,
                 YPCaseTaskName.YPCASE_RAIN_TIME, YPCaseTaskName.YPCASE_SEEPER_TIME);

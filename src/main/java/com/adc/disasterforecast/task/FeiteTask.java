@@ -11,10 +11,10 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.stereotype.Component;
+import org.springframework.context.event.EventListener;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,7 @@ public class FeiteTask {
     @Autowired
     private FeiteDataDAO feiteDataDAO;
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countRegionDiff() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
@@ -53,7 +53,7 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByName(diff);
     }
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countRegionRainfallDiff() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
@@ -138,7 +138,7 @@ public class FeiteTask {
         areaRainfalls.add(jsonObject);
     }
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countRegionDisasterDiff() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF));
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF));
@@ -231,9 +231,7 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByNameAndAlarmId(typeDiff);
     }
 
-
-
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void getRainfallAndGaleTop10ByAlarmId() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOP10));
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOP10));
@@ -396,7 +394,7 @@ public class FeiteTask {
         return hs;
     }
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void getDisasterLocation(){
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_LOCATION));
         JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
@@ -431,7 +429,7 @@ public class FeiteTask {
      * @Author lilin
      * @Create 2017/11/16 22:25
      **/
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void getWarning() {
         // String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
@@ -569,7 +567,7 @@ public class FeiteTask {
     * @Create 2017/11/16 17:51
     **/
 
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countRainfallAndMonitorWind() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL));
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOTAL));
@@ -747,7 +745,7 @@ public class FeiteTask {
     * @Author lilin
     * @Create 2017/11/16 21:10
     **/
-    @Scheduled(initialDelay = 0)
+    @EventListener(ApplicationReadyEvent.class)
     public void countDisasterReports() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
 
