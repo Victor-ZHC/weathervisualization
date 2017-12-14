@@ -57,6 +57,46 @@ public class DisasterTypeHelper {
     }
 
     public static JSONObject getAreaDisasterType(String area, List<JSONObject> disasters) {
+
+        JSONArray disasterTypeList = getDisasterTypeInJsonArray(disasters);
+
+        JSONObject areaDisasterType = new JSONObject();
+        areaDisasterType.put("area", area);
+        areaDisasterType.put("value", disasterTypeList);
+
+        return areaDisasterType;
+    }
+
+    public static String getDisasterTypeByCode(int disasterCode) {
+        switch (disasterCode) {
+                case 1: return "rain";
+                case 2: return "wind";
+                case 3: return "thunder";
+                default: return "";
+        }
+    }
+
+    public static String getDisasterType(String desc) {
+        if (desc.contains("高空")) {
+            return "高空坠物";
+        } else if (desc.contains("房屋进水")) {
+            return "房屋进水";
+        } else if (desc.contains("农田")) {
+            return "农田进水";
+        } else {
+            return "其他";
+        }
+    }
+
+    public static Map<String, Integer> getDisasterMap() {
+        Map<String, Integer> disasterMap = new HashMap<>();
+        for (int i = 0; i < disasterType.length; i++) {
+            disasterMap.put(disasterType[i], 0);
+        }
+        return disasterMap;
+    }
+
+    public static JSONArray getDisasterTypeInJsonArray(List<JSONObject> disasters) {
         int[] disasterType = new int[10];
         String[] disasterTypeName = {"树倒", "房屋进水", "工商业区域进水", "车辆受损", "交通受阻", "电力系统受损", "农作区进水", "建筑受损", "小区进水", "其他"};
 
@@ -100,39 +140,6 @@ public class DisasterTypeHelper {
             disasterTypeList.add(obj);
         }
 
-        JSONObject areaDisasterType = new JSONObject();
-        areaDisasterType.put("area", area);
-        areaDisasterType.put("value", disasterTypeList);
-
-        return areaDisasterType;
-    }
-
-    public static String getDisasterTypeByCode(int disasterCode) {
-        switch (disasterCode) {
-                case 1: return "rain";
-                case 2: return "wind";
-                case 3: return "thunder";
-                default: return "";
-        }
-    }
-
-    public static String getDisasterType(String desc) {
-        if (desc.contains("高空")) {
-            return "高空坠物";
-        } else if (desc.contains("房屋进水")) {
-            return "房屋进水";
-        } else if (desc.contains("农田")) {
-            return "农田进水";
-        } else {
-            return "其他";
-        }
-    }
-
-    public static Map<String, Integer> getDisasterMap() {
-        Map<String, Integer> disasterMap = new HashMap<>();
-        for (int i = 0; i < disasterType.length; i++) {
-            disasterMap.put(disasterType[i], 0);
-        }
-        return disasterMap;
+        return disasterTypeList;
     }
 }
