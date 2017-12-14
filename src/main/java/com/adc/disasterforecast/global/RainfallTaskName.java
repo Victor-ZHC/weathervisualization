@@ -17,5 +17,5 @@ public class RainfallTaskName {
     public static String SEEPER_SITE_MAX = "KPI_BYNL_SEEPER_SITE_MAX";
     public static String RAIN_SPREAD = "KPI_BYNL_RAIN_SPREAD";
     public static String RAIN_SITE_MAX = "KPI_BYNL_RAIN_SITE_MAX";
-    public static String KPI_BYNL_WARNING_NOTICE = "KPI_BYNL_WARNING_NOTICE";
+    public static String WARNING_NOTICE = "KPI_BYNL_WARNING_NOTICE";
 }
