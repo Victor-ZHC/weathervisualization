@@ -277,6 +277,15 @@ public class DateHelper {
                 delayDay);
     }
 
+    public static long getCsvDateInLong(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split(" ");
+        String[] dates = parts[0].split("/");
+        String[] times = parts[1].split(":");
+
+        return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + times[1] + times[2], 0);
+    }
+
     public static void main(String[] args) {
         System.out.println(Calendar.getInstance().get(Calendar.MONTH));
     }

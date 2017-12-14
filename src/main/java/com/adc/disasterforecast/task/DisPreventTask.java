@@ -258,10 +258,10 @@ public class DisPreventTask {
         Map<Long, Integer> weekAvgYearVal = new HashMap<>();
         for(Object obj: disasterData) {
             JSONObject disaster = (JSONObject) obj;
-            System.out.println(disaster);
+//            System.out.println(disaster);
             String month = (String) disaster.get("FORECASTDATE");
             String operation = (String) disaster.get("OPERATION");
-            System.out.println(disaster);
+//            System.out.println(disaster);
             if (operation != null && operation.compareTo("更新") == 0) continue;
             String type = (String) disaster.get("TYPE");
             if (type.compareTo(disasterType) != 0) continue;

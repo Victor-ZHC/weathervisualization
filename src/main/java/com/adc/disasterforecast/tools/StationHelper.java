@@ -34,4 +34,34 @@ public class StationHelper {
         autoStation.add("PS000388");
         return autoStation;
     }
+
+    public static Set<String> getYPWaterStation() {
+        Set<String> waterStation = new HashSet<>();
+        waterStation.add("2016050078");
+        waterStation.add("2016050113");
+        waterStation.add("2016050091");
+        waterStation.add("2016050129");
+        waterStation.add("82139353");
+        waterStation.add("11100006");
+        waterStation.add("11100008");
+        waterStation.add("11100007");
+        waterStation.add("11100001");
+        waterStation.add("11100002");
+        waterStation.add("11100003");
+        waterStation.add("11100009");
+        waterStation.add("11100010");
+        waterStation.add("2017050036");
+        waterStation.add("2017050037");
+        waterStation.add("2017050038");
+        waterStation.add("2017060009");
+        waterStation.add("2017060010");
+        waterStation.add("95274854");
+        waterStation.add("95274837");
+        waterStation.add("82275976");
+        waterStation.add("82275990");
+        waterStation.add("82275970");
+        waterStation.add("74467053");
+        waterStation.add("82275978");
+        return waterStation;
+    }
 }

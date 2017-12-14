@@ -72,7 +72,7 @@ public class BackUpTask {
     public void updateHistoryRainfall(){
         logger.info(String.format("began update task：%s", BackUpDataName.RAINFALL));
         String nowDate = DateHelper.getCurrentTimeInString("day");
-        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/";
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
         String beginDate = DateHelper.getPostponeDateByDay(nowDate, -1);
         String endDate = nowDate;
@@ -111,30 +111,4 @@ public class BackUpTask {
         }
         return max;
     }
-
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-//    public void updateHistoryWarning(){
-//        logger.info(String.format("began update task：%s", BackUpDataName.WARNING));
-//        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRiskAlarmByUsername/ypq";
-//
-//        JSONObject obj = HttpHelper.getDataByURL(url);
-//        JSONObject warningObj = (JSONObject) obj.get("Data");
-//        JSONArray subWarnings = (JSONArray) warningObj.get("SubAlarms");
-//
-//        JSONArray historyWarning = backUpDataDAO.findBackUpDataByName(BackUpDataName.WARNING).getValue();
-//
-//        for (int i = 0; i < subWarnings.size(); i++) {
-//            JSONObject subWarning = (JSONObject) subWarnings.get(i);
-//
-//            if (! "解除".equals(subWarning.get("OPERATION"))) {
-//                String name = (String) subWarning.get("Name");
-//                String date = (String) subWarning.get("FORECASTDATE");
-//                int level = WarningHelper.getWarningInInt((String) subWarning.get("LEVEL"));
-//
-//
-//            }
-//
-//        }
-//
-//    }
 }

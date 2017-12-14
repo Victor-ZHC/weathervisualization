@@ -20,8 +20,8 @@ public class HttpHelper {
         logger.info("download JSON data from " + url);
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(600, TimeUnit.SECONDS)
+                .readTimeout(600, TimeUnit.SECONDS)
                 .build();
 
         Request request = new Request.Builder()
