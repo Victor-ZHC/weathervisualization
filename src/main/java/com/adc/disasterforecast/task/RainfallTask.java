@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Component
@@ -29,7 +30,8 @@ public class RainfallTask {
     @Autowired
     private BackUpDataDAO backUpDataDAO;
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countSeeperSiteTOP10AndMax() {
         logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_TOP10));
         logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_MAX));
@@ -115,7 +117,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(seeperSiteMax);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void countNLInfluenceTOP10() {
         logger.info(String.format("began task：%s", RainfallTaskName.NL_INFLUENCE_TOP10));
 
@@ -179,7 +182,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(NLInfluenceTOP10);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void countNLTOP10() {
         logger.info(String.format("began task：%s", RainfallTaskName.NL_TOP10));
 
@@ -231,7 +235,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(NLTOP10);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void countSeeperRankTOP10() {
         logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_RANK_TOP10));
 
@@ -285,7 +290,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(seeperRankTOP10);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void countRainRankTOP10() {
         logger.info(String.format("began task：%s", RainfallTaskName.RAIN_RANK_TOP10));
 
@@ -319,7 +325,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(rainRankTOP10);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countRainSiteTOP10AndMax() {
         logger.info(String.format("began task：%s", RainfallTaskName.RAIN_SITE_TOP10));
         logger.info(String.format("began task：%s", RainfallTaskName.RAIN_SITE_MAX));
@@ -414,7 +421,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(rainSiteMax);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     public void countDisaster(){
         logger.info(String.format("began task：%s", RainfallTaskName.DISASTER));
         String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/";
@@ -439,7 +447,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(disaster);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countBYNLWarningAndNotice() {
         logger.info(String.format("began task：%s", RainfallTaskName.BYNL_WARNING));
         logger.info(String.format("began task：%s", RainfallTaskName.WARNING_NOTICE));
@@ -472,7 +481,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(notice);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countSeeperAndDrain() {
         logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_TOP10));
         logger.info(String.format("began task：%s", RainfallTaskName.DRAIN_TOP10));
@@ -537,7 +547,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(drain);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countWarning() {
         logger.info(String.format("began task：%s", RainfallTaskName.WARNING));
 
@@ -579,7 +590,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(warning);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countDisasterSpread() {
         logger.info(String.format("began task：%s", RainfallTaskName.DISASTER_SPREAD));
 
@@ -615,7 +627,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(disasterArea);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countSeeperSpread() {
         logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SPREAD));
 
@@ -649,7 +662,8 @@ public class RainfallTask {
         rainfallDataDAO.updateRainfallDataByName(seeperStationArea);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     public void countRainSpread() {
         logger.info(String.format("began task：%s", RainfallTaskName.RAIN_SPREAD));
 
