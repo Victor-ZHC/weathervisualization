@@ -409,12 +409,39 @@ public class RainfallTask {
     @PostConstruct
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @Scheduled(cron = "0 0 0 * * ?")
-    public void countDisaster(){
-        logger.info(String.format("began task：%s", RainfallTaskName.DISASTER));
+    public void countHistoryDisaster(){
+        logger.info(String.format("began task：%s", RainfallTaskName.HISTORY_DISASTER));
         String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/";
 
         String beginDate = "20150101000000";
         String endDate = DateHelper.getCurrentTimeInString("day");
+
+        String url = baseUrl + beginDate + "/" + endDate;
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONArray disasterArray = (JSONArray) obj.get("Data");
+
+        List<JSONObject> disasterList = new ArrayList<>();
+        disasterList.addAll(disasterArray);
+
+        JSONArray value = DisasterTypeHelper.getDisasterTypeInJsonArray(disasterList);
+
+        RainfallDataEntity disaster = new RainfallDataEntity();
+        disaster.setName(RainfallTaskName.HISTORY_DISASTER);
+        disaster.setValue(value);
+
+        rainfallDataDAO.updateRainfallDataByName(disaster);
+    }
+
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @Scheduled(cron = "0 0/10 * * * ?")
+    public void countDisaster(){
+        logger.info(String.format("began task：%s", RainfallTaskName.DISASTER));
+        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/";
+
+        String beginDate = DateHelper.getCurrentTimeInString("day");
+        String endDate = DateHelper.getCurrentTimeInString("minute");
 
         String url = baseUrl + beginDate + "/" + endDate;
 
@@ -453,7 +480,11 @@ public class RainfallTask {
             warning.put("count", 100);
 
             value.add(warning);
-            noticeValue.add(warningObj.get("CONTENT"));
+
+            JSONObject notice = new JSONObject();
+            notice.put("level", WarningHelper.getWarningInColor((String) warningObj.get("LEVEL")));
+            notice.put("value", warningObj.get("CONTENT"));
+            noticeValue.add(notice);
         }
 
         RainfallDataEntity BYNLWarning = new RainfallDataEntity();
@@ -495,8 +526,10 @@ public class RainfallTask {
             seeperList.add(seeperObject);
 
             JSONObject drainObject = new JSONObject();
+            double ratio = Double.valueOf((String) seeperAndDrain.get("RATIO"));
             drainObject.put("zone", seeperAndDrain.get("AreaName"));
-            drainObject.put("value", Double.valueOf((String) seeperAndDrain.get("RATIO")));
+            drainObject.put("value", ratio);
+            drainObject.put("level", getDrainLevel(ratio));
             drainList.add(drainObject);
         }
 
@@ -533,6 +566,20 @@ public class RainfallTask {
         drain.setName(RainfallTaskName.DRAIN_TOP10);
         drain.setValue(drainValue);
         rainfallDataDAO.updateRainfallDataByName(drain);
+    }
+
+    private int getDrainLevel (double ratio) {
+        if (ratio == 0) {
+            return 5;
+        } else if (ratio < 2.5) {
+            return 4;
+        } else if (ratio < 5) {
+            return 3;
+        } else if (ratio < 10){
+            return 2;
+        } else {
+            return 1;
+        }
     }
 
     @PostConstruct

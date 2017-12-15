@@ -134,15 +134,29 @@ public class WarningHelper {
 
     public static int getWarningInInt(String level) {
         if ("蓝色".equals(level)) {
-            return 1;
-        } else if ("黄色".equals(level)) {
-            return 2;
-        } else if ("橙色".equals(level)) {
-            return 3;
-        } else if ("红色".equals(level)) {
             return 4;
+        } else if ("黄色".equals(level)) {
+            return 3;
+        } else if ("橙色".equals(level)) {
+            return 2;
+        } else if ("红色".equals(level)) {
+            return 1;
         } else {
-            return 0;
+            return 5;
+        }
+    }
+
+    public static String getWarningInColor(String level) {
+        if ("蓝色".equals(level)) {
+            return "blue";
+        } else if ("黄色".equals(level)) {
+            return "yellow";
+        } else if ("橙色".equals(level)) {
+            return "orange";
+        } else if ("红色".equals(level)) {
+            return "red";
+        } else {
+            return "";
         }
     }
 }

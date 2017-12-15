@@ -7,6 +7,7 @@ public class RainfallTaskName {
     public static String NL_TOP10 = "KPI_BYNL_NL_TOP10";
     public static String SEEPER_RANK_TOP10 = "KPI_BYNL_SEEPER_RANK_TOP10";
     public static String RAIN_RANK_TOP10 = "KPI_BYNL_RAIN_RANK_TOP10";
+    public static String HISTORY_DISASTER = "KPI_BYNL_HISTORY_DISASTER";
     public static String DISASTER = "KPI_BYNL_DISASTER";
     public static String BYNL_WARNING = "KPI_BYNL_BYNL_WARNING";
     public static String SEEPER_TOP10 = "KPI_BYNL_SEEPER_TOP10";
