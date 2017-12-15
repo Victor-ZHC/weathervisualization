@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -912,8 +913,9 @@ public class HistoryAnalysisTask {
 //                }
 
                 long disasterCode = (long) disaster.get("CODE_DISASTER");
-                double lontitude = (double) disaster.get("LONTITUDE");
-                double latitude = (double) disaster.get("LATITUDE");
+                DecimalFormat decimalFormat = new DecimalFormat("#.0000");
+                double lontitude = Double.parseDouble(decimalFormat.format((double) disaster.get("LONTITUDE")));
+                double latitude = Double.parseDouble(decimalFormat.format((double) disaster.get("LATITUDE")));
                 String lon_lat_key = lontitude + "-" + latitude;
                 if (DisasterTypeHelper.DISASTER_RAIN_CODE == disasterCode) {
                     int rainDisasterDensityNum = 0;
@@ -1088,8 +1090,8 @@ public class HistoryAnalysisTask {
     **/
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+    //@PostConstruct
+    //@Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsHistoryIncident() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT));
 
