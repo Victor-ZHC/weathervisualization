@@ -404,7 +404,7 @@ public class DisPreventTask {
             String [] hashKey = entry.getKey().split(" ");
             for (int i =0; i< hashKey.length; i++){
                 Double d = Double.parseDouble(hashKey[i]);
-                hashKey[i] = String.format("%.4f", d);
+                hashKey[i] = String.format("%.3f", d);
             }
             location.put("lat", hashKey[0]);
             location.put("lon", hashKey[1]);

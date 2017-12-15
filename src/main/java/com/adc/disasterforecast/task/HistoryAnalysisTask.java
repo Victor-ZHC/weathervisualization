@@ -913,7 +913,7 @@ public class HistoryAnalysisTask {
 //                }
 
                 long disasterCode = (long) disaster.get("CODE_DISASTER");
-                DecimalFormat decimalFormat = new DecimalFormat("#.0000");
+                DecimalFormat decimalFormat = new DecimalFormat("#.000");
                 double lontitude = Double.parseDouble(decimalFormat.format((double) disaster.get("LONTITUDE")));
                 double latitude = Double.parseDouble(decimalFormat.format((double) disaster.get("LATITUDE")));
                 String lon_lat_key = lontitude + "-" + latitude;
