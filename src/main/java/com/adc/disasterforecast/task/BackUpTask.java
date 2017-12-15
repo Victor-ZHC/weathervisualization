@@ -202,4 +202,45 @@ public class BackUpTask {
         }
         return max;
     }
+
+//    @PostConstruct
+//    public void localContinueSeeper() {
+//        logger.info(String.format("began task：%s", BackUpDataName.SEEPER));
+//
+//        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
+//        String beginDate = "";
+//        String endDate = "";
+//
+//        String nowDate = DateHelper.getCurrentTimeInString("day");
+//
+//        int i = 0;
+//        JSONArray historySeeperValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.SEEPER).getValue();
+//        while (! nowDate.equals(endDate)) {
+//            beginDate = DateHelper.getPostponeDateByDay(2017, 3, 12, 0, 0, 0, i);
+//            endDate = DateHelper.getPostponeDateByDay(2017, 3, 13, 0, 0, 0, i);
+//
+//            String url = baseUrl + beginDate + "/" + endDate;
+//
+//            JSONObject obj = HttpHelper.getDataByURL(url);
+//            JSONArray waterStationDataArray = (JSONArray) obj.get("Data");
+//
+//            if (waterStationDataArray == null) {
+//                i++;
+//                continue;
+//            }
+//
+//            double max = getMaxWaterDepth(waterStationDataArray);
+//
+//            JSONObject maxWaterDepthByDay = new JSONObject();
+//            maxWaterDepthByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
+//            maxWaterDepthByDay.put("value", max);
+//            historySeeperValue.add(maxWaterDepthByDay);
+//            i++;
+//
+//            BackUpDataEntity historySeeper = new BackUpDataEntity();
+//            historySeeper.setName(BackUpDataName.SEEPER);
+//            historySeeper.setValue(historySeeperValue);
+//            backUpDataDAO.updateBackUpDataByName(historySeeper);
+//        }
+//    }
 }
