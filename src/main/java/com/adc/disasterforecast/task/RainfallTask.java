@@ -571,11 +571,11 @@ public class RainfallTask {
     private int getDrainLevel (double ratio) {
         if (ratio == 0) {
             return 5;
-        } else if (ratio < 2.5) {
+        } else if (ratio < 1.25) {
             return 4;
-        } else if (ratio < 5) {
+        } else if (ratio < 2.5) {
             return 3;
-        } else if (ratio < 10){
+        } else if (ratio < 5){
             return 2;
         } else {
             return 1;
