@@ -220,6 +220,12 @@ public class DateHelper {
         return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + times[1] + times[2], 0);
     }
 
+    public static long getDayOfYearInLong(String date) {
+        // 2017-08-04
+        String[] dates = date.split("-");
+        return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + "000000", 0);
+    }
+
     public static long getDateInLongByHour(String date) {
         // 2017-08-04T13:15:00
         String[] parts = date.split("T");
@@ -255,6 +261,12 @@ public class DateHelper {
         String[] dates = parts[1].split(":");
 
         return dates[0];
+    }
+
+    public static String getDayOfYear(String date) {
+        // 2017-08-04T13:15:00
+        String[] parts = date.split("T");
+        return parts[0];
     }
 
     public static String getPostponeDateByDay(int year, int month, int date, int hourOfDay, int minute, int second, int delayDay) {
