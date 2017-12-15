@@ -10,12 +10,14 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.CachedIntrospectionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Component
@@ -27,7 +29,9 @@ public class RealTimeControlTask {
     @Autowired
     private RealTimeControlDAO realTimeControlDAO;
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countWeatherLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WEATHER_LIVE));
 
@@ -75,7 +79,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(weatherLiveEntity);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countRainfallAndMonitorAndWind() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.RAINFALL_LIVE));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WIND_LIVE));
@@ -234,7 +240,9 @@ public class RealTimeControlTask {
         }
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countThunderLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_LIVE));
 
@@ -262,7 +270,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(thunderLiveData);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countMonitorStatsLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITOR_STATS_LIVE));
 
@@ -309,7 +319,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(monitorStats);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countThunderStatsLive() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_STATS_LIVE));
 
@@ -348,7 +360,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(thunderStatsLive);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countBroadcastV1() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V1));
 
@@ -369,7 +383,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(broadcastV1);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countBroadcastV2() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V2));
 
@@ -386,7 +402,8 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(broadcastV2);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countWarningRiskForecast() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
 
@@ -406,7 +423,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(warningRiskForecast);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countEarlyWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.EARLY_WARNING));
 
@@ -448,7 +467,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(earlyWarning);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countFocusActivities() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.FOCUS_ACTIVITIES));
 
@@ -465,7 +486,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(focusActivities);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countDisaster() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_LIVE));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_AREA));
@@ -581,7 +604,9 @@ public class RealTimeControlTask {
         realTimeControlDAO.updateRealTimeControlDataByName(disasterTime);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countHistoryWarning() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_AVG));
@@ -726,7 +751,9 @@ public class RealTimeControlTask {
     }
 
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countHistoryDisaster() {
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER));
         logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_AVG));

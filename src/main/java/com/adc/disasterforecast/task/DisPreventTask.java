@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.aggregation.ArrayOperators;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 
@@ -33,7 +34,9 @@ public class DisPreventTask {
     @Autowired
     private DisPreventDataDAO disPreventDataDAO;
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
         JSONObject disasterJsonYears;
         JSONArray disasterDataYears;
@@ -90,7 +93,9 @@ public class DisPreventTask {
 
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
         String date = DateHelper.getNow();

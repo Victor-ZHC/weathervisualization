@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -51,8 +52,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/7 22:10
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsWarnings() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WARNING_YEAR));
 
@@ -169,8 +172,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/7 23:05
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsWarningTrend() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WARNING_TREND_YEAR));
 
@@ -472,8 +477,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/8 22:47
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsWeatherDisaster() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WEATHER_DISASTER));
 
@@ -729,8 +736,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/9 0:38
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsDisasterFrequency() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_FREQUENCY));
 
@@ -826,8 +835,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/8 0:07
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsDisaster() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_AVG));
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TREND_YEAR));
@@ -1075,8 +1086,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/8 12:39
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsHistoryIncident() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT));
 
@@ -1105,8 +1118,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/10 11:40
     **/
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsDisasterType() {
         logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE));
 

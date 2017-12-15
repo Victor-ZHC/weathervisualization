@@ -297,8 +297,4 @@ public class DateHelper {
 
         return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + times[1] + times[2], 0);
     }
-
-    public static void main(String[] args) {
-        System.out.println(Calendar.getInstance().get(Calendar.MONTH));
-    }
 }

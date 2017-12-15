@@ -15,6 +15,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.context.event.EventListener;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class FeiteTask {
     @Autowired
     private FeiteDataDAO feiteDataDAO;
 
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countRegionDiff() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
@@ -53,7 +54,7 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByName(diff);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countRegionRainfallDiff() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
@@ -138,7 +139,7 @@ public class FeiteTask {
         areaRainfalls.add(jsonObject);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countRegionDisasterDiff() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF));
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF));
@@ -231,7 +232,7 @@ public class FeiteTask {
         feiteDataDAO.updateFeiteDataByNameAndAlarmId(typeDiff);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void getRainfallAndGaleTop10ByAlarmId() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOP10));
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOP10));
@@ -394,7 +395,7 @@ public class FeiteTask {
         return hs;
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void getDisasterLocation(){
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_LOCATION));
         JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
@@ -429,7 +430,7 @@ public class FeiteTask {
      * @Author lilin
      * @Create 2017/11/16 22:25
      **/
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void getWarning() {
         // String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
@@ -567,7 +568,7 @@ public class FeiteTask {
     * @Create 2017/11/16 17:51
     **/
 
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countRainfallAndMonitorWind() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL));
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOTAL));
@@ -745,7 +746,7 @@ public class FeiteTask {
     * @Author lilin
     * @Create 2017/11/16 21:10
     **/
-    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countDisasterReports() {
         logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
 

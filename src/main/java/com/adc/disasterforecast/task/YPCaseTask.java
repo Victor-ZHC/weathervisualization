@@ -20,6 +20,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Component
@@ -31,7 +32,8 @@ public class YPCaseTask {
     @Autowired
     private YPCaseDataDAO ypCaseDataDAO;
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countSurvey() {
         String baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetCommunityListByDistrict/";
 
@@ -58,7 +60,9 @@ public class YPCaseTask {
         ypCaseDataDAO.updateYPCaseDataByName(survey);
     }
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countHistoryDisaster() throws InterruptedException {
         String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
@@ -99,7 +103,8 @@ public class YPCaseTask {
         ypCaseDataDAO.updateYPCaseDataByName(historyDisaster);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countNotice() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_NOTICE));
 
@@ -218,7 +223,8 @@ public class YPCaseTask {
     * @Author lilin
     * @Create 2017/11/28 17:29
     **/
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void getWarningService() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_WARNING_SERVICE));
 
@@ -331,7 +337,8 @@ public class YPCaseTask {
     * @Author lilin
     * @Create 2017/11/28 19:58
     **/
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countRainAndSeeper() {
         logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_RAIN_SEEPER));
 
@@ -387,7 +394,8 @@ public class YPCaseTask {
         ypCaseDataDAO.updateYPCaseDataByName(seeperData);
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+//    @EventListener(ApplicationReadyEvent.class)
+    @PostConstruct
     public void countRainAndSeeperByStation(){
         countRainAndSeeperByTime(YPRegionInfo.XINJIANGWAN_RAIN_STATIONNAME, YPRegionInfo.XINJIANGWAN_SEEPER_STATIONNAME,
                 YPCaseTaskName.YPCASE_RAIN_TIME, YPCaseTaskName.YPCASE_SEEPER_TIME);
