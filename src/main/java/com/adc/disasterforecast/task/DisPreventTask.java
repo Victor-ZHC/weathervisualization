@@ -129,14 +129,31 @@ public class DisPreventTask {
 //        JSONObject YXYBJson = HttpHelper.getDataByURL(url);
 //        JSONArray YXYBData = (JSONArray) YXYBJson.get("Data");
 //        cnt = YXYBData.size();
-        stationData.put("yingxiangyubao", cnt);
+        JSONObject yxybJson = new JSONObject();
+        yxybJson.put("total", cnt);
+        cnt = 0;
+        yxybJson.put("add", cnt);
+        stationData.put("yingxiangyubao", yxybJson);
 
         baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
         url = baseUrl + beginDate + "/" + endDate;
         JSONObject weatherWarnningJson = HttpHelper.getDataByURL(url);
         JSONArray weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
         cnt = weatherWarnningData.size();
-        stationData.put("fengxianyujing", cnt);
+
+        JSONObject fxyjJson = new JSONObject();
+        fxyjJson.put("total", cnt);
+
+        endDate = DateHelper.getNow();
+        beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
+        url = baseUrl + beginDate + "/" + endDate;
+        weatherWarnningJson = HttpHelper.getDataByURL(url);
+        weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
+        System.out.println(weatherWarnningData);
+        cnt = weatherWarnningData.size();
+        fxyjJson.put("add", cnt);
+
+        stationData.put("fengxianyujing", fxyjJson);
         stationData.put("shandiandingweiyi", 4);
         stationData.put("jiaotongjiancedian", 789);
         stationData.put("hangkongjiancedian", 189);
@@ -385,8 +402,12 @@ public class DisPreventTask {
         for (Map.Entry<String, Integer> entry: locationMap.entrySet()) {
             JSONObject location = new JSONObject();
             String [] hashKey = entry.getKey().split(" ");
-            location.put("lat", Double.parseDouble(hashKey[0]));
-            location.put("lon", Double.parseDouble(hashKey[1]));
+            for (int i =0; i< hashKey.length; i++){
+                Double d = Double.parseDouble(hashKey[i]);
+                hashKey[i] = String.format("%.4f", d);
+            }
+            location.put("lat", hashKey[0]);
+            location.put("lon", hashKey[1]);
             location.put("value", entry.getValue());
             locationVal.add(location);
         }
