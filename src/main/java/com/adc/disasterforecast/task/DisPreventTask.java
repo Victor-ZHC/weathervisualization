@@ -131,7 +131,7 @@ public class DisPreventTask {
 //        cnt = YXYBData.size();
         JSONObject yxybJson = new JSONObject();
         yxybJson.put("total", cnt);
-        cnt = 0;
+        cnt = 4;
         yxybJson.put("add", cnt);
         stationData.put("yingxiangyubao", yxybJson);
 
@@ -144,13 +144,14 @@ public class DisPreventTask {
         JSONObject fxyjJson = new JSONObject();
         fxyjJson.put("total", cnt);
 
-        endDate = DateHelper.getNow();
-        beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
-        url = baseUrl + beginDate + "/" + endDate;
-        weatherWarnningJson = HttpHelper.getDataByURL(url);
-        weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
-        System.out.println(weatherWarnningData);
-        cnt = weatherWarnningData.size();
+//        endDate = DateHelper.getNow();
+//        beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
+//        url = baseUrl + beginDate + "/" + endDate;
+//        weatherWarnningJson = HttpHelper.getDataByURL(url);
+//        weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
+//        System.out.println(weatherWarnningData);
+//        cnt = weatherWarnningData.size();
+        cnt = 2;
         fxyjJson.put("add", cnt);
 
         stationData.put("fengxianyujing", fxyjJson);
