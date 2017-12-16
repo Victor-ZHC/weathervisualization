@@ -137,7 +137,7 @@ public class RainfallTask {
         for (int i = 0; i < array.size(); i++) {
             JSONObject data = (JSONObject) array.get(i);
 
-            if (! "解除".equals(data.get("State"))) {
+            if ("暴雨内涝风险预警".equals(data.get("Type")) && ! "解除".equals(data.get("State"))) {
                 String name = (String) data.get("ObjectName");
                 int level = ((Number) data.get("Level")).intValue() - 1;
 
@@ -202,12 +202,15 @@ public class RainfallTask {
         Map<String, Integer> map = new HashMap<>();
         for (int i = 0; i < array.size(); i++) {
             JSONObject data = (JSONObject) array.get(i);
-            String name = (String) data.get("AreaName");
 
-            if (map.containsKey(name)) {
-                map.put(name, map.get(name) + 1);
-            } else {
-                map.put(name, 1);
+            if (! "0".equals(data.get("FloodArea"))) {
+                String name = (String) data.get("AreaName");
+
+                if (map.containsKey(name)) {
+                    map.put(name, map.get(name) + 1);
+                } else {
+                    map.put(name, 1);
+                }
             }
         }
 
