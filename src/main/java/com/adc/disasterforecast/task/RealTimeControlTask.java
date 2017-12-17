@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
-@Component
+//@Component
 public class RealTimeControlTask {
     // logger for RealTimeControlTask
     private static final Logger logger = LoggerFactory.getLogger(RealTimeControlTask.class);

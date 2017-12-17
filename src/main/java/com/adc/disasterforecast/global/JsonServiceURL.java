@@ -11,4 +11,6 @@ public class JsonServiceURL {
     public static final String THUNDER_JSON_SERVICE_URL = "http://61.152.126.152/JsonService_V2/ThunderJsonService.svc/";
     public static final String VERIFY_USER_URL = "http://61.152.126.152/JsonService_V2/UserJsonService.svc/";
 
+    public static final String HEALTH_SEND_NUM_URL = "http://222.66.83.21:8282/V2/patrolhandler.do/?provider=MMShareBLL.DAL.HeathWeatheReport&method=GetSendNum&Date=";
+
 }
