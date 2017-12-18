@@ -35,6 +35,9 @@ public class Controller {
     @Autowired
     HealthDataDAO healthDataDAO;
 
+    @Autowired
+    OceanDataDAO oceanDataDAO;
+
     /**
      * handle all GET request from "feite" page by name
      * @param name data name
@@ -154,5 +157,18 @@ public class Controller {
         logger.info("get request from /jiankangqixiang/" + name);
         HealthDataEntity healthDataEntity = healthDataDAO.findHealthDataByName(name);
         return healthDataEntity;
+    }
+
+    /**
+     * handle all GET request from "haiyangqixiang" page by name
+     * @param name data name
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/haiyangqixiang/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public OceanDataEntity getOceanData(@PathVariable("name") String name) {
+        logger.info("get request from /haiyangqixiang/" + name);
+        OceanDataEntity oceanDataEntity = oceanDataDAO.findOceanDataByName(name);
+        return oceanDataEntity;
     }
 }
