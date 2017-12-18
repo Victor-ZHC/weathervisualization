@@ -34,6 +34,45 @@ public class HealthTask {
     private HealthDataDAO healthDataDAO;
 
     @PostConstruct
+    @Scheduled(cron = "0 0 0/1 * * ?")
+    public void fetchWeatherForecast() {
+        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_WEATHER_FORCAST));
+
+        HealthDataEntity healthDataEntity = new HealthDataEntity();
+        healthDataEntity.setName(HealthTaskName.KPI_JKQX_WEATHER_FORCAST);
+        JSONArray value = new JSONArray();
+        healthDataEntity.setValue(value);
+        JSONObject today = new JSONObject();
+        JSONObject tomorrow = new JSONObject();
+        value.add(today);
+        value.add(tomorrow);
+
+        String url = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
+        JSONObject jo = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) jo.get("Data");
+        JSONObject todayJo = (JSONObject) array.get(0);
+        JSONObject tomorrowJo = (JSONObject) array.get(1);
+
+        today.put("date", DateHelper.getPostponeDateByDay(0));
+        today.put("weather", todayJo.get("Day"));
+        today.put("minTemp", Integer.parseInt((String) todayJo.get("LowTmp")));
+        today.put("maxTemp", Integer.parseInt((String) todayJo.get("HighTmp")));
+        today.put("wind", (String) todayJo.get("Wind") + (String) todayJo.get("WindLev"));
+        today.put("pressure", 1021);
+        today.put("humidity", 65);
+
+        tomorrow.put("date", DateHelper.getPostponeDateByDay(1));
+        tomorrow.put("weather", tomorrowJo.get("Day"));
+        tomorrow.put("minTemp", Integer.parseInt((String) tomorrowJo.get("LowTmp")));
+        tomorrow.put("maxTemp", Integer.parseInt((String) tomorrowJo.get("HighTmp")));
+        tomorrow.put("wind", (String) tomorrowJo.get("Wind") + (String) tomorrowJo.get("WindLev"));
+        tomorrow.put("pressure", 1024);
+        tomorrow.put("humidity", 75);
+
+        healthDataDAO.updateHealthDataByName(healthDataEntity);
+    }
+
+    @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchAQI() {
         logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_AIR_QUALITY));
