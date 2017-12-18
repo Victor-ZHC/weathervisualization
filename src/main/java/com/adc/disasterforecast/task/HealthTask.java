@@ -6,6 +6,7 @@ import com.adc.disasterforecast.entity.HealthDataEntity;
 import com.adc.disasterforecast.entity.po.HistoryHealthData;
 import com.adc.disasterforecast.global.HealthTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
+import com.adc.disasterforecast.tools.DateHelper;
 import com.adc.disasterforecast.tools.HttpHelper;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -21,6 +22,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import static com.adc.disasterforecast.task.HealthTask.AirQualityType.*;
+
 
 @Component
 public class HealthTask {
@@ -29,6 +32,100 @@ public class HealthTask {
 
     @Autowired
     private HealthDataDAO healthDataDAO;
+
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
+    public void fetchAQI() {
+        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_AIR_QUALITY));
+
+        HealthDataEntity healthDataEntity = new HealthDataEntity();
+        healthDataEntity.setName(HealthTaskName.KPI_JKQX_AIR_QUALITY);
+        JSONArray value = new JSONArray();
+        healthDataEntity.setValue(value);
+        JSONObject realtimeData = new JSONObject();
+        value.add(realtimeData);
+
+        // 获取实时AQI数据
+        String url = String.format("%s%s/%s",
+                JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL,
+                "GetLastest_SHAQI_Realtime",
+                DateHelper.getNow());
+
+        JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) obj.get("Data");
+        JSONObject jo = (JSONObject) array.get(0);
+
+        JSONObject aqiRealtime = new JSONObject();
+        int aqi = (int) (long) jo.get("AQI");
+        aqiRealtime.put("value", aqi);
+        aqiRealtime.put("level", airQualityLevel(aqi, AQI));
+        JSONObject pm25Realtime = new JSONObject();
+        int pm25 = (int)((double)jo.get("PM2_5"));
+        pm25Realtime.put("value", pm25);
+        pm25Realtime.put("level", airQualityLevel(pm25, PM25));
+        JSONObject pm10Realtime = new JSONObject();
+        int pm10 = (int)((double)jo.get("PM10"));
+        pm10Realtime.put("value", pm10);
+        pm10Realtime.put("level", airQualityLevel(pm10, PM10));
+        JSONObject no2Realtime = new JSONObject();
+        int no2 = (int)((double)jo.get("NO2"));
+        no2Realtime.put("value", no2);
+        no2Realtime.put("level", airQualityLevel(no2, NO2));
+        JSONObject so2Realtime = new JSONObject();
+        int so2 = (int)((double)jo.get("SO2"));
+        so2Realtime.put("value", so2);
+        so2Realtime.put("level", airQualityLevel(so2, SO2));
+        JSONObject o3Realtime = new JSONObject();
+        int o3 = (int)((double)jo.get("O3"));
+        o3Realtime.put("value", o3);
+        o3Realtime.put("level", airQualityLevel(o3, O3));
+
+        realtimeData.put("date", new Date().getTime());
+        realtimeData.put("AQI", aqiRealtime);
+        realtimeData.put("PM25", pm25Realtime);
+        realtimeData.put("PM10", pm10Realtime);
+        realtimeData.put("O3", o3Realtime);
+        realtimeData.put("SO2", so2Realtime);
+        realtimeData.put("NO2", no2Realtime);
+
+        // 获取未来AQI数据
+        url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetAirQuality";
+        obj = HttpHelper.getDataByURL(url);
+        JSONObject data = (JSONObject) obj.get("Data");
+        array = (JSONArray) data.get("AQIDatas");
+
+        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+        int startIndex, endIndex;
+        if (hour >=6 && hour < 17) {
+            startIndex = 2;
+            endIndex = 5;
+        } else {
+            startIndex = 1;
+            endIndex = 4;
+        }
+
+        for (int i = startIndex; i < endIndex; ++i) {
+            JSONObject aqiData = (JSONObject) array.get(i);
+            String period = (String) aqiData.get("Period");
+            if (period.contains("（"))
+                period = period.substring(0, period.indexOf("（"));
+            String aqiStr = (String) aqiData.get("AQI");
+            int futureAqi = aqiStr.contains("-")
+                    ? Integer.parseInt(aqiStr.substring(aqiStr.indexOf("-") + 1))
+                    : Integer.parseInt(aqiStr);
+            int level = airQualityLevel(futureAqi, AQI);
+            JSONObject futureData = new JSONObject();
+            futureData.put("date", period);
+            JSONObject aqiInfo = new JSONObject();
+            aqiInfo.put("level", level);
+            aqiInfo.put("value", futureAqi);
+            futureData.put("AQI", aqiInfo);
+            value.add(futureData);
+        }
+
+        healthDataDAO.updateHealthDataByName(healthDataEntity);
+    }
+
 
     @PostConstruct
     @Scheduled(cron = "0 0 1 * * ?")
@@ -280,4 +377,58 @@ public class HealthTask {
         array.add(area);
     }
 
+    enum AirQualityType {
+        AQI,
+        PM25,
+        PM10,
+        O3,
+        NO2,
+        SO2
+    }
+
+    private int airQualityLevel(int value, AirQualityType type) {
+        switch (type) {
+            case AQI:
+                if (value < 50) return 1;
+                else if (value < 100) return 2;
+                else if (value < 150) return 3;
+                else if (value < 200) return 4;
+                else if (value < 300) return 5;
+                else return 6;
+            case PM25:
+                if (value < 35) return 1;
+                else if (value < 75) return 2;
+                else if (value < 115) return 3;
+                else if (value < 150) return 4;
+                else if (value < 250) return 5;
+                else return 6;
+            case PM10:
+                if (value < 50) return 1;
+                else if (value < 150) return 2;
+                else if (value < 250) return 3;
+                else if (value < 350) return 4;
+                else if (value < 420) return 5;
+                else return 6;
+            case SO2:
+                if (value < 150) return 1;
+                else if (value < 500) return 2;
+                else if (value < 650) return 3;
+                else return 4;
+            case NO2:
+                if (value < 100) return 1;
+                else if (value < 200) return 2;
+                else if (value < 700) return 3;
+                else if (value < 1200) return 4;
+                else if (value < 2340) return 5;
+                else return 6;
+            case O3:
+                if (value < 160) return 1;
+                else if (value < 200) return 2;
+                else if (value < 300) return 3;
+                else if (value < 400) return 4;
+                else if (value < 800) return 5;
+                else return 6;
+        }
+        return 1;
+    }
 }
