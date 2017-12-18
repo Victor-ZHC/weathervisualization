@@ -25,7 +25,7 @@ import java.util.*;
  * @author zhichengliu
  * @create -12-06-21:05
  **/
-//@Component
+@Component
 public class DisPreventTask {
     // logger for DisPreventTask
     private static final Logger logger = LoggerFactory.getLogger(DisPreventTask.class);

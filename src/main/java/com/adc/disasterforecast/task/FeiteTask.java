@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Component
+@Component
 public class FeiteTask {
     // logger for FeiteTask
     private static final Logger logger = LoggerFactory.getLogger(FeiteTask.class);

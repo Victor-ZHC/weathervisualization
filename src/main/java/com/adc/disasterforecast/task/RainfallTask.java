@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
-//@Component
+@Component
 public class RainfallTask {
     // logger for RealTimeControlTask
     private static final Logger logger = LoggerFactory.getLogger(RainfallTask.class);
