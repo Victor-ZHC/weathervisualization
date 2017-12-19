@@ -1061,7 +1061,7 @@ public class HistoryAnalysisTask {
                 JSONObject rainDisasterDensityObject = new JSONObject();
                 rainDisasterDensityObject.put("lon", lon);
                 rainDisasterDensityObject.put("lat", lat);
-                rainDisasterDensityObject.put("value", value);
+                rainDisasterDensityObject.put("value", (double) value / 10);
                 rainDisasterDensityArray.add(rainDisasterDensityObject);
             }
             for (Map.Entry<String, Integer> entry : windDisasterDensityMap.entrySet()) {
@@ -1073,7 +1073,7 @@ public class HistoryAnalysisTask {
                 JSONObject windDisasterDensityObject = new JSONObject();
                 windDisasterDensityObject.put("lon", lon);
                 windDisasterDensityObject.put("lat", lat);
-                windDisasterDensityObject.put("value", value);
+                windDisasterDensityObject.put("value", (double) value / 10);
                 windDisasterDensityArray.add(windDisasterDensityObject);
             }
             for (Map.Entry<String, Integer> entry : thunderDisasterDensityMap.entrySet()) {
@@ -1085,7 +1085,7 @@ public class HistoryAnalysisTask {
                 JSONObject thunderDisasterDensityObject = new JSONObject();
                 thunderDisasterDensityObject.put("lon", lon);
                 thunderDisasterDensityObject.put("lat", lat);
-                thunderDisasterDensityObject.put("value", value);
+                thunderDisasterDensityObject.put("value", (double) value / 10);
                 thunderDisasterDensityArray.add(thunderDisasterDensityObject);
             }
             disasterDensityResultObject.put("rain", rainDisasterDensityArray);
