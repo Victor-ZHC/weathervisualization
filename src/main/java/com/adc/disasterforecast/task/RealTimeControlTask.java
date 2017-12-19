@@ -924,4 +924,41 @@ public class RealTimeControlTask {
         historyDisasterMonth.setValue(historyDisasterMonthValue);
         realTimeControlDAO.updateRealTimeControlDataByName(historyDisasterMonth);
     }
+
+    @PostConstruct
+//    @Scheduled(initialDelay = 0, fixedDelay = 600000)
+    @Scheduled(cron = "0 0/10 * * * ?")
+    public void countDisasterSpread() {
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITOR_DISASTER_SPREAD));
+
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
+
+            String beginDate = DateHelper.getCurrentTimeInString("day");
+            String endDate = DateHelper.getCurrentTimeInString("minute");
+
+            String url = baseUrl + beginDate + "/" + endDate;
+
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray disasterArray = (JSONArray) obj.get("Data");
+
+            JSONArray value = new JSONArray();
+            for (int i = 0; i < disasterArray.size(); i++) {
+                JSONObject disasterObject = (JSONObject) disasterArray.get(i);
+
+                JSONObject object = new JSONObject();
+                object.put("lon", disasterObject.get("LONTITUDE"));
+                object.put("lat", disasterObject.get("LATITUDE"));
+
+                value.add(object);
+            }
+
+            RealTimeControlDataEntity disasterArea = new RealTimeControlDataEntity();
+            disasterArea.setName(RealTimeControlTaskName.MONITOR_DISASTER_SPREAD);
+            disasterArea.setValue(value);
+            realTimeControlDAO.updateRealTimeControlDataByName(disasterArea);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
 }

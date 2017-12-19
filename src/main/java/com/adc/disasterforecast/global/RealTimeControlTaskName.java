@@ -22,4 +22,5 @@ public class RealTimeControlTaskName {
     public static final String HISTORY_WARNING_AVG = "KPI_SSGK_HISTORY_WARNING_AVG";
     public static final String HISTORY_DISASTER_MONTH = "KPI_SSGK_HISTORY_DISASTER_MONTH";
     public static final String HISTORY_DISASTER_AVG = "KPI_SSGK_HISTORY_DISASTER_AVG";
+    public static final String MONITOR_DISASTER_SPREAD = "KPI_SSGK_MONITOR_DISASTER_SPREAD";
 }
