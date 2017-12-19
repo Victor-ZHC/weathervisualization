@@ -580,7 +580,7 @@ public class HistoryAnalysisTask {
                 for (int j = 0; j < size; j++) {
                     JSONObject disaster = (JSONObject) disasters.get(j);
                     int month = Integer.parseInt(DateHelper.getMonth((String) disaster.get("DATETIME_DISASTER")));
-                    if (DisasterTypeHelper.DISTRICT_CODE == (long) disaster.get("DISTRICT")) {
+//                    if (DisasterTypeHelper.DISTRICT_CODE == (long) disaster.get("DISTRICT")) {
                         if (DisasterTypeHelper.DISASTER_RAIN_CODE == (long) disaster.get("CODE_DISASTER")) {
                             totalRainNum ++;
                             yearRainDisasterNum ++;
@@ -611,7 +611,7 @@ public class HistoryAnalysisTask {
                             monthThunderWeatherDisasterObject.put("disasterValue", disasterValue);
                             monthThunderWeatherDisasterMap.put(month, monthThunderWeatherDisasterObject);
                         }
-                    }
+//                    }
                 }
                 JSONObject yearRainWeatherDisasterObject = yearRainWeatherDisasterMap.get(recent10Years[i]);
                 yearRainWeatherDisasterObject.put("disasterValue", yearRainDisasterNum);
