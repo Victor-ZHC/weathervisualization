@@ -11,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Random;
 
 @Component
 public class OceanTask {
@@ -28,18 +31,63 @@ public class OceanTask {
             fillData(OceanTaskName.HYQX_ABNORMAL_WAVE_MONTH, createKPI_HYQX_ABNORMAL_WAVE_MONTH());
             fillData(OceanTaskName.HYQX_SERVICE_PUBLISH, createKPI_HYQX_SERVICE_PUBLISH());
             fillData(OceanTaskName.HYQX_WARNING_TYPE, createKPI_HYQX_WARNING_TYPE());
-//        fillData(OceanTaskName.HYQX_WAVE_STEEPNESS, createKPI_HYQX_WAVE_STEEPNESS());
-//        fillData(OceanTaskName.HYQX_SHOAL_EFFECT, createKPI_HYQX_SHOAL_EFFECT());
-//        fillData(OceanTaskName.HYQX_SURGE_PROPORTION, createKPI_HYQX_SURGE_PROPORTION());
+            fillData(OceanTaskName.HYQX_WAVE_STEEPNESS, createKPI_HYQX_WAVE_STEEPNESS());
+            fillData(OceanTaskName.HYQX_SHOAL_EFFECT, createKPI_HYQX_SHOAL_EFFECT());
+            fillData(OceanTaskName.HYQX_SURGE_PROPORTION, createKPI_HYQX_SURGE_PROPORTION());
             fillData(OceanTaskName.HYQX_NAVIGATION_BROADCAST, createKPI_HYQX_NAVIGATION_BROADCAST());
-//        fillData(OceanTaskName.HYQX_SYNC_ROLLING, createKPI_HYQX_SYNC_ROLLING());
+            fillData(OceanTaskName.HYQX_SYNC_ROLLING, createKPI_HYQX_SYNC_ROLLING());
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-//    private JSONArray createKPI_HYQX_SYNC_ROLLING() {
-//    }
+    private JSONArray createKPI_HYQX_SYNC_ROLLING() {
+        JSONArray array = new JSONArray();
+        double upperBound = 1.5, lowerBound = 0.1;
+        array.add(createChart("A", upperBound, lowerBound));
+        array.add(createChart("B", upperBound, lowerBound));
+        array.add(createChart("C", upperBound, lowerBound));
+        array.add(createChart("D", upperBound, lowerBound));
+        return  array;
+    }
+
+    private JSONObject createChart(String siteName, double upperBound, double lowerBound) {
+        JSONObject jo = new JSONObject();
+        jo.put("site", "A");
+        JSONArray value = new JSONArray();
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, -3);
+        cal.add(Calendar.HOUR_OF_DAY, -1);
+        Random rand = new Random();
+        for (int i = 0; i < 72; ++i) {
+            JSONObject data = new JSONObject();
+            data.put("date", cal.getTimeInMillis());
+            data.put("value", rand.nextDouble() * (upperBound - lowerBound) + lowerBound);
+            cal.add(Calendar.HOUR_OF_DAY, 1);
+            value.add(data);
+        }
+        jo.put("value", value);
+        return jo;
+    }
+
+    private JSONObject createChart(String siteName, List<Integer> values) {
+        JSONObject jo = new JSONObject();
+        jo.put("site", "A");
+        JSONArray value = new JSONArray();
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, -3);
+        cal.add(Calendar.HOUR_OF_DAY, -1);
+        Random rand = new Random();
+        for (int i = 0; i < 72; ++i) {
+            JSONObject data = new JSONObject();
+            data.put("date", cal.getTimeInMillis());
+            data.put("value", values.get(rand.nextInt(values.size())));
+            cal.add(Calendar.HOUR_OF_DAY, 1);
+            value.add(data);
+        }
+        jo.put("value", value);
+        return jo;
+    }
 
     private JSONArray createKPI_HYQX_NAVIGATION_BROADCAST() {
         JSONArray array = new JSONArray();
@@ -71,14 +119,36 @@ public class OceanTask {
         return jo;
     }
 
-//    private JSONArray createKPI_HYQX_SURGE_PROPORTION() {
-//    }
+    private JSONArray createKPI_HYQX_SURGE_PROPORTION() {
+        JSONArray array = new JSONArray();
+        double upperBound = 2.8, lowerBound = 0.5;
+        array.add(createChart("A", upperBound, lowerBound));
+        array.add(createChart("B", upperBound, lowerBound));
+        array.add(createChart("C", upperBound, lowerBound));
+        array.add(createChart("D", upperBound, lowerBound));
+        return  array;
+    }
 
-//    private JSONArray createKPI_HYQX_SHOAL_EFFECT() {
-//    }
+    private JSONArray createKPI_HYQX_SHOAL_EFFECT() {
+        JSONArray array = new JSONArray();
+        double upperBound = 2.2, lowerBound = 0.2;
+        array.add(createChart("A", upperBound, lowerBound));
+        array.add(createChart("B", upperBound, lowerBound));
+        array.add(createChart("C", upperBound, lowerBound));
+        array.add(createChart("D", upperBound, lowerBound));
+        return  array;
+    }
 
-//    private JSONArray createKPI_HYQX_WAVE_STEEPNESS() {
-//    }
+    private JSONArray createKPI_HYQX_WAVE_STEEPNESS() {
+        JSONArray array = new JSONArray();
+        List<Integer> list = Arrays.asList(0, 1, 2, 3);
+        array.add(createChart("A", list));
+        array.add(createChart("B", list));
+        array.add(createChart("C", list));
+        array.add(createChart("D", list));
+        return  array;
+    }
+
 
     private JSONArray createKPI_HYQX_WARNING_TYPE() {
         JSONArray array = new JSONArray();
