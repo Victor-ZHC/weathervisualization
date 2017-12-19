@@ -297,4 +297,10 @@ public class DateHelper {
 
         return getPostponeDateByHourInLong(dates[0] + dates[1] + dates[2] + times[0] + times[1] + times[2], 0);
     }
+
+    public static Long differentDays(String beginDate, String endDate) {
+        Long cnt = Long.parseLong(getTimeMillis(endDate)) - Long.parseLong(getTimeMillis(beginDate));
+        return cnt / (1000 * 3600 * 24);
+    }
+
 }
