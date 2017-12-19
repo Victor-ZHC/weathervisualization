@@ -87,17 +87,15 @@ public class OceanTask {
         int rain = 6;
         int thunder = 34;
         int fog = 15;
-        int total = typhoon + wind + rain + thunder + fog;
-        array.add(createWarningType((float) typhoon / total * 100, "台风"));
-        array.add(createWarningType((float) wind / total * 100, "大风"));
-        array.add(createWarningType((float) rain / total * 100, "暴雨"));
-        array.add(createWarningType((float) thunder / total * 100, "雷电"));
-        array.add(createWarningType((float) fog / total * 100, "大雾"));
+        array.add(createWarningType(typhoon, "台风"));
+        array.add(createWarningType(wind, "大风"));
+        array.add(createWarningType(rain, "暴雨"));
+        array.add(createWarningType(thunder, "雷电"));
+        array.add(createWarningType(fog, "大雾"));
         return array;
     }
 
-    private JSONObject createWarningType(float value, String type) {
-        value = Float.valueOf(new DecimalFormat(".00").format(value));
+    private JSONObject createWarningType(int value, String type) {
         JSONObject jo = new JSONObject();
         jo.put("value", value);
         jo.put("type", type);

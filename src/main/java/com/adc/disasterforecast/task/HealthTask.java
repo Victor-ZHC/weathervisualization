@@ -418,15 +418,15 @@ public class HealthTask {
 
     private void fillHealthyMeteorologicalCityArray(int centerLevel, JSONArray array) {
         fillHealthyMeteorologicalForDistrict("zhongxinchengqu", centerLevel, array);
-        fillHealthyMeteorologicalForDistrict("pudongxinqu", 1, array);
-        fillHealthyMeteorologicalForDistrict("fengxian", 1, array);
-        fillHealthyMeteorologicalForDistrict("baoshan", 1, array);
-        fillHealthyMeteorologicalForDistrict("minhang", 1, array);
-        fillHealthyMeteorologicalForDistrict("jinshan", 1, array);
-        fillHealthyMeteorologicalForDistrict("songjiang", 1, array);
-        fillHealthyMeteorologicalForDistrict("qingpu", 1, array);
-        fillHealthyMeteorologicalForDistrict("jiading", 1, array);
-        fillHealthyMeteorologicalForDistrict("chongming", 1, array);
+        fillHealthyMeteorologicalForDistrict("pudongxinqu", 0, array);
+        fillHealthyMeteorologicalForDistrict("fengxian", 0, array);
+        fillHealthyMeteorologicalForDistrict("baoshan", 0, array);
+        fillHealthyMeteorologicalForDistrict("minhang", 0, array);
+        fillHealthyMeteorologicalForDistrict("jinshan", 0, array);
+        fillHealthyMeteorologicalForDistrict("songjiang", 0, array);
+        fillHealthyMeteorologicalForDistrict("qingpu", 0, array);
+        fillHealthyMeteorologicalForDistrict("jiading", 0, array);
+        fillHealthyMeteorologicalForDistrict("chongming", 0, array);
     }
 
     private void fillHealthyMeteorologicalForDistrict(String districtName, int level, JSONArray array) {
