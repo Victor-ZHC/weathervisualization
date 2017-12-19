@@ -302,6 +302,9 @@ public class RealTimeControlTask {
             for (int i = 0; i < autoStationDataArray.size(); i++) {
                 JSONObject autoStationDataObject = (JSONObject) autoStationDataArray.get(i);
 
+                if ("小洋山".equals(autoStationDataObject.get("STATIONNAME")))
+                    continue;
+
                 JSONObject autoStationData = new JSONObject();
 
                 JSONObject stationPos = new JSONObject();
