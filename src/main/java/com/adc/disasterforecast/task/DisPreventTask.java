@@ -38,111 +38,115 @@ public class DisPreventTask {
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
-        JSONObject disasterJsonYears;
-        JSONArray disasterDataYears;
-        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
-        String endDate = DateHelper.getNow();
-        String beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
-        String url = baseUrl + beginDate + "/" + endDate;
-        JSONObject disasterJson = HttpHelper.getDataByURL(url);
-        JSONArray disasterData = (JSONArray) disasterJson.get("Data");
-        getCurWarning(disasterData);
-        endDate = DateHelper.getNow().substring(0, 4) + "0101000000";
-        beginDate = DateHelper.getPostponeDateByYear(endDate, -10);
-        if (beginDate.compareTo("20160101000000") < 0){
-            int baseTime = Calendar.getInstance().get(Calendar.YEAR) - 10;
-            beginDate = (baseTime > 2016 ? baseTime : 2016) + "0101000000";
-            url = baseUrl + beginDate + "/" + endDate;
-            disasterJsonYears = HttpHelper.getDataByURL(url);
-            disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
-            List<Row> historyWarningFromExcel = ExcelHelper.loadAllExcelFile();
-            for (Row row : historyWarningFromExcel) {
-                String content = ExcelHelper.getCellContent(row, 0);
-                if (content.contains("发布") && baseTime <= ExcelHelper.getWarningYear(content)) {
-                    String date = ExcelHelper.getWarningDate(content);
-                    String type = ExcelHelper.getWarningType(content);
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("TYPE", type);
-                    jsonObject.put("FORECASTDATE", date);
-                    disasterDataYears.add(jsonObject);
+        try {
+            JSONObject disasterJsonYears;
+            JSONArray disasterDataYears;
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
+            String endDate = DateHelper.getNow();
+            String beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
+            String url = baseUrl + beginDate + "/" + endDate;
+            JSONObject disasterJson = HttpHelper.getDataByURL(url);
+            JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+            getCurWarning(disasterData);
+            endDate = DateHelper.getNow().substring(0, 4) + "0101000000";
+            beginDate = DateHelper.getPostponeDateByYear(endDate, -10);
+            if (beginDate.compareTo("20160101000000") < 0){
+                int baseTime = Calendar.getInstance().get(Calendar.YEAR) - 10;
+                beginDate = (baseTime > 2016 ? baseTime : 2016) + "0101000000";
+                url = baseUrl + beginDate + "/" + endDate;
+                disasterJsonYears = HttpHelper.getDataByURL(url);
+                disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
+                List<Row> historyWarningFromExcel = ExcelHelper.loadAllExcelFile();
+                for (Row row : historyWarningFromExcel) {
+                    String content = ExcelHelper.getCellContent(row, 0);
+                    if (content.contains("发布") && baseTime <= ExcelHelper.getWarningYear(content)) {
+                        String date = ExcelHelper.getWarningDate(content);
+                        String type = ExcelHelper.getWarningType(content);
+                        JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("TYPE", type);
+                        jsonObject.put("FORECASTDATE", date);
+                        disasterDataYears.add(jsonObject);
+                    }
                 }
-            }
 
-        } else {
+            } else {
+                url = baseUrl + beginDate + "/" + endDate;
+                disasterJsonYears = HttpHelper.getDataByURL(url);
+                disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
+            }
+            getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+            getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
+            getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
+
+            baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
+            endDate = DateHelper.getNow();
+            beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
+            url = baseUrl + beginDate + "/" + endDate;
+            disasterJson = HttpHelper.getDataByURL(url);
+            disasterData = (JSONArray) disasterJson.get("Data");
+            getDisasterType(disasterData);
+            getLocation(disasterData);
+            beginDate = DateHelper.getPostponeDateByYear(endDate, -10);
             url = baseUrl + beginDate + "/" + endDate;
             disasterJsonYears = HttpHelper.getDataByURL(url);
-            disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
+            disasterDataYears = (JSONArray)disasterJsonYears.get("Data");
+            getDisasterCntAvg(disasterDataYears, disasterData);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-        getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
-        getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
-        getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
-
-        baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
-        endDate = DateHelper.getNow();
-        beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
-        url = baseUrl + beginDate + "/" + endDate;
-        disasterJson = HttpHelper.getDataByURL(url);
-        disasterData = (JSONArray) disasterJson.get("Data");
-        getDisasterType(disasterData);
-        getLocation(disasterData);
-        beginDate = DateHelper.getPostponeDateByYear(endDate, -10);
-        url = baseUrl + beginDate + "/" + endDate;
-        disasterJsonYears = HttpHelper.getDataByURL(url);
-        disasterDataYears = (JSONArray)disasterJsonYears.get("Data");
-        getDisasterCntAvg(disasterDataYears, disasterData);
-
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
-        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
-        String date = DateHelper.getNow();
-        String url = baseUrl + date;
-        JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
-        JSONArray weatherStationData = (JSONArray) weatherStationJson.get("Data");
-        int weatherCnt = weatherStationData.size();
-        JSONObject stationData = new JSONObject();
-        stationData.put("qixiangzidongzhan", weatherCnt);
+        try {
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
+            String date = DateHelper.getNow();
+            String url = baseUrl + date;
+            JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
+            JSONArray weatherStationData = (JSONArray) weatherStationJson.get("Data");
+            int weatherCnt = weatherStationData.size();
+            JSONObject stationData = new JSONObject();
+            stationData.put("qixiangzidongzhan", weatherCnt);
 
-        baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterOut_Geliku/";
-        url = baseUrl + date;
-        JSONObject waterOutStationJson = HttpHelper.getDataByURL(url);
-        JSONArray waterOutStationData = (JSONArray) waterOutStationJson.get("Data");
-        int waterOutCnt = waterOutStationData.size();
-        stationData.put("shuiwenzhan", waterOutCnt);
+            baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterOut_Geliku/";
+            url = baseUrl + date;
+            JSONObject waterOutStationJson = HttpHelper.getDataByURL(url);
+            JSONArray waterOutStationData = (JSONArray) waterOutStationJson.get("Data");
+            int waterOutCnt = waterOutStationData.size();
+            stationData.put("shuiwenzhan", waterOutCnt);
 
-        baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData_Geliku/";
-        url = baseUrl + date;
-        JSONObject waterStationJson = HttpHelper.getDataByURL(url);
-        JSONArray waterStationData = (JSONArray) waterStationJson.get("Data");
-        int waterCnt = waterStationData.size();
-        stationData.put("jishuizhan", waterCnt);
+            baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData_Geliku/";
+            url = baseUrl + date;
+            JSONObject waterStationJson = HttpHelper.getDataByURL(url);
+            JSONArray waterStationData = (JSONArray) waterStationJson.get("Data");
+            int waterCnt = waterStationData.size();
+            stationData.put("jishuizhan", waterCnt);
 
-        // YXYB ret null data
-        baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYXYB/";
-        String endDate = DateHelper.getNow();
-        String beginDate = endDate.substring(0, 4) + "0101000000";
-        url = baseUrl + beginDate + "/" + endDate;
-        int cnt = 486;
+            // YXYB ret null data
+            baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYXYB/";
+            String endDate = DateHelper.getNow();
+            String beginDate = endDate.substring(0, 4) + "0101000000";
+            url = baseUrl + beginDate + "/" + endDate;
+            int cnt = 486;
 //        JSONObject YXYBJson = HttpHelper.getDataByURL(url);
 //        JSONArray YXYBData = (JSONArray) YXYBJson.get("Data");
 //        cnt = YXYBData.size();
-        JSONObject yxybJson = new JSONObject();
-        yxybJson.put("total", cnt);
-        cnt = 4;
-        yxybJson.put("add", cnt);
-        stationData.put("yingxiangyubao", yxybJson);
+            JSONObject yxybJson = new JSONObject();
+            yxybJson.put("total", cnt);
+            cnt = 4;
+            yxybJson.put("add", cnt);
+            stationData.put("yingxiangyubao", yxybJson);
 
-        baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
-        url = baseUrl + beginDate + "/" + endDate;
-        JSONObject weatherWarnningJson = HttpHelper.getDataByURL(url);
-        JSONArray weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
-        cnt = weatherWarnningData.size();
+            baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
+            url = baseUrl + beginDate + "/" + endDate;
+            JSONObject weatherWarnningJson = HttpHelper.getDataByURL(url);
+            JSONArray weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
+            cnt = weatherWarnningData.size();
 
-        JSONObject fxyjJson = new JSONObject();
-        fxyjJson.put("total", cnt);
+            JSONObject fxyjJson = new JSONObject();
+            fxyjJson.put("total", cnt);
 
 //        endDate = DateHelper.getNow();
 //        beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
@@ -151,27 +155,31 @@ public class DisPreventTask {
 //        weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
 //        System.out.println(weatherWarnningData);
 //        cnt = weatherWarnningData.size();
-        cnt = 2;
-        fxyjJson.put("add", cnt);
+            cnt = 2;
+            fxyjJson.put("add", cnt);
 
-        stationData.put("fengxianyujing", fxyjJson);
-        stationData.put("shandiandingweiyi", 4);
-        stationData.put("jiaotongjiancedian", 789);
-        stationData.put("hangkongjiancedian", 189);
-        stationData.put("shipinjiankongdian", 9876);
-        stationData.put("duanxin", 23422);
-        stationData.put("weixin", 54332);
-        stationData.put("app", 54332);
-        stationData.put("zhongduanxitong", 23345);
-        stationData.put("liandongxiangying", 23422);
+            stationData.put("fengxianyujing", fxyjJson);
+            stationData.put("shandiandingweiyi", 4);
+            stationData.put("jiaotongjiancedian", 789);
+            stationData.put("hangkongjiancedian", 189);
+            stationData.put("shipinjiankongdian", 9876);
+            stationData.put("duanxin", 23422);
+            stationData.put("weixin", 54332);
+            stationData.put("app", 54332);
+            stationData.put("zhongduanxitong", 23345);
+            stationData.put("liandongxiangying", 23422);
 
-        JSONArray valArray = new JSONArray();
-        valArray.add(stationData);
+            JSONArray valArray = new JSONArray();
+            valArray.add(stationData);
 
-        DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
-        disPreventDataEntity.setValue(valArray);
-        disPreventDataEntity.setName(DisPreventTaskName.FZJZ_DATA_COLLECTION_PLATFORM);
-        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
+            DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
+            disPreventDataEntity.setValue(valArray);
+            disPreventDataEntity.setName(DisPreventTaskName.FZJZ_DATA_COLLECTION_PLATFORM);
+            disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
 
     }
 

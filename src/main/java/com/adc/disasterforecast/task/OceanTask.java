@@ -23,15 +23,19 @@ public class OceanTask {
 
     @PostConstruct
     public void fillAllData() {
-        fillData(OceanTaskName.HYQX_COURSE_INFLUENCE, createKPI_HYQX_COURSE_INFLUENCE());
-        fillData(OceanTaskName.HYQX_ABNORMAL_WAVE_MONTH, createKPI_HYQX_ABNORMAL_WAVE_MONTH());
-        fillData(OceanTaskName.HYQX_SERVICE_PUBLISH, createKPI_HYQX_SERVICE_PUBLISH());
-        fillData(OceanTaskName.HYQX_WARNING_TYPE, createKPI_HYQX_WARNING_TYPE());
+        try {
+            fillData(OceanTaskName.HYQX_COURSE_INFLUENCE, createKPI_HYQX_COURSE_INFLUENCE());
+            fillData(OceanTaskName.HYQX_ABNORMAL_WAVE_MONTH, createKPI_HYQX_ABNORMAL_WAVE_MONTH());
+            fillData(OceanTaskName.HYQX_SERVICE_PUBLISH, createKPI_HYQX_SERVICE_PUBLISH());
+            fillData(OceanTaskName.HYQX_WARNING_TYPE, createKPI_HYQX_WARNING_TYPE());
 //        fillData(OceanTaskName.HYQX_WAVE_STEEPNESS, createKPI_HYQX_WAVE_STEEPNESS());
 //        fillData(OceanTaskName.HYQX_SHOAL_EFFECT, createKPI_HYQX_SHOAL_EFFECT());
 //        fillData(OceanTaskName.HYQX_SURGE_PROPORTION, createKPI_HYQX_SURGE_PROPORTION());
-        fillData(OceanTaskName.HYQX_NAVIGATION_BROADCAST, createKPI_HYQX_NAVIGATION_BROADCAST());
+            fillData(OceanTaskName.HYQX_NAVIGATION_BROADCAST, createKPI_HYQX_NAVIGATION_BROADCAST());
 //        fillData(OceanTaskName.HYQX_SYNC_ROLLING, createKPI_HYQX_SYNC_ROLLING());
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 //    private JSONArray createKPI_HYQX_SYNC_ROLLING() {

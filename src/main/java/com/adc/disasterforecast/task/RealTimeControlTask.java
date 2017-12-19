@@ -33,102 +33,110 @@ public class RealTimeControlTask {
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countWeatherLive() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.WEATHER_LIVE));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.WEATHER_LIVE));
 
-        String todayUrl = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "GetZXSForecast";
-        JSONObject today = HttpHelper.getDataByURL(todayUrl);
+            String todayUrl = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "GetZXSForecast";
+            JSONObject today = HttpHelper.getDataByURL(todayUrl);
 
-        JSONArray todayDataList = (JSONArray) today.get("Data");
+            JSONArray todayDataList = (JSONArray) today.get("Data");
 
-        JSONObject todayLive = new JSONObject();
+            JSONObject todayLive = new JSONObject();
 
-        JSONObject todayData = (JSONObject) todayDataList.get(0);
-        todayLive.put("weather", todayData.get("Weather"));
-        todayLive.put("currentTemp", todayData.get("LowTmp"));
+            JSONObject todayData = (JSONObject) todayDataList.get(0);
+            todayLive.put("weather", todayData.get("Weather"));
+            todayLive.put("currentTemp", todayData.get("LowTmp"));
 
-        String futureUrl = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
-        JSONObject future = HttpHelper.getDataByURL(futureUrl);
+            String futureUrl = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
+            JSONObject future = HttpHelper.getDataByURL(futureUrl);
 
-        JSONArray futureDataList = (JSONArray) future.get("Data");
+            JSONArray futureDataList = (JSONArray) future.get("Data");
 
-        JSONArray weatherLiveValue = new JSONArray();
+            JSONArray weatherLiveValue = new JSONArray();
 
-        for (int i = 0; i < 4; i++) {
-            JSONObject futureData = (JSONObject) futureDataList.get(i);
-            if (i == 0) {
-                todayLive.put("date", DateHelper.getPostponeDateByDay(i));
-                todayLive.put("minTemp", futureData.get("LowTmp"));
-                todayLive.put("maxTemp", futureData.get("HighTmp"));
+            for (int i = 0; i < 4; i++) {
+                JSONObject futureData = (JSONObject) futureDataList.get(i);
+                if (i == 0) {
+                    todayLive.put("date", DateHelper.getPostponeDateByDay(i));
+                    todayLive.put("minTemp", futureData.get("LowTmp"));
+                    todayLive.put("maxTemp", futureData.get("HighTmp"));
 
-                weatherLiveValue.add(todayLive);
-            } else {
-                JSONObject futureLive = new JSONObject();
-                futureLive.put("date", DateHelper.getPostponeDateByDay(i));
-                futureLive.put("weather", futureData.get("Day"));
-                futureLive.put("minTemp", futureData.get("LowTmp"));
-                futureLive.put("maxTemp", futureData.get("HighTmp"));
+                    weatherLiveValue.add(todayLive);
+                } else {
+                    JSONObject futureLive = new JSONObject();
+                    futureLive.put("date", DateHelper.getPostponeDateByDay(i));
+                    futureLive.put("weather", futureData.get("Day"));
+                    futureLive.put("minTemp", futureData.get("LowTmp"));
+                    futureLive.put("maxTemp", futureData.get("HighTmp"));
 
-                weatherLiveValue.add(futureLive);
+                    weatherLiveValue.add(futureLive);
+                }
             }
+
+            RealTimeControlDataEntity weatherLiveEntity = new RealTimeControlDataEntity();
+            weatherLiveEntity.setValue(weatherLiveValue);
+            weatherLiveEntity.setName(RealTimeControlTaskName.WEATHER_LIVE);
+
+            realTimeControlDAO.updateRealTimeControlDataByName(weatherLiveEntity);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        RealTimeControlDataEntity weatherLiveEntity = new RealTimeControlDataEntity();
-        weatherLiveEntity.setValue(weatherLiveValue);
-        weatherLiveEntity.setName(RealTimeControlTaskName.WEATHER_LIVE);
-
-        realTimeControlDAO.updateRealTimeControlDataByName(weatherLiveEntity);
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countRainfallAndMonitorAndWind() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.RAINFALL_LIVE));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.WIND_LIVE));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITORING_SITE));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.RAINFALL_LIVE));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.WIND_LIVE));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITORING_SITE));
 
-        int[] delayHour = {1, 3, 6};
+            int[] delayHour = {1, 3, 6};
 
-        String endDate = DateHelper.getCurrentTimeInString("hour");
+            String endDate = DateHelper.getCurrentTimeInString("hour");
 
-        JSONArray rainfallLiveValue = new JSONArray();
+            JSONArray rainfallLiveValue = new JSONArray();
 
-        for (int i = 0; i < delayHour.length; i++) {
-            String beginDate = DateHelper.getPostponeDateByHour(endDate, -delayHour[i]);
+            for (int i = 0; i < delayHour.length; i++) {
+                String beginDate = DateHelper.getPostponeDateByHour(endDate, -delayHour[i]);
 
-            String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
-                    beginDate + "/" + endDate + "/1";
+                String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
+                        beginDate + "/" + endDate + "/1";
 
-            JSONObject obj = HttpHelper.getDataByURL(url);
-            JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
+                JSONObject obj = HttpHelper.getDataByURL(url);
+                JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
 
-            if (i == 0) {
+                if (i == 0) {
 
-                JSONArray windValueArray = new JSONArray();
-                JSONArray monitorPointsNumArray = new JSONArray();
+                    JSONArray windValueArray = new JSONArray();
+                    JSONArray monitorPointsNumArray = new JSONArray();
 
-                addRainfallLive(rainfallLiveValue, autoStationDataArray, delayHour[i]);
-                addWindLive(windValueArray, autoStationDataArray);
-                addMonitoringSite(monitorPointsNumArray, autoStationDataArray);
+                    addRainfallLive(rainfallLiveValue, autoStationDataArray, delayHour[i]);
+                    addWindLive(windValueArray, autoStationDataArray);
+                    addMonitoringSite(monitorPointsNumArray, autoStationDataArray);
 
-                RealTimeControlDataEntity windLiveData = new RealTimeControlDataEntity();
-                windLiveData.setName(RealTimeControlTaskName.WIND_LIVE);
-                windLiveData.setValue(windValueArray);
-                realTimeControlDAO.updateRealTimeControlDataByName(windLiveData);
+                    RealTimeControlDataEntity windLiveData = new RealTimeControlDataEntity();
+                    windLiveData.setName(RealTimeControlTaskName.WIND_LIVE);
+                    windLiveData.setValue(windValueArray);
+                    realTimeControlDAO.updateRealTimeControlDataByName(windLiveData);
 
-                RealTimeControlDataEntity monitorPointsNumData = new RealTimeControlDataEntity();
-                monitorPointsNumData.setValue(monitorPointsNumArray);
-                monitorPointsNumData.setName(RealTimeControlTaskName.MONITORING_SITE);
-                realTimeControlDAO.updateRealTimeControlDataByName(monitorPointsNumData);
-            } else {
-                addRainfallLive(rainfallLiveValue, autoStationDataArray, delayHour[i]);
+                    RealTimeControlDataEntity monitorPointsNumData = new RealTimeControlDataEntity();
+                    monitorPointsNumData.setValue(monitorPointsNumArray);
+                    monitorPointsNumData.setName(RealTimeControlTaskName.MONITORING_SITE);
+                    realTimeControlDAO.updateRealTimeControlDataByName(monitorPointsNumData);
+                } else {
+                    addRainfallLive(rainfallLiveValue, autoStationDataArray, delayHour[i]);
+                }
             }
-        }
 
-        RealTimeControlDataEntity rainfallLiveData = new RealTimeControlDataEntity();
-        rainfallLiveData.setName(RealTimeControlTaskName.RAINFALL_LIVE);
-        rainfallLiveData.setValue(rainfallLiveValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(rainfallLiveData);
+            RealTimeControlDataEntity rainfallLiveData = new RealTimeControlDataEntity();
+            rainfallLiveData.setName(RealTimeControlTaskName.RAINFALL_LIVE);
+            rainfallLiveData.setValue(rainfallLiveValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(rainfallLiveData);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
 
     }
 
@@ -244,269 +252,305 @@ public class RealTimeControlTask {
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countThunderLive() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_LIVE));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_LIVE));
 
-        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "Get_1H_Lightning/";
+            String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "Get_1H_Lightning/";
 
-        JSONArray thunderLiveArray = new JSONArray();
-        String baseDate = DateHelper.getCurrentTimeInString("hour");
-        for (int i = 0; i < 24; i++) {
-            String endDate = DateHelper.getPostponeDateByHour(baseDate, -i);
-            String url = baseUrl + endDate;
+            JSONArray thunderLiveArray = new JSONArray();
+            String baseDate = DateHelper.getCurrentTimeInString("hour");
+            for (int i = 0; i < 24; i++) {
+                String endDate = DateHelper.getPostponeDateByHour(baseDate, -i);
+                String url = baseUrl + endDate;
 
-            JSONObject obj = HttpHelper.getDataByURL(url);
-            JSONArray thunderData = (JSONArray) obj.get("Data");
+                JSONObject obj = HttpHelper.getDataByURL(url);
+                JSONArray thunderData = (JSONArray) obj.get("Data");
 
-            JSONObject thunderLiveObject = new JSONObject();
-            thunderLiveObject.put("date", DateHelper.getPostponeDateByHourInLong(baseDate, -i));
-            thunderLiveObject.put("value", thunderData.size());
+                JSONObject thunderLiveObject = new JSONObject();
+                thunderLiveObject.put("date", DateHelper.getPostponeDateByHourInLong(baseDate, -i));
+                thunderLiveObject.put("value", thunderData.size());
 
-            thunderLiveArray.add(thunderLiveObject);
+                thunderLiveArray.add(thunderLiveObject);
+            }
+
+            RealTimeControlDataEntity thunderLiveData = new RealTimeControlDataEntity();
+            thunderLiveData.setName(RealTimeControlTaskName.THUNDER_LIVE);
+            thunderLiveData.setValue(thunderLiveArray);
+            realTimeControlDAO.updateRealTimeControlDataByName(thunderLiveData);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        RealTimeControlDataEntity thunderLiveData = new RealTimeControlDataEntity();
-        thunderLiveData.setName(RealTimeControlTaskName.THUNDER_LIVE);
-        thunderLiveData.setValue(thunderLiveArray);
-        realTimeControlDAO.updateRealTimeControlDataByName(thunderLiveData);
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countMonitorStatsLive() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITOR_STATS_LIVE));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.MONITOR_STATS_LIVE));
 
-        String endDate = DateHelper.getCurrentTimeInString("minute");
-        String beginDate = DateHelper.getPostponeDateByHour(endDate, -1);
+            String endDate = DateHelper.getCurrentTimeInString("minute");
+            String beginDate = DateHelper.getPostponeDateByHour(endDate, -1);
 
-        String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/" +
-                beginDate + "/" + endDate + "/1";
+            String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/" +
+                    beginDate + "/" + endDate + "/1";
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
 
-        JSONArray monitorStatsValue = new JSONArray();
-        for (int i = 0; i < autoStationDataArray.size(); i++) {
-            JSONObject autoStationDataObject = (JSONObject) autoStationDataArray.get(i);
+            JSONArray monitorStatsValue = new JSONArray();
+            for (int i = 0; i < autoStationDataArray.size(); i++) {
+                JSONObject autoStationDataObject = (JSONObject) autoStationDataArray.get(i);
 
-            JSONObject autoStationData = new JSONObject();
+                JSONObject autoStationData = new JSONObject();
 
-            JSONObject stationPos = new JSONObject();
-            stationPos.put("lon", Double.parseDouble((String) autoStationDataObject.get("LON")));
-            stationPos.put("lat", Double.parseDouble((String) autoStationDataObject.get("LAT")));
-            autoStationData.put("sitePos", stationPos);
+                JSONObject stationPos = new JSONObject();
+                stationPos.put("lon", Double.parseDouble((String) autoStationDataObject.get("LON")));
+                stationPos.put("lat", Double.parseDouble((String) autoStationDataObject.get("LAT")));
+                autoStationData.put("sitePos", stationPos);
 
-            autoStationData.put("siteName", autoStationDataObject.get("STATIONNAME"));
+                autoStationData.put("siteName", autoStationDataObject.get("STATIONNAME"));
 
-            JSONObject siteRain = new JSONObject();
-            String rainHour = (String) autoStationDataObject.get("RAINHOUR");
-            siteRain.put("amount", RainfallHelper.getRainHour(rainHour));
-            siteRain.put("level", RainfallHelper.getRainfallColor(rainHour));
-            autoStationData.put("site_rain", siteRain);
+                JSONObject siteRain = new JSONObject();
+                String rainHour = (String) autoStationDataObject.get("RAINHOUR");
+                siteRain.put("amount", RainfallHelper.getRainHour(rainHour));
+                siteRain.put("level", RainfallHelper.getRainfallColor(rainHour));
+                autoStationData.put("site_rain", siteRain);
 
-            JSONObject siteWind = new JSONObject();
-            String windSpeed = (String) autoStationDataObject.get("WINDSPEED");
-            siteWind.put("amount", WindHelper.getWindSpeed(windSpeed));
-            siteWind.put("level", WindHelper.getWindColor(windSpeed));
-            autoStationData.put("site_wind", siteWind);
+                JSONObject siteWind = new JSONObject();
+                String windSpeed = (String) autoStationDataObject.get("WINDSPEED");
+                siteWind.put("amount", WindHelper.getWindSpeed(windSpeed));
+                siteWind.put("level", WindHelper.getWindColor(windSpeed));
+                autoStationData.put("site_wind", siteWind);
 
-            monitorStatsValue.add(autoStationData);
+                monitorStatsValue.add(autoStationData);
+            }
+
+            RealTimeControlDataEntity monitorStats = new RealTimeControlDataEntity();
+            monitorStats.setName(RealTimeControlTaskName.MONITOR_STATS_LIVE);
+            monitorStats.setValue(monitorStatsValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(monitorStats);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        RealTimeControlDataEntity monitorStats = new RealTimeControlDataEntity();
-        monitorStats.setName(RealTimeControlTaskName.MONITOR_STATS_LIVE);
-        monitorStats.setValue(monitorStatsValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(monitorStats);
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countThunderStatsLive() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_STATS_LIVE));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.THUNDER_STATS_LIVE));
 
-        String endDate = DateHelper.getCurrentTimeInString("minute");
-        String beginDate = DateHelper.getPostponeDateByMinute(endDate, -10);
+            String endDate = DateHelper.getCurrentTimeInString("minute");
+            String beginDate = DateHelper.getPostponeDateByMinute(endDate, -10);
 
-        String url = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/ADTD/" +
-                beginDate + "/" + endDate;
+            String url = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/ADTD/" +
+                    beginDate + "/" + endDate;
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray thunderDataArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray thunderDataArray = (JSONArray) obj.get("Data");
 
-        JSONArray thunderStatsLiveValue = new JSONArray();
-        for (int i = 0; i < thunderDataArray.size(); i++) {
-            JSONObject thunderDataObject = (JSONObject) thunderDataArray.get(i);
+            JSONArray thunderStatsLiveValue = new JSONArray();
+            for (int i = 0; i < thunderDataArray.size(); i++) {
+                JSONObject thunderDataObject = (JSONObject) thunderDataArray.get(i);
 
-            JSONObject thunderData = new JSONObject();
+                JSONObject thunderData = new JSONObject();
 
-            JSONObject stationPos = new JSONObject();
-            stationPos.put("lon", Double.parseDouble((String) thunderDataObject.get("LON")));
-            stationPos.put("lat", Double.parseDouble((String) thunderDataObject.get("LAT")));
-            thunderData.put("sitePos", stationPos);
+                JSONObject stationPos = new JSONObject();
+                stationPos.put("lon", Double.parseDouble((String) thunderDataObject.get("LON")));
+                stationPos.put("lat", Double.parseDouble((String) thunderDataObject.get("LAT")));
+                thunderData.put("sitePos", stationPos);
 
-            thunderData.put("time", DateHelper.getDateInLong((String) thunderDataObject.get("DATETIME")));
+                thunderData.put("time", DateHelper.getDateInLong((String) thunderDataObject.get("DATETIME")));
 
-            thunderData.put("strength", thunderDataObject.get("PEAK_KA"));
+                thunderData.put("strength", thunderDataObject.get("PEAK_KA"));
 
-            thunderData.put("level", "red");
+                thunderData.put("level", "red");
 
-            thunderStatsLiveValue.add(thunderData);
+                thunderStatsLiveValue.add(thunderData);
+            }
+
+            RealTimeControlDataEntity thunderStatsLive = new RealTimeControlDataEntity();
+            thunderStatsLive.setName(RealTimeControlTaskName.THUNDER_STATS_LIVE);
+            thunderStatsLive.setValue(thunderStatsLiveValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(thunderStatsLive);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        RealTimeControlDataEntity thunderStatsLive = new RealTimeControlDataEntity();
-        thunderStatsLive.setName(RealTimeControlTaskName.THUNDER_STATS_LIVE);
-        thunderStatsLive.setValue(thunderStatsLiveValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(thunderStatsLive);
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countBroadcastV1() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V1));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V1));
 
-        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnning";
+            String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnning";
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray warningBroadcastDataArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray warningBroadcastDataArray = (JSONArray) obj.get("Data");
 
-        JSONArray broadcastValue = new JSONArray();
-        for (int i = 0; i < warningBroadcastDataArray.size(); i++) {
-            JSONObject warningBroadcastDataObject = (JSONObject) warningBroadcastDataArray.get(i);
-            broadcastValue.add(warningBroadcastDataObject.get("CONTENT"));
+            JSONArray broadcastValue = new JSONArray();
+            for (int i = 0; i < warningBroadcastDataArray.size(); i++) {
+                JSONObject warningBroadcastDataObject = (JSONObject) warningBroadcastDataArray.get(i);
+                broadcastValue.add(warningBroadcastDataObject.get("CONTENT"));
+            }
+
+            RealTimeControlDataEntity broadcastV1 = new RealTimeControlDataEntity();
+            broadcastV1.setName(RealTimeControlTaskName.BROADCAST_V1);
+            broadcastV1.setValue(broadcastValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(broadcastV1);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        RealTimeControlDataEntity broadcastV1 = new RealTimeControlDataEntity();
-        broadcastV1.setName(RealTimeControlTaskName.BROADCAST_V1);
-        broadcastV1.setValue(broadcastValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(broadcastV1);
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void countBroadcastV2() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V2));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.BROADCAST_V2));
 
-        RealTimeControlDataEntity entity = realTimeControlDAO.findRealTimeControlDataByName("All_ACTIVITIES");
-        JSONArray allActivities = entity.getValue();
-        int mouth = Calendar.getInstance().get(Calendar.MONTH);
+            RealTimeControlDataEntity entity = realTimeControlDAO.findRealTimeControlDataByName("All_ACTIVITIES");
+            JSONArray allActivities = entity.getValue();
+            int mouth = Calendar.getInstance().get(Calendar.MONTH);
 
-        JSONArray broadcastV2Value = new JSONArray();
-        broadcastV2Value.addAll(((Map<String, List>) allActivities.get(mouth)).get("content"));
+            JSONArray broadcastV2Value = new JSONArray();
+            broadcastV2Value.addAll(((Map<String, List>) allActivities.get(mouth)).get("content"));
 
-        RealTimeControlDataEntity broadcastV2 = new RealTimeControlDataEntity();
-        broadcastV2.setName(RealTimeControlTaskName.BROADCAST_V2);
-        broadcastV2.setValue(broadcastV2Value);
-        realTimeControlDAO.updateRealTimeControlDataByName(broadcastV2);
+            RealTimeControlDataEntity broadcastV2 = new RealTimeControlDataEntity();
+            broadcastV2.setName(RealTimeControlTaskName.BROADCAST_V2);
+            broadcastV2.setValue(broadcastV2Value);
+            realTimeControlDAO.updateRealTimeControlDataByName(broadcastV2);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
     public void countWarningRiskForecast() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
 
-        JSONObject data = new JSONObject();
-        data.put("baoyuneilao", "normal");
-        data.put("hangkongqixiang", "normal");
-        data.put("jiankangqixiang", "normal");
-        data.put("jiaotongqixiang", "normal");
-        data.put("haiyangqixiang", "normal");
+            JSONObject data = new JSONObject();
+            data.put("baoyuneilao", "normal");
+            data.put("hangkongqixiang", "normal");
+            data.put("jiankangqixiang", "normal");
+            data.put("jiaotongqixiang", "normal");
+            data.put("haiyangqixiang", "normal");
 
-        JSONArray warningRiskForecastValue = new JSONArray();
-        warningRiskForecastValue.add(data);
+            JSONArray warningRiskForecastValue = new JSONArray();
+            warningRiskForecastValue.add(data);
 
-        RealTimeControlDataEntity warningRiskForecast = new RealTimeControlDataEntity();
-        warningRiskForecast.setName(RealTimeControlTaskName.WARNING_RISK_FORECAST);
-        warningRiskForecast.setValue(warningRiskForecastValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(warningRiskForecast);
+            RealTimeControlDataEntity warningRiskForecast = new RealTimeControlDataEntity();
+            warningRiskForecast.setName(RealTimeControlTaskName.WARNING_RISK_FORECAST);
+            warningRiskForecast.setValue(warningRiskForecastValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(warningRiskForecast);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countEarlyWarning() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.EARLY_WARNING));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.EARLY_WARNING));
 
-        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
 
-        String beginDate = DateHelper.getCurrentTimeInString("day");
-        String endDate = DateHelper.getCurrentTimeInString("minute");
+            String beginDate = DateHelper.getCurrentTimeInString("day");
+            String endDate = DateHelper.getCurrentTimeInString("minute");
 
-        String url = baseUrl + beginDate + "/" + endDate;
+            String url = baseUrl + beginDate + "/" + endDate;
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray earlyWarningDataArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray earlyWarningDataArray = (JSONArray) obj.get("Data");
 
-        Map<String, String> earlyWarningMap = WarningHelper.getEarlyWarningMap();
+            Map<String, String> earlyWarningMap = WarningHelper.getEarlyWarningMap();
 
-        for (int i = 0; i < earlyWarningDataArray.size(); i++) {
-            JSONObject earlyWarningDataObject = (JSONObject) earlyWarningDataArray.get(i);
+            for (int i = 0; i < earlyWarningDataArray.size(); i++) {
+                JSONObject earlyWarningDataObject = (JSONObject) earlyWarningDataArray.get(i);
 
-            String warningType = WarningHelper.getWarningWeather((String) earlyWarningDataObject.get("TYPE"));
-            String warningLevel = WarningHelper.getWarningLevel((String) earlyWarningDataObject.get("LEVEL"));
+                String warningType = WarningHelper.getWarningWeather((String) earlyWarningDataObject.get("TYPE"));
+                String warningLevel = WarningHelper.getWarningLevel((String) earlyWarningDataObject.get("LEVEL"));
 
-            if (earlyWarningMap.containsKey(warningType)) {
-                earlyWarningMap.put(warningType, warningLevel);
+                if (earlyWarningMap.containsKey(warningType)) {
+                    earlyWarningMap.put(warningType, warningLevel);
+                }
+
             }
 
+            JSONArray earlyWarningValue = new JSONArray();
+            earlyWarningMap.forEach((String k, String v) -> {
+                JSONObject warning = new JSONObject();
+                warning.put("type", k);
+                warning.put("warning", v);
+                earlyWarningValue.add(warning);
+            });
+
+            RealTimeControlDataEntity earlyWarning = new RealTimeControlDataEntity();
+            earlyWarning.setName(RealTimeControlTaskName.EARLY_WARNING);
+            earlyWarning.setValue(earlyWarningValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(earlyWarning);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        JSONArray earlyWarningValue = new JSONArray();
-        earlyWarningMap.forEach((String k, String v) -> {
-            JSONObject warning = new JSONObject();
-            warning.put("type", k);
-            warning.put("warning", v);
-            earlyWarningValue.add(warning);
-        });
-
-        RealTimeControlDataEntity earlyWarning = new RealTimeControlDataEntity();
-        earlyWarning.setName(RealTimeControlTaskName.EARLY_WARNING);
-        earlyWarning.setValue(earlyWarningValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(earlyWarning);
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void countFocusActivities() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.FOCUS_ACTIVITIES));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.FOCUS_ACTIVITIES));
 
-        RealTimeControlDataEntity entity = realTimeControlDAO.findRealTimeControlDataByName("All_ACTIVITIES");
-        JSONArray allActivities = entity.getValue();
-        int mouth = Calendar.getInstance().get(Calendar.MONTH);
+            RealTimeControlDataEntity entity = realTimeControlDAO.findRealTimeControlDataByName("All_ACTIVITIES");
+            JSONArray allActivities = entity.getValue();
+            int mouth = Calendar.getInstance().get(Calendar.MONTH);
 
-        JSONArray focusActivitiesValue = new JSONArray();
-        focusActivitiesValue.addAll(((Map<String, List>) allActivities.get(mouth)).get("title"));
+            JSONArray focusActivitiesValue = new JSONArray();
+            focusActivitiesValue.addAll(((Map<String, List>) allActivities.get(mouth)).get("title"));
 
-        RealTimeControlDataEntity focusActivities = new RealTimeControlDataEntity();
-        focusActivities.setName(RealTimeControlTaskName.FOCUS_ACTIVITIES);
-        focusActivities.setValue(focusActivitiesValue);
-        realTimeControlDAO.updateRealTimeControlDataByName(focusActivities);
+            RealTimeControlDataEntity focusActivities = new RealTimeControlDataEntity();
+            focusActivities.setName(RealTimeControlTaskName.FOCUS_ACTIVITIES);
+            focusActivities.setValue(focusActivitiesValue);
+            realTimeControlDAO.updateRealTimeControlDataByName(focusActivities);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void countDisaster() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_LIVE));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_AREA));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_TIME_PERIOD));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_LIVE));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_AREA));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.DISASTER_TIME_PERIOD));
 
-        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
-        String beginDate = DateHelper.getCurrentTimeInString("day");
-        String endDate = DateHelper.getCurrentTimeInString("minute");
+            String beginDate = DateHelper.getCurrentTimeInString("day");
+            String endDate = DateHelper.getCurrentTimeInString("minute");
 
-        String url = baseUrl + beginDate + "/" + endDate;
+            String url = baseUrl + beginDate + "/" + endDate;
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray disasterArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray disasterArray = (JSONArray) obj.get("Data");
 
-        addDisasterLive(disasterArray);
-        addDisasterArea(disasterArray);
-        addDisasterTime(disasterArray);
+            addDisasterLive(disasterArray);
+            addDisasterArea(disasterArray);
+            addDisasterTime(disasterArray);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private void addDisasterLive(JSONArray disasterArray) {
@@ -608,44 +652,48 @@ public class RealTimeControlTask {
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void countHistoryWarning() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_AVG));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_MONTH));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_AVG));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_WARNING_MONTH));
 
-        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
 
-        // 获取开始年份
-        int baseTime = Calendar.getInstance().get(Calendar.YEAR) - 10;
-        String beginTime = (baseTime > 2016 ? baseTime : 2016) + "0101000000";
-        String endTime = DateHelper.getCurrentTimeInString("year");
+            // 获取开始年份
+            int baseTime = Calendar.getInstance().get(Calendar.YEAR) - 10;
+            String beginTime = (baseTime > 2016 ? baseTime : 2016) + "0101000000";
+            String endTime = DateHelper.getCurrentTimeInString("year");
 
-        String url = baseUrl + beginTime + "/" + endTime;
+            String url = baseUrl + beginTime + "/" + endTime;
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray historyWarningArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray historyWarningArray = (JSONArray) obj.get("Data");
 
-        List<Row> historyWarningFromExcel = ExcelHelper.loadAllExcelFile();
+            List<Row> historyWarningFromExcel = ExcelHelper.loadAllExcelFile();
 
-        for (Row row : historyWarningFromExcel) {
-            String content = ExcelHelper.getCellContent(row, 0);
+            for (Row row : historyWarningFromExcel) {
+                String content = ExcelHelper.getCellContent(row, 0);
 
-            if (content.contains("发布") && baseTime <= ExcelHelper.getWarningYear(content)) {
-                String date = ExcelHelper.getWarningDate(content);
-                String type = ExcelHelper.getWarningType(content);
+                if (content.contains("发布") && baseTime <= ExcelHelper.getWarningYear(content)) {
+                    String date = ExcelHelper.getWarningDate(content);
+                    String type = ExcelHelper.getWarningType(content);
 
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("FORECASTDATE", date);
-                jsonObject.put("TYPE", type);
-                jsonObject.put("OPERATION", "发布");
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("FORECASTDATE", date);
+                    jsonObject.put("TYPE", type);
+                    jsonObject.put("OPERATION", "发布");
 
-                historyWarningArray.add(jsonObject);
+                    historyWarningArray.add(jsonObject);
+                }
+
             }
 
+            int total = addHistoryWarningAndGetTotalYear(historyWarningArray);
+            addHistoryWarningAvg(historyWarningArray, total);
+            addHistoryWarningMouth(historyWarningArray, total);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        int total = addHistoryWarningAndGetTotalYear(historyWarningArray);
-        addHistoryWarningAvg(historyWarningArray, total);
-        addHistoryWarningMouth(historyWarningArray, total);
     }
 
     private int addHistoryWarningAndGetTotalYear(JSONArray historyWarningArray) {
@@ -755,24 +803,28 @@ public class RealTimeControlTask {
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void countHistoryDisaster() {
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_AVG));
-        logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_MONTH));
+        try {
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_AVG));
+            logger.info(String.format("began task：%s", RealTimeControlTaskName.HISTORY_DISASTER_MONTH));
 
-        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
-        // 获取开始年份
-        String beginTime = (Calendar.getInstance().get(Calendar.YEAR) - 10) + "0101000000";
-        String endTime = DateHelper.getCurrentTimeInString("year");
+            // 获取开始年份
+            String beginTime = (Calendar.getInstance().get(Calendar.YEAR) - 10) + "0101000000";
+            String endTime = DateHelper.getCurrentTimeInString("year");
 
-        String url = baseUrl + beginTime + "/" + endTime;
+            String url = baseUrl + beginTime + "/" + endTime;
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray historyDisasterArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray historyDisasterArray = (JSONArray) obj.get("Data");
 
-        int total = addHistoryDisasterAndGetTotalYear(historyDisasterArray);
-        addHistoryDisasterAvg(historyDisasterArray, total);
-        addHistoryDisasterMouth(historyDisasterArray, total);
+            int total = addHistoryDisasterAndGetTotalYear(historyDisasterArray);
+            addHistoryDisasterAvg(historyDisasterArray, total);
+            addHistoryDisasterMouth(historyDisasterArray, total);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private int addHistoryDisasterAndGetTotalYear(JSONArray historyDisasterArray) {

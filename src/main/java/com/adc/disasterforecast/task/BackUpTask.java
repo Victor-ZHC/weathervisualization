@@ -117,62 +117,70 @@ public class BackUpTask {
 //    @Scheduled(initialDelay = 86400000, fixedDelay = 86400000)
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateHistoryRainfall(){
-        logger.info(String.format("began update task：%s", BackUpDataName.RAINFALL));
-        String nowDate = DateHelper.getCurrentTimeInString("day");
-        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+        try {
+            logger.info(String.format("began update task：%s", BackUpDataName.RAINFALL));
+            String nowDate = DateHelper.getCurrentTimeInString("day");
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
-        String beginDate = DateHelper.getPostponeDateByDay(nowDate, -1);
-        String endDate = nowDate;
+            String beginDate = DateHelper.getPostponeDateByDay(nowDate, -1);
+            String endDate = nowDate;
 
 
-        String url = baseUrl + beginDate + "/" + endDate + "/1";
+            String url = baseUrl + beginDate + "/" + endDate + "/1";
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
 
-        double max = getMaxRainHour(autoStationDataArray);
+            double max = getMaxRainHour(autoStationDataArray);
 
-        JSONArray historyRainfallValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.RAINFALL).getValue();
-        JSONObject maxRainHourByDay = new JSONObject();
-        maxRainHourByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
-        maxRainHourByDay.put("value", max);
-        historyRainfallValue.add(maxRainHourByDay);
+            JSONArray historyRainfallValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.RAINFALL).getValue();
+            JSONObject maxRainHourByDay = new JSONObject();
+            maxRainHourByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
+            maxRainHourByDay.put("value", max);
+            historyRainfallValue.add(maxRainHourByDay);
 
-        BackUpDataEntity historyRainfall = new BackUpDataEntity();
-        historyRainfall.setName(BackUpDataName.RAINFALL);
-        historyRainfall.setValue(historyRainfallValue);
-        backUpDataDAO.updateBackUpDataByName(historyRainfall);
+            BackUpDataEntity historyRainfall = new BackUpDataEntity();
+            historyRainfall.setName(BackUpDataName.RAINFALL);
+            historyRainfall.setValue(historyRainfallValue);
+            backUpDataDAO.updateBackUpDataByName(historyRainfall);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 //    @Scheduled(initialDelay = 86400000, fixedDelay = 86400000)
     @Scheduled(cron = "0 0 0 * * ?")
     public void  updateHistorySeeper() {
-        logger.info(String.format("began task：%s", BackUpDataName.SEEPER));
+        try {
+            logger.info(String.format("began task：%s", BackUpDataName.SEEPER));
 
-        String nowDate = DateHelper.getCurrentTimeInString("day");
+            String nowDate = DateHelper.getCurrentTimeInString("day");
 
-        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
-        String beginDate = DateHelper.getPostponeDateByDay(nowDate, -1);
-        String endDate = nowDate;
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
+            String beginDate = DateHelper.getPostponeDateByDay(nowDate, -1);
+            String endDate = nowDate;
 
-        String url = baseUrl + beginDate + "/" + endDate;
+            String url = baseUrl + beginDate + "/" + endDate;
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray waterStationDataArray = (JSONArray) obj.get("Data");
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray waterStationDataArray = (JSONArray) obj.get("Data");
 
-        double max = getMaxWaterDepth(waterStationDataArray);
+            double max = getMaxWaterDepth(waterStationDataArray);
 
-        JSONArray historySeeperValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.SEEPER).getValue();
+            JSONArray historySeeperValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.SEEPER).getValue();
 
-        JSONObject maxWaterDepthByDay = new JSONObject();
-        maxWaterDepthByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
-        maxWaterDepthByDay.put("value", max);
-        historySeeperValue.add(maxWaterDepthByDay);
+            JSONObject maxWaterDepthByDay = new JSONObject();
+            maxWaterDepthByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
+            maxWaterDepthByDay.put("value", max);
+            historySeeperValue.add(maxWaterDepthByDay);
 
-        BackUpDataEntity historySeeper = new BackUpDataEntity();
-        historySeeper.setName(BackUpDataName.SEEPER);
-        historySeeper.setValue(historySeeperValue);
-        backUpDataDAO.updateBackUpDataByName(historySeeper);
+            BackUpDataEntity historySeeper = new BackUpDataEntity();
+            historySeeper.setName(BackUpDataName.SEEPER);
+            historySeeper.setValue(historySeeperValue);
+            backUpDataDAO.updateBackUpDataByName(historySeeper);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private double getMaxRainHour(JSONArray autoStationDataArray) {

@@ -36,314 +36,333 @@ public class HealthTask {
     @PostConstruct
     @Scheduled(cron = "0 0 0/1 * * ?")
     public void fetchWeatherForecast() {
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_WEATHER_FORCAST));
+        try {
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_WEATHER_FORCAST));
 
-        HealthDataEntity healthDataEntity = new HealthDataEntity();
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_WEATHER_FORCAST);
-        JSONArray value = new JSONArray();
-        healthDataEntity.setValue(value);
-        JSONObject today = new JSONObject();
-        JSONObject tomorrow = new JSONObject();
-        value.add(today);
-        value.add(tomorrow);
+            HealthDataEntity healthDataEntity = new HealthDataEntity();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_WEATHER_FORCAST);
+            JSONArray value = new JSONArray();
+            healthDataEntity.setValue(value);
+            JSONObject today = new JSONObject();
+            JSONObject tomorrow = new JSONObject();
+            value.add(today);
+            value.add(tomorrow);
 
-        String url = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
-        JSONObject jo = HttpHelper.getDataByURL(url);
-        JSONArray array = (JSONArray) jo.get("Data");
-        JSONObject todayJo = (JSONObject) array.get(0);
-        JSONObject tomorrowJo = (JSONObject) array.get(1);
+            String url = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
+            JSONObject jo = HttpHelper.getDataByURL(url);
+            JSONArray array = (JSONArray) jo.get("Data");
+            JSONObject todayJo = (JSONObject) array.get(0);
+            JSONObject tomorrowJo = (JSONObject) array.get(1);
 
-        today.put("date", DateHelper.getPostponeDateByDay(0));
-        today.put("weather", todayJo.get("Day"));
-        today.put("minTemp", Integer.parseInt((String) todayJo.get("LowTmp")));
-        today.put("maxTemp", Integer.parseInt((String) todayJo.get("HighTmp")));
-        today.put("wind", (String) todayJo.get("Wind") + (String) todayJo.get("WindLev"));
-        today.put("pressure", 1021);
-        today.put("humidity", 65);
+            today.put("date", DateHelper.getPostponeDateByDay(0));
+            today.put("weather", todayJo.get("Day"));
+            today.put("minTemp", Integer.parseInt((String) todayJo.get("LowTmp")));
+            today.put("maxTemp", Integer.parseInt((String) todayJo.get("HighTmp")));
+            today.put("wind", (String) todayJo.get("Wind") + (String) todayJo.get("WindLev"));
+            today.put("pressure", 1021);
+            today.put("humidity", 65);
 
-        tomorrow.put("date", DateHelper.getPostponeDateByDay(1));
-        tomorrow.put("weather", tomorrowJo.get("Day"));
-        tomorrow.put("minTemp", Integer.parseInt((String) tomorrowJo.get("LowTmp")));
-        tomorrow.put("maxTemp", Integer.parseInt((String) tomorrowJo.get("HighTmp")));
-        tomorrow.put("wind", (String) tomorrowJo.get("Wind") + (String) tomorrowJo.get("WindLev"));
-        tomorrow.put("pressure", 1024);
-        tomorrow.put("humidity", 75);
+            tomorrow.put("date", DateHelper.getPostponeDateByDay(1));
+            tomorrow.put("weather", tomorrowJo.get("Day"));
+            tomorrow.put("minTemp", Integer.parseInt((String) tomorrowJo.get("LowTmp")));
+            tomorrow.put("maxTemp", Integer.parseInt((String) tomorrowJo.get("HighTmp")));
+            tomorrow.put("wind", (String) tomorrowJo.get("Wind") + (String) tomorrowJo.get("WindLev"));
+            tomorrow.put("pressure", 1024);
+            tomorrow.put("humidity", 75);
 
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchAQI() {
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_AIR_QUALITY));
+        try {
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_AIR_QUALITY));
 
-        HealthDataEntity healthDataEntity = new HealthDataEntity();
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_AIR_QUALITY);
-        JSONArray value = new JSONArray();
-        healthDataEntity.setValue(value);
-        JSONObject realtimeData = new JSONObject();
-        value.add(realtimeData);
+            HealthDataEntity healthDataEntity = new HealthDataEntity();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_AIR_QUALITY);
+            JSONArray value = new JSONArray();
+            healthDataEntity.setValue(value);
+            JSONObject realtimeData = new JSONObject();
+            value.add(realtimeData);
 
-        // 获取实时AQI数据
-        String url = String.format("%s%s/%s",
-                JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL,
-                "GetLastest_SHAQI_Realtime",
-                DateHelper.getNow());
+            // 获取实时AQI数据
+            String url = String.format("%s%s/%s",
+                    JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL,
+                    "GetLastest_SHAQI_Realtime",
+                    DateHelper.getNow());
 
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray array = (JSONArray) obj.get("Data");
-        JSONObject jo = (JSONObject) array.get(0);
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray array = (JSONArray) obj.get("Data");
+            JSONObject jo = (JSONObject) array.get(0);
 
-        JSONObject aqiRealtime = new JSONObject();
-        int aqi = (int) (long) jo.get("AQI");
-        aqiRealtime.put("value", aqi);
-        aqiRealtime.put("level", airQualityLevel(aqi, AQI));
-        JSONObject pm25Realtime = new JSONObject();
-        int pm25 = (int)((double)jo.get("PM2_5"));
-        pm25Realtime.put("value", pm25);
-        pm25Realtime.put("level", airQualityLevel(pm25, PM25));
-        JSONObject pm10Realtime = new JSONObject();
-        int pm10 = (int)((double)jo.get("PM10"));
-        pm10Realtime.put("value", pm10);
-        pm10Realtime.put("level", airQualityLevel(pm10, PM10));
-        JSONObject no2Realtime = new JSONObject();
-        int no2 = (int)((double)jo.get("NO2"));
-        no2Realtime.put("value", no2);
-        no2Realtime.put("level", airQualityLevel(no2, NO2));
-        JSONObject so2Realtime = new JSONObject();
-        int so2 = (int)((double)jo.get("SO2"));
-        so2Realtime.put("value", so2);
-        so2Realtime.put("level", airQualityLevel(so2, SO2));
-        JSONObject o3Realtime = new JSONObject();
-        int o3 = (int)((double)jo.get("O3"));
-        o3Realtime.put("value", o3);
-        o3Realtime.put("level", airQualityLevel(o3, O3));
+            JSONObject aqiRealtime = new JSONObject();
+            int aqi = (int) (long) jo.get("AQI");
+            aqiRealtime.put("value", aqi);
+            aqiRealtime.put("level", airQualityLevel(aqi, AQI));
+            JSONObject pm25Realtime = new JSONObject();
+            int pm25 = (int)((double)jo.get("PM2_5"));
+            pm25Realtime.put("value", pm25);
+            pm25Realtime.put("level", airQualityLevel(pm25, PM25));
+            JSONObject pm10Realtime = new JSONObject();
+            int pm10 = (int)((double)jo.get("PM10"));
+            pm10Realtime.put("value", pm10);
+            pm10Realtime.put("level", airQualityLevel(pm10, PM10));
+            JSONObject no2Realtime = new JSONObject();
+            int no2 = (int)((double)jo.get("NO2"));
+            no2Realtime.put("value", no2);
+            no2Realtime.put("level", airQualityLevel(no2, NO2));
+            JSONObject so2Realtime = new JSONObject();
+            int so2 = (int)((double)jo.get("SO2"));
+            so2Realtime.put("value", so2);
+            so2Realtime.put("level", airQualityLevel(so2, SO2));
+            JSONObject o3Realtime = new JSONObject();
+            int o3 = (int)((double)jo.get("O3"));
+            o3Realtime.put("value", o3);
+            o3Realtime.put("level", airQualityLevel(o3, O3));
 
-        realtimeData.put("date", new Date().getTime());
-        realtimeData.put("AQI", aqiRealtime);
-        realtimeData.put("PM25", pm25Realtime);
-        realtimeData.put("PM10", pm10Realtime);
-        realtimeData.put("O3", o3Realtime);
-        realtimeData.put("SO2", so2Realtime);
-        realtimeData.put("NO2", no2Realtime);
+            realtimeData.put("date", new Date().getTime());
+            realtimeData.put("AQI", aqiRealtime);
+            realtimeData.put("PM25", pm25Realtime);
+            realtimeData.put("PM10", pm10Realtime);
+            realtimeData.put("O3", o3Realtime);
+            realtimeData.put("SO2", so2Realtime);
+            realtimeData.put("NO2", no2Realtime);
 
-        // 获取未来AQI数据
-        url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetAirQuality";
-        obj = HttpHelper.getDataByURL(url);
-        JSONObject data = (JSONObject) obj.get("Data");
-        array = (JSONArray) data.get("AQIDatas");
+            // 获取未来AQI数据
+            url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetAirQuality";
+            obj = HttpHelper.getDataByURL(url);
+            JSONObject data = (JSONObject) obj.get("Data");
+            array = (JSONArray) data.get("AQIDatas");
 
-        int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-        int startIndex, endIndex;
-        if (hour >=6 && hour < 17) {
-            startIndex = 2;
-            endIndex = 5;
-        } else {
-            startIndex = 1;
-            endIndex = 4;
+            int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
+            int startIndex, endIndex;
+            if (hour >=6 && hour < 17) {
+                startIndex = 2;
+                endIndex = 5;
+            } else {
+                startIndex = 1;
+                endIndex = 4;
+            }
+
+            for (int i = startIndex; i < endIndex; ++i) {
+                JSONObject aqiData = (JSONObject) array.get(i);
+                String period = (String) aqiData.get("Period");
+                if (period.contains("（"))
+                    period = period.substring(0, period.indexOf("（"));
+                String aqiStr = (String) aqiData.get("AQI");
+                int futureAqi = aqiStr.contains("-")
+                        ? Integer.parseInt(aqiStr.substring(aqiStr.indexOf("-") + 1))
+                        : Integer.parseInt(aqiStr);
+                int level = airQualityLevel(futureAqi, AQI);
+                JSONObject futureData = new JSONObject();
+                futureData.put("date", period);
+                JSONObject aqiInfo = new JSONObject();
+                aqiInfo.put("level", level);
+                aqiInfo.put("value", futureAqi);
+                futureData.put("AQI", aqiInfo);
+                value.add(futureData);
+            }
+
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        for (int i = startIndex; i < endIndex; ++i) {
-            JSONObject aqiData = (JSONObject) array.get(i);
-            String period = (String) aqiData.get("Period");
-            if (period.contains("（"))
-                period = period.substring(0, period.indexOf("（"));
-            String aqiStr = (String) aqiData.get("AQI");
-            int futureAqi = aqiStr.contains("-")
-                    ? Integer.parseInt(aqiStr.substring(aqiStr.indexOf("-") + 1))
-                    : Integer.parseInt(aqiStr);
-            int level = airQualityLevel(futureAqi, AQI);
-            JSONObject futureData = new JSONObject();
-            futureData.put("date", period);
-            JSONObject aqiInfo = new JSONObject();
-            aqiInfo.put("level", level);
-            aqiInfo.put("value", futureAqi);
-            futureData.put("AQI", aqiInfo);
-            value.add(futureData);
-        }
-
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
     }
 
 
     @PostConstruct
     @Scheduled(cron = "0 0 1 * * ?")
     public void fetchHistoryHealthyMeteorological() {
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_HISTORY_DISEASE));
+        try {
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_HISTORY_DISEASE));
 
-        String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "Getlastesthealthweather";
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray array = (JSONArray) obj.get("Data");
-        String beginTime = "9999/99/99 9:99:99";
-        for (Object o : array) {
-            JSONObject jo = (JSONObject) o;
-            HistoryHealthData healthData = new HistoryHealthData(jo);
-            beginTime = healthData.FORECAST_TIME;
-            healthDataDAO.upsertHistoryHealthData(healthData);
-        }
-
-        // 2017/12/18 0:00:00 -> 2017/12
-        beginTime = beginTime.substring(0, 7);
-
-        // 历史数据更新完毕，现在需要根据历史数据计算本月数据
-        List<HistoryHealthData> historyHealthDataList = healthDataDAO.findHistoryHealthData(beginTime);
-        int copdCount = 0;
-        int childFluCount = 0;
-        int childAsthmaCount = 0;
-        int oldFluCount = 0;
-        int adultFluCount = 0;
-        for (HistoryHealthData data : historyHealthDataList) {
-            if (data.WARNING_LEVEL > 4) {
-                if (data.CROW.equals("COPD患者")) ++copdCount;
-                else if (data.CROW.equals("儿童感冒")) ++childFluCount;
-                else if (data.CROW.equals("儿童哮喘")) ++childAsthmaCount;
-                else if (data.CROW.equals("老年人感冒")) ++oldFluCount;
-                else if (data.CROW.equals("青少年和成年人感冒")) ++adultFluCount;
+            String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "Getlastesthealthweather";
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray array = (JSONArray) obj.get("Data");
+            String beginTime = "9999/99/99 9:99:99";
+            for (Object o : array) {
+                JSONObject jo = (JSONObject) o;
+                HistoryHealthData healthData = new HistoryHealthData(jo);
+                beginTime = healthData.FORECAST_TIME;
+                healthDataDAO.upsertHistoryHealthData(healthData);
             }
+
+            // 2017/12/18 0:00:00 -> 2017/12
+            beginTime = beginTime.substring(0, 7);
+
+            // 历史数据更新完毕，现在需要根据历史数据计算本月数据
+            List<HistoryHealthData> historyHealthDataList = healthDataDAO.findHistoryHealthData(beginTime);
+            int copdCount = 0;
+            int childFluCount = 0;
+            int childAsthmaCount = 0;
+            int oldFluCount = 0;
+            int adultFluCount = 0;
+            for (HistoryHealthData data : historyHealthDataList) {
+                if (data.WARNING_LEVEL > 4) {
+                    if (data.CROW.equals("COPD患者")) ++copdCount;
+                    else if (data.CROW.equals("儿童感冒")) ++childFluCount;
+                    else if (data.CROW.equals("儿童哮喘")) ++childAsthmaCount;
+                    else if (data.CROW.equals("老年人感冒")) ++oldFluCount;
+                    else if (data.CROW.equals("青少年和成年人感冒")) ++adultFluCount;
+                }
+            }
+
+            int total = copdCount + childFluCount + childAsthmaCount + oldFluCount + adultFluCount;
+            int copdPercent = total == 0 ? 0 : Math.round((float) (copdCount * 100) / total);
+            int childFluPercent = total == 0 ? 0 : Math.round((float) (childFluCount * 100) / total);
+            int childAsthmaPercent = total == 0 ? 0 : Math.round((float) (childAsthmaCount * 100) / total);
+            int oldFluPercent = total == 0 ? 0 : Math.round((float) (oldFluCount * 100) / total);
+            int adultFluPercent = total == 0 ? 0 : Math.round((float) (adultFluCount * 100) / total);
+
+            JSONObject jo = new JSONObject();
+            jo.put("ertong", childFluPercent);
+            jo.put("qingshaonian", adultFluPercent);
+            jo.put("laonianren", oldFluPercent);
+            jo.put("ertongxiaochuan", childAsthmaPercent);
+            jo.put("COPD", copdPercent);
+            JSONArray value = new JSONArray();
+            value.add(jo);
+
+            HealthDataEntity healthDataEntity = new HealthDataEntity();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_HISTORY_DISEASE);
+            healthDataEntity.setValue(value);
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        int total = copdCount + childFluCount + childAsthmaCount + oldFluCount + adultFluCount;
-        int copdPercent = total == 0 ? 0 : Math.round((float) (copdCount * 100) / total);
-        int childFluPercent = total == 0 ? 0 : Math.round((float) (childFluCount * 100) / total);
-        int childAsthmaPercent = total == 0 ? 0 : Math.round((float) (childAsthmaCount * 100) / total);
-        int oldFluPercent = total == 0 ? 0 : Math.round((float) (oldFluCount * 100) / total);
-        int adultFluPercent = total == 0 ? 0 : Math.round((float) (adultFluCount * 100) / total);
-
-        JSONObject jo = new JSONObject();
-        jo.put("ertong", childFluPercent);
-        jo.put("qingshaonian", adultFluPercent);
-        jo.put("laonianren", oldFluPercent);
-        jo.put("ertongxiaochuan", childAsthmaPercent);
-        jo.put("COPD", copdPercent);
-        JSONArray value = new JSONArray();
-        value.add(jo);
-
-        HealthDataEntity healthDataEntity = new HealthDataEntity();
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_HISTORY_DISEASE);
-        healthDataEntity.setValue(value);
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
-
     }
 
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchHealthyMeteorologicalInTodayAndTomorrow() {
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_HEALTHY_FORCAST));
+        try {
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_HEALTHY_FORCAST));
 
-        String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetHealthyMeteorological";
-        JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONArray array = (JSONArray) obj.get("Data");
+            String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetHealthyMeteorological";
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray array = (JSONArray) obj.get("Data");
 
-        HealthDataEntity healthDataEntity = new HealthDataEntity();
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_HEALTHY_FORCAST);
-        JSONArray value = new JSONArray();
-        healthDataEntity.setValue(value);
+            HealthDataEntity healthDataEntity = new HealthDataEntity();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_HEALTHY_FORCAST);
+            JSONArray value = new JSONArray();
+            healthDataEntity.setValue(value);
 
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 0);
-        today.set(Calendar.MINUTE, 0);
-        today.set(Calendar.SECOND, 0);
-        today.set(Calendar.MILLISECOND, 0);
-        Calendar tomorrow = (Calendar) today.clone();
-        tomorrow.add(Calendar.DAY_OF_YEAR, 1);
+            Calendar today = Calendar.getInstance();
+            today.set(Calendar.HOUR_OF_DAY, 0);
+            today.set(Calendar.MINUTE, 0);
+            today.set(Calendar.SECOND, 0);
+            today.set(Calendar.MILLISECOND, 0);
+            Calendar tomorrow = (Calendar) today.clone();
+            tomorrow.add(Calendar.DAY_OF_YEAR, 1);
 
-        JSONObject todayData = new JSONObject();
-        JSONObject tomorrowData = new JSONObject();
-        value.add(todayData);
-        value.add(tomorrowData);
+            JSONObject todayData = new JSONObject();
+            JSONObject tomorrowData = new JSONObject();
+            value.add(todayData);
+            value.add(tomorrowData);
 
-        todayData.put("date", today.getTimeInMillis());
-        tomorrowData.put("date", tomorrow.getTimeInMillis());
+            todayData.put("date", today.getTimeInMillis());
+            tomorrowData.put("date", tomorrow.getTimeInMillis());
 
-        array.forEach(o -> {
-            JSONObject jo = (JSONObject) o;
-            if (jo.get("Crow").equals("COPD患者")) {
-                fillHealthyMeteorological("COPD", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("儿童感冒")) {
-                fillHealthyMeteorological("ertong", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("儿童哮喘")) {
-                fillHealthyMeteorological("ertongxiaochuan", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("老年人感冒")) {
-                fillHealthyMeteorological("laonianren", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("青少年和成年人感冒")) {
-                fillHealthyMeteorological("qingshaonian", jo, todayData, tomorrowData);
-            }
-        });
+            array.forEach(o -> {
+                JSONObject jo = (JSONObject) o;
+                if (jo.get("Crow").equals("COPD患者")) {
+                    fillHealthyMeteorological("COPD", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("儿童感冒")) {
+                    fillHealthyMeteorological("ertong", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("儿童哮喘")) {
+                    fillHealthyMeteorological("ertongxiaochuan", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("老年人感冒")) {
+                    fillHealthyMeteorological("laonianren", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("青少年和成年人感冒")) {
+                    fillHealthyMeteorological("qingshaonian", jo, todayData, tomorrowData);
+                }
+            });
 
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
 
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_HEALTHY_FORCAST_SPREAD));
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_HEALTHY_FORCAST_SPREAD));
 
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_HEALTHY_FORCAST_SPREAD);
-        todayData.clear();
-        tomorrowData.clear();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_HEALTHY_FORCAST_SPREAD);
+            todayData.clear();
+            tomorrowData.clear();
 
-        array.forEach(o -> {
-            JSONObject jo = (JSONObject) o;
-            if (jo.get("Crow").equals("COPD患者")) {
-                fillHealthyMeteorologicalInCity("COPD", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("儿童感冒")) {
-                fillHealthyMeteorologicalInCity("ertong", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("儿童哮喘")) {
-                fillHealthyMeteorologicalInCity("ertongxiaochuan", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("老年人感冒")) {
-                fillHealthyMeteorologicalInCity("laonianren", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("青少年和成年人感冒")) {
-                fillHealthyMeteorologicalInCity("qingshaonian", jo, todayData, tomorrowData);
-            }
-        });
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
+            array.forEach(o -> {
+                JSONObject jo = (JSONObject) o;
+                if (jo.get("Crow").equals("COPD患者")) {
+                    fillHealthyMeteorologicalInCity("COPD", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("儿童感冒")) {
+                    fillHealthyMeteorologicalInCity("ertong", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("儿童哮喘")) {
+                    fillHealthyMeteorologicalInCity("ertongxiaochuan", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("老年人感冒")) {
+                    fillHealthyMeteorologicalInCity("laonianren", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("青少年和成年人感冒")) {
+                    fillHealthyMeteorologicalInCity("qingshaonian", jo, todayData, tomorrowData);
+                }
+            });
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
 
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_PREVENT_ADVICE));
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_PREVENT_ADVICE));
 
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_PREVENT_ADVICE);
-        todayData.clear();
-        tomorrowData.clear();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_PREVENT_ADVICE);
+            todayData.clear();
+            tomorrowData.clear();
 
-        array.forEach(o -> {
-            JSONObject jo = (JSONObject) o;
-            if (jo.get("Crow").equals("COPD患者")) {
-                fillHealthyMeteorologicalAdvice("COPD", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("儿童感冒")) {
-                fillHealthyMeteorologicalAdvice("ertong", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("儿童哮喘")) {
-                fillHealthyMeteorologicalAdvice("ertongxiaochuan", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("老年人感冒")) {
-                fillHealthyMeteorologicalAdvice("laonianren", jo, todayData, tomorrowData);
-            } else if (jo.get("Crow").equals("青少年和成年人感冒")) {
-                fillHealthyMeteorologicalAdvice("qingshaonian", jo, todayData, tomorrowData);
-            }
-        });
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
+            array.forEach(o -> {
+                JSONObject jo = (JSONObject) o;
+                if (jo.get("Crow").equals("COPD患者")) {
+                    fillHealthyMeteorologicalAdvice("COPD", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("儿童感冒")) {
+                    fillHealthyMeteorologicalAdvice("ertong", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("儿童哮喘")) {
+                    fillHealthyMeteorologicalAdvice("ertongxiaochuan", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("老年人感冒")) {
+                    fillHealthyMeteorologicalAdvice("laonianren", jo, todayData, tomorrowData);
+                } else if (jo.get("Crow").equals("青少年和成年人感冒")) {
+                    fillHealthyMeteorologicalAdvice("qingshaonian", jo, todayData, tomorrowData);
+                }
+            });
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchServicePublish() {
-        logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_SERVICE_PUBLISH));
+        try {
+            logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_SERVICE_PUBLISH));
 
-        String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        String url = JsonServiceURL.HEALTH_SEND_NUM_URL + now;
+            String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+            String url = JsonServiceURL.HEALTH_SEND_NUM_URL + now;
 
-        JSONArray array = HttpHelper.getJsonDataByURL(url);
-        int ftpCount = Integer.parseInt((String) ((JSONObject)array.get(0)).get("FTP"));
-        int smsCount = Integer.parseInt((String) ((JSONObject)array.get(0)).get("短信"));
-        int emailCount = Integer.parseInt((String) ((JSONObject)array.get(0)).get("邮件"));
-        int wsCount = 74126;
+            JSONArray array = HttpHelper.getJsonDataByURL(url);
+            int ftpCount = Integer.parseInt((String) ((JSONObject)array.get(0)).get("FTP"));
+            int smsCount = Integer.parseInt((String) ((JSONObject)array.get(0)).get("短信"));
+            int emailCount = Integer.parseInt((String) ((JSONObject)array.get(0)).get("邮件"));
+            int wsCount = 74126;
 
-        JSONArray value = new JSONArray();
-        JSONObject returnData = new JSONObject();
-        returnData.put("mail", emailCount);
-        returnData.put("message", smsCount);
-        returnData.put("ftp", ftpCount);
-        returnData.put("webservice", wsCount);
-        value.add(returnData);
+            JSONArray value = new JSONArray();
+            JSONObject returnData = new JSONObject();
+            returnData.put("mail", emailCount);
+            returnData.put("message", smsCount);
+            returnData.put("ftp", ftpCount);
+            returnData.put("webservice", wsCount);
+            value.add(returnData);
 
-        HealthDataEntity healthDataEntity = new HealthDataEntity();
-        healthDataEntity.setName(HealthTaskName.KPI_JKQX_SERVICE_PUBLISH);
-        healthDataEntity.setValue(value);
+            HealthDataEntity healthDataEntity = new HealthDataEntity();
+            healthDataEntity.setName(HealthTaskName.KPI_JKQX_SERVICE_PUBLISH);
+            healthDataEntity.setValue(value);
 
-        healthDataDAO.updateHealthDataByName(healthDataEntity);
+            healthDataDAO.updateHealthDataByName(healthDataEntity);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private void fillHealthyMeteorological(String userType, JSONObject jo,

@@ -31,65 +31,74 @@ public class FeiteTask {
 
     @PostConstruct
     public void countRegionDiff() {
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
+        try {
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DIFF));
 
-        JSONObject central = new JSONObject();
-        central.put("area", FeiteRegionInfo.CENTRAL_AREA);
-        central.put("population", FeiteRegionInfo.CENTRAL_POPULATION);
-        central.put("acreage", FeiteRegionInfo.CENTRAL_ACREAGE);
+            JSONObject central = new JSONObject();
+            central.put("area", FeiteRegionInfo.CENTRAL_AREA);
+            central.put("population", FeiteRegionInfo.CENTRAL_POPULATION);
+            central.put("acreage", FeiteRegionInfo.CENTRAL_ACREAGE);
 
-        JSONObject cm = new JSONObject();
-        cm.put("area", FeiteRegionInfo.CM_AREA);
-        cm.put("population", FeiteRegionInfo.CM_POPULATION);
-        cm.put("acreage", FeiteRegionInfo.CM_ACREAGE);
+            JSONObject cm = new JSONObject();
+            cm.put("area", FeiteRegionInfo.CM_AREA);
+            cm.put("population", FeiteRegionInfo.CM_POPULATION);
+            cm.put("acreage", FeiteRegionInfo.CM_ACREAGE);
 
-        JSONArray diffValue = new JSONArray();
-        diffValue.add(central);
-        diffValue.add(cm);
+            JSONArray diffValue = new JSONArray();
+            diffValue.add(central);
+            diffValue.add(cm);
 
-        FeiteDataEntity diff = new FeiteDataEntity();
-        diff.setName(FeiteTaskName.FEITE_REGION_DIFF);
-        diff.setValue(diffValue);
+            FeiteDataEntity diff = new FeiteDataEntity();
+            diff.setName(FeiteTaskName.FEITE_REGION_DIFF);
+            diff.setValue(diffValue);
 
-        feiteDataDAO.updateFeiteDataByName(diff);
+            feiteDataDAO.updateFeiteDataByName(diff);
+
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     @PostConstruct
     public void countRegionRainfallDiff() {
-        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+        try {
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
 
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_RAINFALL_DIFF));
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_RAINFALL_DIFF));
 
-        Map<String, JSONObject> xhRainfalls = new HashMap<>();
-        Map<String, JSONObject> cmRainfalls = new HashMap<>();
+            Map<String, JSONObject> xhRainfalls = new HashMap<>();
+            Map<String, JSONObject> cmRainfalls = new HashMap<>();
 
-        for (int i = 0; i < 41; i++) {
-            String beginDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 19, 0, 0, i);
-            String endDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 20, 0, 0, i);
+            for (int i = 0; i < 41; i++) {
+                String beginDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 19, 0, 0, i);
+                String endDate = DateHelper.getPostponeDateByHour(2013, 10, 6, 20, 0, 0, i);
 
-            String url = baseUrl + beginDate + "/" + endDate + "/1";
-            JSONObject rainfallJson = HttpHelper.getDataByURL(url);
-            JSONArray rainfallData = (JSONArray) rainfallJson.get("Data");
+                String url = baseUrl + beginDate + "/" + endDate + "/1";
+                JSONObject rainfallJson = HttpHelper.getDataByURL(url);
+                JSONArray rainfallData = (JSONArray) rainfallJson.get("Data");
 
-            for (Object obj : rainfallData) {
-                JSONObject rainfall = (JSONObject) obj;
-                String stationName = (String) rainfall.get("STATIONNAME");
+                for (Object obj : rainfallData) {
+                    JSONObject rainfall = (JSONObject) obj;
+                    String stationName = (String) rainfall.get("STATIONNAME");
 
-                if (FeiteRegionInfo.XH_STATION_NAME.equals(stationName)) {
-                    xhRainfalls.put(endDate, rainfall);
-                } else if (FeiteRegionInfo.CM_STATION_NAME.equals(stationName)) {
-                    cmRainfalls.put(endDate, rainfall);
+                    if (FeiteRegionInfo.XH_STATION_NAME.equals(stationName)) {
+                        xhRainfalls.put(endDate, rainfall);
+                    } else if (FeiteRegionInfo.CM_STATION_NAME.equals(stationName)) {
+                        cmRainfalls.put(endDate, rainfall);
+                    }
                 }
             }
-        }
-        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
 
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate").substring(0, 10) + "0000";
-            String endDate = alarm.get("endDate").substring(0, 10) + "0000";
-            String alarmId = alarm.get("alarmId");
-            countRegionRainfallDiffByAlarmId(beginDate, endDate, alarmId, xhRainfalls, cmRainfalls);
+            for (Object obj : alarms) {
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate").substring(0, 10) + "0000";
+                String endDate = alarm.get("endDate").substring(0, 10) + "0000";
+                String alarmId = alarm.get("alarmId");
+                countRegionRainfallDiffByAlarmId(beginDate, endDate, alarmId, xhRainfalls, cmRainfalls);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -141,18 +150,22 @@ public class FeiteTask {
 
     @PostConstruct
     public void countRegionDisasterDiff() {
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF));
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF));
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_TYPE_DIFF));
+        try {
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_NUM_DIFF));
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_DENSITY_DIFF));
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_REGION_DISASTER_TYPE_DIFF));
 
-        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
 
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate");
-            String endDate = alarm.get("endDate");
-            String alarmId = alarm.get("alarmId");
-            countRegionDisasterDiffByAlarmId(beginDate, endDate, alarmId);
+            for (Object obj : alarms) {
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate");
+                String endDate = alarm.get("endDate");
+                String alarmId = alarm.get("alarmId");
+                countRegionDisasterDiffByAlarmId(beginDate, endDate, alarmId);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -234,101 +247,105 @@ public class FeiteTask {
 
     @PostConstruct
     public void getRainfallAndGaleTop10ByAlarmId() {
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOP10));
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOP10));
+        try {
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOP10));
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOP10));
 
-        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
-        Map<String, Queue<JSONObject> > rainfallTop10ByTime = getRainfallTop10();
-        Map<String, Queue<JSONObject> > galeTop10ByTime = getGaleTop10();
-        for (Object obj : alarms) {
-            int top10 = FeiteRegionInfo.Top10;
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate");
-            String endDate = alarm.get("endDate");
-            String alarmId = alarm.get("alarmId");
+            JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            Map<String, Queue<JSONObject> > rainfallTop10ByTime = getRainfallTop10();
+            Map<String, Queue<JSONObject> > galeTop10ByTime = getGaleTop10();
+            for (Object obj : alarms) {
+                int top10 = FeiteRegionInfo.Top10;
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate");
+                String endDate = alarm.get("endDate");
+                String alarmId = alarm.get("alarmId");
 //            System.out.println(beginDate + " " + endDate);
-            Map<String, JSONObject> rainfallTop10 = new HashMap<>();
-            for (Map.Entry<String, Queue<JSONObject> > entry: rainfallTop10ByTime.entrySet()){
-                if (entry.getKey().compareTo(beginDate) < 0) continue;
-                if (DateHelper.getPostponeDateByHour(entry.getKey(), 1).compareTo(endDate) > 0) continue;
-                for (JSONObject rainfall: entry.getValue()) {
-                    String stationName = (String)rainfall.get("STATIONNAME");
-                    if (rainfallTop10.get(stationName) == null) rainfallTop10.put(stationName, rainfall);
-                    else{
-                        Double cur = Double.parseDouble((String)rainfall.get("RAINHOUR"));
-                        Double pre = Double.parseDouble((String)rainfallTop10.get(stationName).get("RAINHOUR"));
-                        if (cur > pre) rainfallTop10.put(stationName, rainfall);
+                Map<String, JSONObject> rainfallTop10 = new HashMap<>();
+                for (Map.Entry<String, Queue<JSONObject> > entry: rainfallTop10ByTime.entrySet()){
+                    if (entry.getKey().compareTo(beginDate) < 0) continue;
+                    if (DateHelper.getPostponeDateByHour(entry.getKey(), 1).compareTo(endDate) > 0) continue;
+                    for (JSONObject rainfall: entry.getValue()) {
+                        String stationName = (String)rainfall.get("STATIONNAME");
+                        if (rainfallTop10.get(stationName) == null) rainfallTop10.put(stationName, rainfall);
+                        else{
+                            Double cur = Double.parseDouble((String)rainfall.get("RAINHOUR"));
+                            Double pre = Double.parseDouble((String)rainfallTop10.get(stationName).get("RAINHOUR"));
+                            if (cur > pre) rainfallTop10.put(stationName, rainfall);
+                        }
                     }
                 }
-            }
-            List<Map.Entry<String, JSONObject> > sortedRainfall = new ArrayList<>(rainfallTop10.entrySet());
-            Collections.sort(sortedRainfall, new Comparator<Map.Entry<String, JSONObject>>() {
-                @Override
-                public int compare(Map.Entry<String, JSONObject> o1, Map.Entry<String, JSONObject> o2) {
-                    Double x = Double.parseDouble((String)o1.getValue().get("RAINHOUR"));
-                    Double y = Double.parseDouble((String)o2.getValue().get("RAINHOUR"));
-                    return x < y ? -1 : (x == y ? 0: 1);
-                }
-            });
-            Collections.reverse(sortedRainfall);
-            JSONArray TopVal = new JSONArray();
-            int len = sortedRainfall.size();
-            for (int i =0; i < top10 && i < len; i++){
-                JSONObject tmp = new JSONObject();
-                Map.Entry<String, JSONObject> rainfall = sortedRainfall.get(i);
+                List<Map.Entry<String, JSONObject> > sortedRainfall = new ArrayList<>(rainfallTop10.entrySet());
+                Collections.sort(sortedRainfall, new Comparator<Map.Entry<String, JSONObject>>() {
+                    @Override
+                    public int compare(Map.Entry<String, JSONObject> o1, Map.Entry<String, JSONObject> o2) {
+                        Double x = Double.parseDouble((String)o1.getValue().get("RAINHOUR"));
+                        Double y = Double.parseDouble((String)o2.getValue().get("RAINHOUR"));
+                        return x < y ? -1 : (x == y ? 0: 1);
+                    }
+                });
+                Collections.reverse(sortedRainfall);
+                JSONArray TopVal = new JSONArray();
+                int len = sortedRainfall.size();
+                for (int i =0; i < top10 && i < len; i++){
+                    JSONObject tmp = new JSONObject();
+                    Map.Entry<String, JSONObject> rainfall = sortedRainfall.get(i);
 //                System.out.println(rainfall.getValue().get("STATIONNAME") + " " + rainfall.getValue().get("RAINHOUR"));
-                tmp.put("site", rainfall.getValue().get("STATIONNAME"));
-                tmp.put("value", Double.parseDouble((String)rainfall.getValue().get("RAINHOUR")));
-                TopVal.add(tmp);
-            }
+                    tmp.put("site", rainfall.getValue().get("STATIONNAME"));
+                    tmp.put("value", Double.parseDouble((String)rainfall.getValue().get("RAINHOUR")));
+                    TopVal.add(tmp);
+                }
 
-            FeiteDataEntity Top = new FeiteDataEntity();
-            Top.setName(FeiteTaskName.FEITE_RAINFALL_TOP10);
-            Top.setValue(TopVal);
-            Top.setAlarmId(alarmId);
-            feiteDataDAO.updateFeiteDataByNameAndAlarmId(Top);
+                FeiteDataEntity Top = new FeiteDataEntity();
+                Top.setName(FeiteTaskName.FEITE_RAINFALL_TOP10);
+                Top.setValue(TopVal);
+                Top.setAlarmId(alarmId);
+                feiteDataDAO.updateFeiteDataByNameAndAlarmId(Top);
 
-            Map<String, JSONObject> galeTop10 = new HashMap<>();
-            for (Map.Entry<String, Queue<JSONObject> > entry: galeTop10ByTime.entrySet()){
-                if (DateHelper.getPostponeDateByHour(entry.getKey(), 1).compareTo(endDate) > 0) continue;
-                if (entry.getKey().compareTo(beginDate) < 0) continue;
-                for (JSONObject gale: entry.getValue()) {
-                    String stationName = (String)gale.get("STATIONNAME");
-                    if (galeTop10.get(stationName) == null) galeTop10.put(stationName, gale);
-                    else{
-                        Double cur = Double.parseDouble((String)gale.get("WINDSPEED"));
-                        Double pre = Double.parseDouble((String)galeTop10.get(stationName).get("WINDSPEED"));
-                        if (cur > pre) rainfallTop10.put(stationName, gale);
+                Map<String, JSONObject> galeTop10 = new HashMap<>();
+                for (Map.Entry<String, Queue<JSONObject> > entry: galeTop10ByTime.entrySet()){
+                    if (DateHelper.getPostponeDateByHour(entry.getKey(), 1).compareTo(endDate) > 0) continue;
+                    if (entry.getKey().compareTo(beginDate) < 0) continue;
+                    for (JSONObject gale: entry.getValue()) {
+                        String stationName = (String)gale.get("STATIONNAME");
+                        if (galeTop10.get(stationName) == null) galeTop10.put(stationName, gale);
+                        else{
+                            Double cur = Double.parseDouble((String)gale.get("WINDSPEED"));
+                            Double pre = Double.parseDouble((String)galeTop10.get(stationName).get("WINDSPEED"));
+                            if (cur > pre) rainfallTop10.put(stationName, gale);
+                        }
                     }
                 }
-            }
 //            System.out.println("==========================================================================");
-            List<Map.Entry<String, JSONObject> > sortedGale = new ArrayList<>(galeTop10.entrySet());
-            Collections.sort(sortedGale, new Comparator<Map.Entry<String, JSONObject>>() {
-                @Override
-                public int compare(Map.Entry<String, JSONObject> o1, Map.Entry<String, JSONObject> o2) {
-                    Double x = Double.parseDouble((String)o1.getValue().get("WINDSPEED"));
-                    Double y = Double.parseDouble((String)o2.getValue().get("WINDSPEED"));
-                    return x < y ? -1 : (x == y ? 0: 1);
+                List<Map.Entry<String, JSONObject> > sortedGale = new ArrayList<>(galeTop10.entrySet());
+                Collections.sort(sortedGale, new Comparator<Map.Entry<String, JSONObject>>() {
+                    @Override
+                    public int compare(Map.Entry<String, JSONObject> o1, Map.Entry<String, JSONObject> o2) {
+                        Double x = Double.parseDouble((String)o1.getValue().get("WINDSPEED"));
+                        Double y = Double.parseDouble((String)o2.getValue().get("WINDSPEED"));
+                        return x < y ? -1 : (x == y ? 0: 1);
+                    }
+                });
+                Collections.reverse(sortedGale);
+                TopVal = new JSONArray();
+                len = sortedGale.size();
+                for (int i =0; i < top10 && i < len; i++){
+                    JSONObject tmp = new JSONObject();
+                    Map.Entry<String, JSONObject> gale = sortedGale.get(i);
+                    tmp.put("site", gale.getValue().get("STATIONNAME"));
+                    tmp.put("value", Double.parseDouble((String)gale.getValue().get("WINDSPEED")));
+                    System.out.println(gale.getValue().get("STATIONNAME") + " " + gale.getValue().get("WINDSPEED"));
+                    TopVal.add(tmp);
                 }
-            });
-            Collections.reverse(sortedGale);
-            TopVal = new JSONArray();
-            len = sortedGale.size();
-            for (int i =0; i < top10 && i < len; i++){
-                JSONObject tmp = new JSONObject();
-                Map.Entry<String, JSONObject> gale = sortedGale.get(i);
-                tmp.put("site", gale.getValue().get("STATIONNAME"));
-                tmp.put("value", Double.parseDouble((String)gale.getValue().get("WINDSPEED")));
-                System.out.println(gale.getValue().get("STATIONNAME") + " " + gale.getValue().get("WINDSPEED"));
-                TopVal.add(tmp);
+                System.out.println("==========================================================================");
+                Top = new FeiteDataEntity();
+                Top.setName(FeiteTaskName.FEITE_GALE_TOP10);
+                Top.setValue(TopVal);
+                Top.setAlarmId(alarmId);
+                feiteDataDAO.updateFeiteDataByNameAndAlarmId(Top);
             }
-            System.out.println("==========================================================================");
-            Top = new FeiteDataEntity();
-            Top.setName(FeiteTaskName.FEITE_GALE_TOP10);
-            Top.setValue(TopVal);
-            Top.setAlarmId(alarmId);
-            feiteDataDAO.updateFeiteDataByNameAndAlarmId(Top);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -397,31 +414,35 @@ public class FeiteTask {
 
     @PostConstruct
     public void getDisasterLocation(){
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_LOCATION));
-        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
-        String baseurl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterDetailData_Geliku/";
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate").substring(0, 10) + "0000";
-            String endDate = alarm.get("endDate").substring(0, 10) + "0000";
-            String alarmId = alarm.get("alarmId");
-            String url = baseurl + beginDate + "/" + endDate;
-            JSONObject disasterJson = HttpHelper.getDataByURL(url);
-            JSONArray disasterData = (JSONArray) disasterJson.get("Data");
-            JSONArray disasterLocationVal = new JSONArray();
-            for (Object o: disasterData){
-                JSONObject disaster = (JSONObject) o;
-                JSONObject location = new JSONObject();
-                location.put("lat", disaster.get("LATITUDE"));
-                location.put("lon", disaster.get("LONTITUDE"));
-                disasterLocationVal.add(location);
+        try {
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_LOCATION));
+            JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            String baseurl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterDetailData_Geliku/";
+            for (Object obj : alarms) {
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate").substring(0, 10) + "0000";
+                String endDate = alarm.get("endDate").substring(0, 10) + "0000";
+                String alarmId = alarm.get("alarmId");
+                String url = baseurl + beginDate + "/" + endDate;
+                JSONObject disasterJson = HttpHelper.getDataByURL(url);
+                JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+                JSONArray disasterLocationVal = new JSONArray();
+                for (Object o: disasterData){
+                    JSONObject disaster = (JSONObject) o;
+                    JSONObject location = new JSONObject();
+                    location.put("lat", disaster.get("LATITUDE"));
+                    location.put("lon", disaster.get("LONTITUDE"));
+                    disasterLocationVal.add(location);
 //                System.out.println(location);
+                }
+                FeiteDataEntity disasterLocation = new FeiteDataEntity();
+                disasterLocation.setName(FeiteTaskName.FEITE_DISASTER_LOCATION);
+                disasterLocation.setValue(disasterLocationVal);
+                disasterLocation.setAlarmId(alarmId);
+                feiteDataDAO.updateFeiteDataByNameAndAlarmId(disasterLocation);
             }
-            FeiteDataEntity disasterLocation = new FeiteDataEntity();
-            disasterLocation.setName(FeiteTaskName.FEITE_DISASTER_LOCATION);
-            disasterLocation.setValue(disasterLocationVal);
-            disasterLocation.setAlarmId(alarmId);
-            feiteDataDAO.updateFeiteDataByNameAndAlarmId(disasterLocation);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -432,31 +453,35 @@ public class FeiteTask {
      **/
     @PostConstruct
     public void getWarning() {
-        // String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
+        try {
+            // String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "/GetWeatherWarnningByDatetime/20131006200000/20131008120000";
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_WARNING));
 
-        //JSONObject obj = HttpHelper.getDataByURL(url);
-        JSONObject obj = WarningHelper.getWarningContent();
-        JSONArray resultArray = new JSONArray();
+            //JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONObject obj = WarningHelper.getWarningContent();
+            JSONArray resultArray = new JSONArray();
 
-        JSONArray warnings = (JSONArray) obj.get("Data");
-        for (int i = 0; i < warnings.size(); i++) {
-            JSONObject warning = (JSONObject) warnings.get(i);
-            String date = (String) warning.get("FORECASTDATE");
-            String weather = (String) warning.get("TYPE");
-            String level = (String) warning.get("LEVEL");
-            JSONObject resultObject = new JSONObject();
-            resultObject.put("date", DateHelper.getWarningDate(date));
-            resultObject.put("weather", WarningHelper.getWarningWeather(weather));
-            resultObject.put("level", WarningHelper.getWarningLevel(level));
-            resultObject.put("ID", "ID" + String.valueOf(i + 1));
-            resultArray.add(resultObject);
+            JSONArray warnings = (JSONArray) obj.get("Data");
+            for (int i = 0; i < warnings.size(); i++) {
+                JSONObject warning = (JSONObject) warnings.get(i);
+                String date = (String) warning.get("FORECASTDATE");
+                String weather = (String) warning.get("TYPE");
+                String level = (String) warning.get("LEVEL");
+                JSONObject resultObject = new JSONObject();
+                resultObject.put("date", DateHelper.getWarningDate(date));
+                resultObject.put("weather", WarningHelper.getWarningWeather(weather));
+                resultObject.put("level", WarningHelper.getWarningLevel(level));
+                resultObject.put("ID", "ID" + String.valueOf(i + 1));
+                resultArray.add(resultObject);
+            }
+
+            FeiteDataEntity warningsData = new FeiteDataEntity();
+            warningsData.setName(FeiteTaskName.FEITE_WARNING);
+            warningsData.setValue(resultArray);
+            feiteDataDAO.updateFeiteDataByName(warningsData);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        FeiteDataEntity warningsData = new FeiteDataEntity();
-        warningsData.setName(FeiteTaskName.FEITE_WARNING);
-        warningsData.setValue(resultArray);
-        feiteDataDAO.updateFeiteDataByName(warningsData);
     }
 
     /**
@@ -570,18 +595,22 @@ public class FeiteTask {
 
     @PostConstruct
     public void countRainfallAndMonitorWind() {
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL));
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOTAL));
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_MONITORING_SITE));
+        try {
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_RAINFALL_TOTAL));
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_GALE_TOTAL));
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_MONITORING_SITE));
 
-        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
 
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate");
-            String endDate = alarm.get("endDate");
-            String alarmId = alarm.get("alarmId");
-            countRainfallAndMonitorWindByAlarmId(beginDate, endDate, alarmId);
+            for (Object obj : alarms) {
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate");
+                String endDate = alarm.get("endDate");
+                String alarmId = alarm.get("alarmId");
+                countRainfallAndMonitorWindByAlarmId(beginDate, endDate, alarmId);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 
@@ -748,16 +777,20 @@ public class FeiteTask {
     **/
     @PostConstruct
     public void countDisasterReports() {
-        logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
+        try {
+            logger.info(String.format("began task：%s", FeiteTaskName.FEITE_DISASTER_TOTAL));
 
-        JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
 
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate");
-            String endDate = alarm.get("endDate");
-            String alarmId = alarm.get("alarmId");
-            countDisasterReportsByAlarmId(beginDate, endDate, alarmId);
+            for (Object obj : alarms) {
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate");
+                String endDate = alarm.get("endDate");
+                String alarmId = alarm.get("alarmId");
+                countDisasterReportsByAlarmId(beginDate, endDate, alarmId);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
 }

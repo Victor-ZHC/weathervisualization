@@ -10,6 +10,7 @@ import com.adc.disasterforecast.tools.HttpHelper;
 import com.adc.disasterforecast.tools.CsvHelper;
 import com.adc.disasterforecast.tools.WarningHelper;
 import com.mongodb.util.JSON;
+import org.apache.poi.ss.extractor.ExcelExtractor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -35,92 +36,104 @@ public class YPCaseTask {
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
     public void countSurvey() {
-        String baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetCommunityListByDistrict/";
+        try {
+            String baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetCommunityListByDistrict/";
 
-        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_SURVEY));
+            logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_SURVEY));
 
-        String url = baseUrl + YPRegionInfo.YP_DISTRICT;
-        JSONObject streetsJson = HttpHelper.getDataByURL(url);
+            String url = baseUrl + YPRegionInfo.YP_DISTRICT;
+            JSONObject streetsJson = HttpHelper.getDataByURL(url);
 
-        int streetNum = ((JSONArray) streetsJson.get("Data")).size() - 1;
+            int streetNum = ((JSONArray) streetsJson.get("Data")).size() - 1;
 
-        JSONArray surveyValue = new JSONArray();
+            JSONArray surveyValue = new JSONArray();
 
-        JSONObject ypSurvey = new JSONObject();
-        ypSurvey.put("jiedao", String.valueOf(streetNum));
-        ypSurvey.put("mianji", YPRegionInfo.YP_ACREAGE);
-        ypSurvey.put("renkou", YPRegionInfo.YP_POPULATION);
+            JSONObject ypSurvey = new JSONObject();
+            ypSurvey.put("jiedao", String.valueOf(streetNum));
+            ypSurvey.put("mianji", YPRegionInfo.YP_ACREAGE);
+            ypSurvey.put("renkou", YPRegionInfo.YP_POPULATION);
 
-        surveyValue.add(ypSurvey);
+            surveyValue.add(ypSurvey);
 
-        YPCaseDataEntity survey = new YPCaseDataEntity();
-        survey.setName(YPCaseTaskName.YPCASE_SURVEY);
-        survey.setValue(surveyValue);
+            YPCaseDataEntity survey = new YPCaseDataEntity();
+            survey.setName(YPCaseTaskName.YPCASE_SURVEY);
+            survey.setValue(surveyValue);
 
-        ypCaseDataDAO.updateYPCaseDataByName(survey);
+            ypCaseDataDAO.updateYPCaseDataByName(survey);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void countHistoryDisaster() throws InterruptedException {
-        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
+        try {
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
-        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_HISTROY_DISASTER));
+            logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_HISTROY_DISASTER));
 
-        JSONArray ypHistoryDisasterValue = new JSONArray();
+            JSONArray ypHistoryDisasterValue = new JSONArray();
 
-        // 获取开始年份
-        int years = Calendar.getInstance().get(Calendar.YEAR) - 2011;
+            // 获取开始年份
+            int years = Calendar.getInstance().get(Calendar.YEAR) - 2011;
 
-        for (int i = 0; i < 12; i++) {
-            int monthDisasterSum = 0;
+            for (int i = 0; i < 12; i++) {
+                int monthDisasterSum = 0;
 
-            for (int j = 0; j < years; j++) {
-                String beginTime = DateHelper.getPostponeDateByMonth(2012 + j, 1, 1, 0, 0, 0, i);
-                String endTime = DateHelper.getPostponeDateByMonth(2012 + j, 1, 1, 0, 0, 0, i + 1);
+                for (int j = 0; j < years; j++) {
+                    String beginTime = DateHelper.getPostponeDateByMonth(2012 + j, 1, 1, 0, 0, 0, i);
+                    String endTime = DateHelper.getPostponeDateByMonth(2012 + j, 1, 1, 0, 0, 0, i + 1);
 
-                String url = baseUrl + beginTime + "/" + endTime;
-                JSONObject historyDisasterJson = HttpHelper.getDataByURL(url);
-                JSONArray historyDisasters = (JSONArray) historyDisasterJson.get("Data");
+                    String url = baseUrl + beginTime + "/" + endTime;
+                    JSONObject historyDisasterJson = HttpHelper.getDataByURL(url);
+                    JSONArray historyDisasters = (JSONArray) historyDisasterJson.get("Data");
 
-                monthDisasterSum += getYPMonthlyHistoryDisaster(historyDisasters);
+                    monthDisasterSum += getYPMonthlyHistoryDisaster(historyDisasters);
+                }
+
+                int mouthAvg = monthDisasterSum / years;
+
+                JSONObject ypMonthlyAvgHistoryDisaster = new JSONObject();
+                ypMonthlyAvgHistoryDisaster.put("month", i + 1);
+                ypMonthlyAvgHistoryDisaster.put("value", mouthAvg);
+
+                ypHistoryDisasterValue.add(ypMonthlyAvgHistoryDisaster);
             }
 
-            int mouthAvg = monthDisasterSum / years;
+            YPCaseDataEntity historyDisaster = new YPCaseDataEntity();
+            historyDisaster.setName(YPCaseTaskName.YPCASE_HISTROY_DISASTER);
+            historyDisaster.setValue(ypHistoryDisasterValue);
 
-            JSONObject ypMonthlyAvgHistoryDisaster = new JSONObject();
-            ypMonthlyAvgHistoryDisaster.put("month", i + 1);
-            ypMonthlyAvgHistoryDisaster.put("value", mouthAvg);
-
-            ypHistoryDisasterValue.add(ypMonthlyAvgHistoryDisaster);
+            ypCaseDataDAO.updateYPCaseDataByName(historyDisaster);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-
-        YPCaseDataEntity historyDisaster = new YPCaseDataEntity();
-        historyDisaster.setName(YPCaseTaskName.YPCASE_HISTROY_DISASTER);
-        historyDisaster.setValue(ypHistoryDisasterValue);
-
-        ypCaseDataDAO.updateYPCaseDataByName(historyDisaster);
     }
 
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
     public void countNotice() {
-        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_NOTICE));
+        try {
+            logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_NOTICE));
 
-        JSONArray noticeValue = new JSONArray();
+            JSONArray noticeValue = new JSONArray();
 
-        JSONObject ypNotice = new JSONObject();
-        ypNotice.put("title", YPRegionInfo.YP_NOTICE_TITLE);
-        ypNotice.put("content", YPRegionInfo.YP_NOTICE_CONTENT);
+            JSONObject ypNotice = new JSONObject();
+            ypNotice.put("title", YPRegionInfo.YP_NOTICE_TITLE);
+            ypNotice.put("content", YPRegionInfo.YP_NOTICE_CONTENT);
 
-        noticeValue.add(ypNotice);
+            noticeValue.add(ypNotice);
 
-        YPCaseDataEntity notice = new YPCaseDataEntity();
-        notice.setName(YPCaseTaskName.YPCASE_NOTICE);
-        notice.setValue(noticeValue);
+            YPCaseDataEntity notice = new YPCaseDataEntity();
+            notice.setName(YPCaseTaskName.YPCASE_NOTICE);
+            notice.setValue(noticeValue);
 
-        ypCaseDataDAO.updateYPCaseDataByName(notice);
+            ypCaseDataDAO.updateYPCaseDataByName(notice);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 
     private int getYPMonthlyHistoryDisaster(JSONArray historyDisasters) {
@@ -226,27 +239,31 @@ public class YPCaseTask {
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
     public void getWarningService() {
-        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_WARNING_SERVICE));
+        try {
+            logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_WARNING_SERVICE));
 
-        JSONObject obj = WarningHelper.getWarningServiceContent();
-        JSONArray resultArray = new JSONArray();
+            JSONObject obj = WarningHelper.getWarningServiceContent();
+            JSONArray resultArray = new JSONArray();
 
-        JSONArray warnings = (JSONArray) obj.get("Data");
-        for (int i = 0; i < warnings.size(); i++) {
-            JSONObject warning = (JSONObject) warnings.get(i);
-            JSONObject resultObject = new JSONObject();
-            String id = (String) warning.get("id");
-            String time = (String) warning.get("time");
-            String desc = (String) warning.get("desc");
-            resultObject.put("id", id);
-            resultObject.put("time", Long.parseLong(DateHelper.getTimeMillis(time)));
-            resultObject.put("desc", desc);
-            resultArray.add(resultObject);
+            JSONArray warnings = (JSONArray) obj.get("Data");
+            for (int i = 0; i < warnings.size(); i++) {
+                JSONObject warning = (JSONObject) warnings.get(i);
+                JSONObject resultObject = new JSONObject();
+                String id = (String) warning.get("id");
+                String time = (String) warning.get("time");
+                String desc = (String) warning.get("desc");
+                resultObject.put("id", id);
+                resultObject.put("time", Long.parseLong(DateHelper.getTimeMillis(time)));
+                resultObject.put("desc", desc);
+                resultArray.add(resultObject);
+            }
+            YPCaseDataEntity warningService = new YPCaseDataEntity();
+            warningService.setName(YPCaseTaskName.YPCASE_WARNING_SERVICE);
+            warningService.setValue(resultArray);
+            ypCaseDataDAO.updateYPCaseDataByName(warningService);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
-        YPCaseDataEntity warningService = new YPCaseDataEntity();
-        warningService.setName(YPCaseTaskName.YPCASE_WARNING_SERVICE);
-        warningService.setValue(resultArray);
-        ypCaseDataDAO.updateYPCaseDataByName(warningService);
     }
 
     /**
@@ -340,16 +357,20 @@ public class YPCaseTask {
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
     public void countRainAndSeeper() {
-        logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_RAIN_SEEPER));
+        try {
+            logger.info(String.format("began task：%s", YPCaseTaskName.YPCASE_RAIN_SEEPER));
 
-        JSONArray alarms = ypCaseDataDAO.findYPCaseDataByName("YPCASE_ALARM_STAGE").getValue();
+            JSONArray alarms = ypCaseDataDAO.findYPCaseDataByName("YPCASE_ALARM_STAGE").getValue();
 
-        for (Object obj : alarms) {
-            Map<String, String> alarm = (Map<String, String>) obj;
-            String beginDate = alarm.get("beginDate");
-            String endDate = alarm.get("endDate");
-            String alarmId = alarm.get("alarmId");
-            countRainAndSeeperByAlarmId(beginDate, endDate, alarmId);
+            for (Object obj : alarms) {
+                Map<String, String> alarm = (Map<String, String>) obj;
+                String beginDate = alarm.get("beginDate");
+                String endDate = alarm.get("endDate");
+                String alarmId = alarm.get("alarmId");
+                countRainAndSeeperByAlarmId(beginDate, endDate, alarmId);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
     }
     /**
@@ -397,9 +418,13 @@ public class YPCaseTask {
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
     public void countRainAndSeeperByStation(){
-        countRainAndSeeperByTime(YPRegionInfo.XINJIANGWAN_RAIN_STATIONNAME, YPRegionInfo.XINJIANGWAN_SEEPER_STATIONNAME,
-                YPCaseTaskName.YPCASE_RAIN_TIME, YPCaseTaskName.YPCASE_SEEPER_TIME);
-        countRainAndSeeperByTime(YPRegionInfo.YANGPU_RAIN_STATIONNAME, YPRegionInfo.YANGPU_SEEPER_STATIONNAME,
-                YPCaseTaskName.YPCASE_RAIN_WEEKAVG, YPCaseTaskName.YPCASE_SEEPER_WEEKAVG);
+        try {
+            countRainAndSeeperByTime(YPRegionInfo.XINJIANGWAN_RAIN_STATIONNAME, YPRegionInfo.XINJIANGWAN_SEEPER_STATIONNAME,
+                    YPCaseTaskName.YPCASE_RAIN_TIME, YPCaseTaskName.YPCASE_SEEPER_TIME);
+            countRainAndSeeperByTime(YPRegionInfo.YANGPU_RAIN_STATIONNAME, YPRegionInfo.YANGPU_SEEPER_STATIONNAME,
+                    YPCaseTaskName.YPCASE_RAIN_WEEKAVG, YPCaseTaskName.YPCASE_SEEPER_WEEKAVG);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
     }
 }
