@@ -34,7 +34,7 @@ public class DisPreventTask {
     @Autowired
     private DisPreventDataDAO disPreventDataDAO;
 
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
@@ -147,27 +147,30 @@ public class DisPreventTask {
 
             JSONObject fxyjJson = new JSONObject();
             fxyjJson.put("total", cnt);
+            stationData.put("zhongduanxitong", (int)((JSONObject)stationData.get("yingxiangyubao")).get("total") + cnt);
 
-//        endDate = DateHelper.getNow();
-//        beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
-//        url = baseUrl + beginDate + "/" + endDate;
-//        weatherWarnningJson = HttpHelper.getDataByURL(url);
-//        weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
-//        System.out.println(weatherWarnningData);
-//        cnt = weatherWarnningData.size();
-            cnt = 2;
+            endDate = DateHelper.getNow();
+            beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
+            url = baseUrl + beginDate + "/" + endDate;
+            weatherWarnningJson = HttpHelper.getDataByURL(url);
+            weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
+//            System.out.println(weatherWarnningData);
+            cnt = weatherWarnningData.size();
+//            cnt = 2;
             fxyjJson.put("add", cnt);
 
             stationData.put("fengxianyujing", fxyjJson);
             stationData.put("shandiandingweiyi", 4);
             stationData.put("jiaotongjiancedian", 789);
-            stationData.put("hangkongjiancedian", 189);
+            stationData.put("hangkongjiancedian", 2);
             stationData.put("shipinjiankongdian", 9876);
-            stationData.put("duanxin", 23422);
-            stationData.put("weixin", 54332);
+            beginDate = DateHelper.getPostponeDateByHour("20170101000000", 0);
+            stationData.put("duanxin", DateHelper.differentDays(beginDate, endDate));
+            stationData.put("weixin", DateHelper.differentDays(beginDate, endDate));
+            stationData.put("shehuiguancezhan", 97); // key ??
             stationData.put("app", 54332);
-            stationData.put("zhongduanxitong", 23345);
-            stationData.put("liandongxiangying", 23422);
+
+            stationData.put("liandongxiangying", stationData.get("zhongduanxitong"));
 
             JSONArray valArray = new JSONArray();
             valArray.add(stationData);

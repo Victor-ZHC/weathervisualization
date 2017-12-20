@@ -129,22 +129,22 @@ public class RainfallTask {
         try {
             logger.info(String.format("began task：%s", RainfallTaskName.NL_INFLUENCE_TOP10));
 
-            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRiskAlarmByTime/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRiskAlarmByTimeAndUsername/ypq/";
             String beginDate = "20150101000000";
             String endDate = DateHelper.getCurrentTimeInString("day");
 
             String url = baseUrl + beginDate + "/" + endDate;
 
             JSONObject obj = HttpHelper.getDataByURL(url);
-            JSONArray array = (JSONArray) obj.get("Data");
+            JSONArray array = (JSONArray) ((JSONObject) obj.get("Data")).get("SubAlarms");
 
             Map<String, int[]> map = new HashMap<>();
             for (int i = 0; i < array.size(); i++) {
                 JSONObject data = (JSONObject) array.get(i);
 
-                if ("暴雨内涝风险预警".equals(data.get("Type")) && ! "解除".equals(data.get("State"))) {
-                    String name = (String) data.get("ObjectName");
-                    int level = ((Number) data.get("Level")).intValue() - 1;
+                if ("暴雨内涝风险预警".equals(data.get("TYPE")) && ! "解除".equals(data.get("OPERATION"))) {
+                    String name = (String) data.get("Name");
+                    int level = WarningHelper.getWarningInInt((String) data.get("LEVEL")) - 1;
 
                     if (map.containsKey(name)) {
                         int[] levels = map.get(name);
