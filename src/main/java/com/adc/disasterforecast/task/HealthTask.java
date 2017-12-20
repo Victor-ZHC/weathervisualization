@@ -285,6 +285,8 @@ public class HealthTask {
             healthDataEntity.setName(HealthTaskName.KPI_JKQX_HEALTHY_FORCAST_SPREAD);
             todayData.clear();
             tomorrowData.clear();
+            todayData.put("date", today.getTimeInMillis());
+            tomorrowData.put("date", tomorrow.getTimeInMillis());
 
             array.forEach(o -> {
                 JSONObject jo = (JSONObject) o;
@@ -307,6 +309,8 @@ public class HealthTask {
             healthDataEntity.setName(HealthTaskName.KPI_JKQX_PREVENT_ADVICE);
             todayData.clear();
             tomorrowData.clear();
+            todayData.put("date", today.getTimeInMillis());
+            tomorrowData.put("date", tomorrow.getTimeInMillis());
 
             array.forEach(o -> {
                 JSONObject jo = (JSONObject) o;
@@ -328,8 +332,8 @@ public class HealthTask {
         }
     }
 
-    @PostConstruct
-    @Scheduled(cron = "0 0/10 * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchServicePublish() {
         try {
             logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_SERVICE_PUBLISH));
