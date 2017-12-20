@@ -455,9 +455,9 @@ public class RealTimeControlTask {
 
             // 获取航空预警
             AirDataEntity airDataEntity = airDataDAO.findAirDataByName(AirTaskName.HKQX_AIRPORT_CAPACTIY);
-            JSONObject airData = (JSONObject) airDataEntity.getValue().get(0);
-            int pudongLevel = (int) ((JSONObject)((JSONObject) airData.get("pudong"))).get("level");
-            int hongqiaoLevel = (int) ((JSONObject)((JSONObject) airData.get("hongqiao"))).get("level");
+            Map<String, Map<String, Object>> airData = (Map<String, Map<String, Object>>) airDataEntity.getValue().get(0);
+            int pudongLevel = (int) airData.get("pudong").get("level");
+            int hongqiaoLevel = (int) airData.get("hongqiao").get("level");
             int maxAirportLevel = Math.max(pudongLevel, hongqiaoLevel);
             // 1,2,3,4 -> 5,4,3,1
             int airLevel;
