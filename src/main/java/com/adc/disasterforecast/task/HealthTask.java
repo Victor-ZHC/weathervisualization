@@ -158,7 +158,7 @@ public class HealthTask {
                 futureData.put("date", period);
                 JSONObject aqiInfo = new JSONObject();
                 aqiInfo.put("level", level);
-                aqiInfo.put("value", futureAqi);
+                aqiInfo.put("value", aqiStr);
                 futureData.put("AQI", aqiInfo);
                 value.add(futureData);
             }
