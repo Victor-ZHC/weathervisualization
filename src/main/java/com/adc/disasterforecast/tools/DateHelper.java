@@ -27,6 +27,17 @@ public class DateHelper {
                 delayHour);
     }
 
+    public static String getPostponeDateByMonth(String date, int delayMonth) {
+        return getPostponeDateByYear(Integer.valueOf(date.substring(0, 4)),
+                Integer.valueOf(date.substring(4, 6)),
+                Integer.valueOf(date.substring(6, 8)),
+                Integer.valueOf(date.substring(8, 10)),
+                Integer.valueOf(date.substring(10, 12)),
+                Integer.valueOf(date.substring(12, 14)),
+                delayMonth);
+    }
+
+
     public static String getPostponeDateByMonth(int year, int month, int date, int hourOfDay, int minute, int second, int delayMonth) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
@@ -246,7 +257,10 @@ public class DateHelper {
 
         return dates[0];
     }
-
+    public static String getDay(String date) {
+        // 2017/11/1 00:50:00
+        return date.split(" ")[0];
+    }
     public static String getMonth(String date) {
         // 2017-08-04T13:15:00
         String[] parts = date.split("T");
@@ -267,6 +281,12 @@ public class DateHelper {
         // 2017-08-04T13:15:00
         String[] parts = date.split("T");
         return parts[0];
+    }
+
+    public static String getFormatDate(String date) {
+        String [] parts = date.split(" ");
+        String [] days = parts[0].split("/");
+        return days[0] + days[1] +"01000000";
     }
 
     public static String getPostponeDateByDay(int year, int month, int date, int hourOfDay, int minute, int second, int delayDay) {

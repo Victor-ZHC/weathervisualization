@@ -74,6 +74,7 @@ public class DisPreventTask {
                 disasterJsonYears = HttpHelper.getDataByURL(url);
                 disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
             }
+
             getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
             getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
             getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
@@ -101,7 +102,7 @@ public class DisPreventTask {
     @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
-            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationData_Geliku/";
             String date = DateHelper.getNow();
             String url = baseUrl + date;
             JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
@@ -117,7 +118,7 @@ public class DisPreventTask {
             int waterOutCnt = waterOutStationData.size();
             stationData.put("shuiwenzhan", waterOutCnt);
 
-            baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData_Geliku/";
+            baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
             url = baseUrl + date;
             JSONObject waterStationJson = HttpHelper.getDataByURL(url);
             JSONArray waterStationData = (JSONArray) waterStationJson.get("Data");
@@ -129,13 +130,13 @@ public class DisPreventTask {
             String endDate = DateHelper.getNow();
             String beginDate = endDate.substring(0, 4) + "0101000000";
             url = baseUrl + beginDate + "/" + endDate;
-            int cnt = 486;
+            int cnt = 2;
 //        JSONObject YXYBJson = HttpHelper.getDataByURL(url);
 //        JSONArray YXYBData = (JSONArray) YXYBJson.get("Data");
 //        cnt = YXYBData.size();
             JSONObject yxybJson = new JSONObject();
             yxybJson.put("total", cnt);
-            cnt = 4;
+            cnt = 0;
             yxybJson.put("add", cnt);
             stationData.put("yingxiangyubao", yxybJson);
 
@@ -159,16 +160,23 @@ public class DisPreventTask {
 //            cnt = 2;
             fxyjJson.put("add", cnt);
 
+            baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetMessageCount/";
+            beginDate = endDate.substring(0, 4) + "0101000000";
+            url = baseUrl + beginDate + "/" + endDate;
+            weatherStationJson = HttpHelper.getDataByURL(url);
+            stationData.put("duanxin", weatherStationJson.get("Data"));
+
             stationData.put("fengxianyujing", fxyjJson);
             stationData.put("shandiandingweiyi", 4);
             stationData.put("jiaotongjiancedian", 789);
             stationData.put("hangkongjiancedian", 2);
             stationData.put("shipinjiankongdian", 9876);
             beginDate = DateHelper.getPostponeDateByHour("20170101000000", 0);
-            stationData.put("duanxin", DateHelper.differentDays(beginDate, endDate));
-            stationData.put("weixin", DateHelper.differentDays(beginDate, endDate));
+
+
             stationData.put("shehuiguancezhan", 97); // key ??
             stationData.put("app", 54332);
+            stationData.put("weixin", 54332);
 
             stationData.put("liandongxiangying", stationData.get("zhongduanxitong"));
 
@@ -290,20 +298,24 @@ public class DisPreventTask {
     private void getDisasterAvg(JSONArray disasterDataYears, JSONArray disasterData, String disasterType, String taskName){
         Map<Long, Integer> currentYearVal = new HashMap<>();
         Map<Long, Integer> weekAvgYearVal = new HashMap<>();
-        for(Object obj: disasterData) {
-            JSONObject disaster = (JSONObject) obj;
-//            System.out.println(disaster);
-            String month = (String) disaster.get("FORECASTDATE");
-            String operation = (String) disaster.get("OPERATION");
-//            System.out.println(disaster);
-            if (operation != null && operation.compareTo("更新") == 0) continue;
-            String type = (String) disaster.get("TYPE");
-            if (type.compareTo(disasterType) != 0) continue;
-            month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
-            Long monthVal = Long.parseLong(month);
-            Integer cnt = currentYearVal.get(monthVal) == null ? 1 : 1 + currentYearVal.get(monthVal);
-            currentYearVal.put(monthVal, cnt);
-        }
+        if(disasterType.compareTo("大风") == 0 || disasterType.compareTo("暴雨") == 0)
+            currentYearVal = getDisasterCurYear(disasterType);
+        else if(disasterType.compareTo("雷电") == 0)
+            currentYearVal = getThunderCurYear();
+//        for(Object obj: disasterData) {
+//            JSONObject disaster = (JSONObject) obj;
+////            System.out.println(disaster);
+//            String month = (String) disaster.get("FORECASTDATE");
+//            String operation = (String) disaster.get("OPERATION");
+////            System.out.println(disaster);
+//            if (operation != null && operation.compareTo("更新") == 0) continue;
+//            String type = (String) disaster.get("TYPE");
+//            if (type.compareTo(disasterType) != 0) continue;
+//            month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
+//            Long monthVal = Long.parseLong(month);
+//            Integer cnt = currentYearVal.get(monthVal) == null ? 1 : 1 + currentYearVal.get(monthVal);
+//            currentYearVal.put(monthVal, cnt);
+//        }
         for(Object obj: disasterDataYears) {
             JSONObject disaster = (JSONObject) obj;
             String operation = (String) disaster.get("OPERATION");
@@ -324,7 +336,7 @@ public class DisPreventTask {
         JSONArray weekAvgYearArray = new JSONArray();
 
         for (int i = 1; i <= 12; i++){
-            String baseTime = "2017-";
+            String baseTime = DateHelper.getNow().substring(0, 4) + "-";
             if (i < 10) baseTime = baseTime + "0"+ String.valueOf(i) + "-01T00:00:00";
             else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
             String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
@@ -360,6 +372,68 @@ public class DisPreventTask {
         disPreventDataEntity.setName(taskName);
         disPreventDataEntity.setValue(valueArray);
         disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
+    }
+
+    private Map<Long, Integer> getDisasterCurYear(String disasterType) {
+        Map<Long, Integer> currentYearVal = new HashMap<>();
+
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+        String endDate = DateHelper.getNow().substring(0, 8) + "000000";
+        String beginDate = endDate;
+        while (beginDate.compareTo(endDate.substring(0, 4)) > 0) {
+            int cnt = 0;
+//            System.out.println(beginDate + " " + endDate);
+            endDate = beginDate;
+            beginDate =  DateHelper.getPostponeDateByDay(endDate, -1);
+            String url = baseUrl + beginDate + "/" + endDate + "/1";
+            JSONObject disasterJson = HttpHelper.getDataByURL(url);
+            if(disasterJson.get("Data") == null) continue;
+            JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+            String month = DateHelper.getFormatDate((String)((JSONObject)disasterData.get(0)).get("DATETIME"));
+            Long monthVal = Long.parseLong(month);
+            for (Object obj: disasterData) {
+                JSONObject disaster = (JSONObject) obj;
+//                System.out.println(disaster);
+                if(disasterType.compareTo("大风") == 0) {
+                    String speedData = (String)disaster.get("WINDSPEED");
+                    if(speedData.compareTo("") == 0) continue;
+                    Double speed = Double.parseDouble(speedData);
+                    if (speed > 17.5 / 2) cnt++;
+                }else if (disasterType.compareTo("暴雨") == 0) {
+                    Double rainhour = Double.parseDouble((String)disaster.get("RAINHOUR"));
+                    if (rainhour > 50) cnt++;
+                }
+            }
+            Integer num = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
+            if(cnt > 0) num++;
+            currentYearVal.put(monthVal, num);
+        }
+        return currentYearVal;
+    }
+
+    private Map<Long, Integer> getThunderCurYear() {
+        Map<Long, Integer> currentYearVal = new HashMap<>();
+
+        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/ADTD/";
+        String endDate = DateHelper.getNow().substring(0, 8) + "000000";
+        String beginDate = endDate;
+        while (beginDate.compareTo(endDate.substring(0, 4)) > 0) {
+            int cnt = 0;
+            endDate = beginDate;
+            beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
+            String url = baseUrl + beginDate + "/" + endDate + "/1";
+            JSONObject disasterJson = HttpHelper.getDataByURL(url);
+            if(disasterJson.get("Data") != null) {
+                JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+                if(disasterData != null) cnt ++;
+            }else continue;
+            String month = DateHelper.getFormatWarningMonth(beginDate, beginDate.substring(0, 4));
+            Long monthVal = Long.parseLong(month);
+            Integer num = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
+            if(cnt > 0) num++;
+            currentYearVal.put(monthVal, num);
+        }
+        return currentYearVal;
     }
 
     private void getDisasterCntAvg(JSONArray disasterDataYears, JSONArray disasterData) {
