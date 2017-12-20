@@ -59,16 +59,12 @@ public class HealthTask {
             today.put("minTemp", Integer.parseInt((String) todayJo.get("LowTmp")));
             today.put("maxTemp", Integer.parseInt((String) todayJo.get("HighTmp")));
             today.put("wind", (String) todayJo.get("Wind") + (String) todayJo.get("WindLev"));
-            today.put("pressure", 1021);
-            today.put("humidity", 65);
 
             tomorrow.put("date", DateHelper.getPostponeDateByDay(1));
             tomorrow.put("weather", tomorrowJo.get("Day"));
             tomorrow.put("minTemp", Integer.parseInt((String) tomorrowJo.get("LowTmp")));
             tomorrow.put("maxTemp", Integer.parseInt((String) tomorrowJo.get("HighTmp")));
             tomorrow.put("wind", (String) tomorrowJo.get("Wind") + (String) tomorrowJo.get("WindLev"));
-            tomorrow.put("pressure", 1024);
-            tomorrow.put("humidity", 75);
 
             healthDataDAO.updateHealthDataByName(healthDataEntity);
         } catch (Exception e) {
@@ -162,7 +158,7 @@ public class HealthTask {
                 futureData.put("date", period);
                 JSONObject aqiInfo = new JSONObject();
                 aqiInfo.put("level", level);
-                aqiInfo.put("value", futureAqi);
+                aqiInfo.put("value", aqiStr);
                 futureData.put("AQI", aqiInfo);
                 value.add(futureData);
             }
@@ -289,6 +285,8 @@ public class HealthTask {
             healthDataEntity.setName(HealthTaskName.KPI_JKQX_HEALTHY_FORCAST_SPREAD);
             todayData.clear();
             tomorrowData.clear();
+            todayData.put("date", today.getTimeInMillis());
+            tomorrowData.put("date", tomorrow.getTimeInMillis());
 
             array.forEach(o -> {
                 JSONObject jo = (JSONObject) o;
@@ -311,6 +309,8 @@ public class HealthTask {
             healthDataEntity.setName(HealthTaskName.KPI_JKQX_PREVENT_ADVICE);
             todayData.clear();
             tomorrowData.clear();
+            todayData.put("date", today.getTimeInMillis());
+            tomorrowData.put("date", tomorrow.getTimeInMillis());
 
             array.forEach(o -> {
                 JSONObject jo = (JSONObject) o;
@@ -407,7 +407,7 @@ public class HealthTask {
         todayData.put(userType, todayLevelData);
 
         int tomorrowLevel = Integer.parseInt((String)((JSONObject) details.get(1)).get("WarningLevel"));
-        String tomorrowPrevent = (String)((JSONObject) details.get(1)).get("Wat_guide");
+        String tomorrowPrevent = (String)((JSONObject) details.get(1)).get("Influ");
         String tomorrowDes = (String)((JSONObject) details.get(1)).get("Wat_guide");
         JSONObject tomorrowLevelData = new JSONObject();
         tomorrowLevelData.put("level", tomorrowLevel);

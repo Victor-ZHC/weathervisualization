@@ -485,15 +485,19 @@ public class FeiteTask {
     }
 
     /**
-    * @Description 根据告警ID获取分时段的数据 雨量预测 & 大风监测 & 监测点统计
+    * @Description 根据告警ID获取分时段的数据 雨量累计 & 大风监测 & 监测点统计
     * @Author lilin
     * @Create 2017/11/26 21:20
     **/
-    public void countRainfallAndMonitorWindByAlarmId(String beginDate, String endDate, String alarmId) {
+    public void countRainfallAndMonitorWindByAlarmId(String beginDate, String endDate, String alarmId, String
+            windBeginDate, String windEndDate) {
         String url = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
                 beginDate + "/" + endDate + "/1";
+        String windUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/" +
+                windBeginDate + "/" + windEndDate + "/1";
 
         JSONObject obj = HttpHelper.getDataByURL(url);
+        JSONObject windObj = HttpHelper.getDataByURL(windUrl);
 
         JSONArray rainfallValueArray = new JSONArray();
         JSONArray windValueArray = new JSONArray();
@@ -521,14 +525,9 @@ public class FeiteTask {
         for (int i = 0; i < autoStationDataArray.size(); i++) {
             JSONObject autoStationData = (JSONObject) autoStationDataArray.get(i);
             String rainfallValue = (String) autoStationData.get("RAINHOUR");
-            String windSpeedValue = (String) autoStationData.get("WINDSPEED");
             double rainfallValueNum = Double.valueOf(rainfallValue);
-            double windSpeedValueNum = Double.valueOf(windSpeedValue);
             if (rainfallValueNum < 0) {
                 rainfallValueNum = 0;
-            }
-            if (windSpeedValueNum < 0) {
-                windSpeedValueNum = 0;
             }
             if (rainfallValueNum > 0) {
                 String level = RainfallHelper.getRainfallLevel(rainfallValue);
@@ -536,6 +535,16 @@ public class FeiteTask {
                 num ++;
                 rainfallValueMap.put(level, num);
                 rainfallMonitorPointsNum ++;
+            }
+        }
+
+        JSONArray autoStationWindDataArray = (JSONArray) windObj.get("Data");
+        for (int i = 0; i < autoStationWindDataArray.size(); i++) {
+            JSONObject autoStationWindData = (JSONObject) autoStationWindDataArray.get(i);
+            String windSpeedValue = (String) autoStationWindData.get("WINDSPEED");
+            double windSpeedValueNum = Double.valueOf(windSpeedValue);
+            if (windSpeedValueNum < 0) {
+                windSpeedValueNum = 0;
             }
             if (windSpeedValueNum > 0) {
                 String level = WindHelper.getWindLevel(windSpeedValue);
@@ -601,14 +610,26 @@ public class FeiteTask {
             logger.info(String.format("began task：%s", FeiteTaskName.FEITE_MONITORING_SITE));
 
             JSONArray alarms = feiteDataDAO.findFeiteDataByName("ALARM_STAGE").getValue();
+            JSONArray windAlarms = feiteDataDAO.findFeiteDataByName("WIND_ALARM_STAGE").getValue();
 
-            for (Object obj : alarms) {
-                Map<String, String> alarm = (Map<String, String>) obj;
+            for (int i = 0; i < alarms.size(); i++) {
+                Map<String, String> alarm = (Map<String, String>) alarms.get(i);
+                Map<String, String> windAlarm = (Map<String, String>) windAlarms.get(i);
                 String beginDate = alarm.get("beginDate");
                 String endDate = alarm.get("endDate");
+                String windBeginDate = windAlarm.get("beginDate");
+                String windEndDate = windAlarm.get("endDate");
                 String alarmId = alarm.get("alarmId");
-                countRainfallAndMonitorWindByAlarmId(beginDate, endDate, alarmId);
+                countRainfallAndMonitorWindByAlarmId(beginDate, endDate, alarmId, windBeginDate, windEndDate);
             }
+
+//            for (Object obj : alarms) {
+//                Map<String, String> alarm = (Map<String, String>) obj;
+//                String beginDate = alarm.get("beginDate");
+//                String endDate = alarm.get("endDate");
+//                String alarmId = alarm.get("alarmId");
+//                countRainfallAndMonitorWindByAlarmId(beginDate, endDate, alarmId);
+//            }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

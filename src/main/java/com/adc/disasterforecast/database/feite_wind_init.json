@@ -1,0 +1,42 @@
+// put it in collection: feiteDataEntity
+{
+  "name": "WIND_ALARM_STAGE",
+  "value": [
+    {
+      "alarmId": "0",
+      "beginDate": "20131006203600",
+      "endDate": "20131007215200"
+    },
+    {
+      "alarmId": "1",
+      "beginDate": "20131007215200",
+      "endDate": "20131008053600"
+    },
+    {
+      "alarmId": "2",
+      "beginDate": "20131008053600",
+      "endDate": "20131008073800"
+    },
+    {
+      "alarmId": "3",
+      "beginDate": "20131008073800",
+      "endDate": "20131008075900"
+    },
+    {
+      "alarmId": "4",
+      "beginDate": "20131008075900",
+      "endDate": "20131008100000"
+    },
+    {
+      "alarmId": "5",
+      "beginDate": "20131008100000",
+      "endDate": "20131008115000"
+    },
+    {
+      "alarmId": "-1",
+      "beginDate": "20131007120000",
+      "endDate": "20131008120000"
+    }
+  ],
+  "alarmId": ""
+}

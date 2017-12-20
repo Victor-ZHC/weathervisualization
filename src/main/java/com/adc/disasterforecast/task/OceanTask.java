@@ -53,7 +53,7 @@ public class OceanTask {
 
     private JSONObject createChart(String siteName, double upperBound, double lowerBound) {
         JSONObject jo = new JSONObject();
-        jo.put("site", "A");
+        jo.put("site", siteName);
         JSONArray value = new JSONArray();
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -3);

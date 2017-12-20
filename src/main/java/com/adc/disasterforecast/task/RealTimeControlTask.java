@@ -1,7 +1,10 @@
 package com.adc.disasterforecast.task;
 
+import com.adc.disasterforecast.dao.AirDataDAO;
 import com.adc.disasterforecast.dao.RealTimeControlDAO;
+import com.adc.disasterforecast.entity.AirDataEntity;
 import com.adc.disasterforecast.entity.RealTimeControlDataEntity;
+import com.adc.disasterforecast.global.AirTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.global.RealTimeControlTaskName;
 import com.adc.disasterforecast.tools.*;
@@ -28,6 +31,8 @@ public class RealTimeControlTask {
     // dao Autowired
     @Autowired
     private RealTimeControlDAO realTimeControlDAO;
+    @Autowired
+    private AirDataDAO airDataDAO;
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
@@ -439,10 +444,32 @@ public class RealTimeControlTask {
         try {
             logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
 
+            // 获取健康预警
+            String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetHealthyMeteorological";
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray array = (JSONArray) obj.get("Data");
+            JSONObject healthJo = (JSONObject) array.stream().max(Comparator.comparing(
+                    o -> Integer.parseInt((String)((JSONObject)(((JSONArray)((JSONObject) o).get("Deatails")).get(0))).get("WarningLevel"))
+            )).get();
+            int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJo.get("Deatails")).get(0))).get("WarningLevel"));
+
+            // 获取航空预警
+            AirDataEntity airDataEntity = airDataDAO.findAirDataByName(AirTaskName.HKQX_AIRPORT_CAPACTIY);
+            Map<String, Map<String, Object>> airData = (Map<String, Map<String, Object>>) airDataEntity.getValue().get(0);
+            int pudongLevel = (int) airData.get("pudong").get("level");
+            int hongqiaoLevel = (int) airData.get("hongqiao").get("level");
+            int maxAirportLevel = Math.max(pudongLevel, hongqiaoLevel);
+            // 1,2,3,4 -> 5,4,3,1
+            int airLevel;
+            if (maxAirportLevel == 1) airLevel = 5;
+            else if (maxAirportLevel == 2) airLevel = 4;
+            else if (maxAirportLevel == 3) airLevel = 3;
+            else airLevel = 1;
+
             JSONObject data = new JSONObject();
             data.put("baoyuneilao", "normal");
-            data.put("hangkongqixiang", "normal");
-            data.put("jiankangqixiang", "normal");
+            data.put("hangkongqixiang", matchWarningLevel(airLevel));
+            data.put("jiankangqixiang", matchWarningLevel(healthLevel));
             data.put("jiaotongqixiang", "normal");
             data.put("haiyangqixiang", "normal");
 
@@ -704,15 +731,12 @@ public class RealTimeControlTask {
         for (int i = 0; i < historyWarningArray.size(); i++) {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
-            int warningYear = Integer.valueOf(DateHelper.getYear((String) historyWarning.get("FORECASTDATE")));
-            String warningOperation = (String) historyWarning.get("OPERATION");
+            if ("发布".equals(historyWarning.get("OPERATION")) && (!"".equals(WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"))))){
+                int warningYear = Integer.valueOf(DateHelper.getYear((String) historyWarning.get("FORECASTDATE")));
 
-            if (historyWarningMap.containsKey(warningYear)) {
-                if ("发布".equals(warningOperation)) {
+                if (historyWarningMap.containsKey(warningYear)) {
                     historyWarningMap.put(warningYear, historyWarningMap.get(warningYear) + 1);
-                }
-            } else {
-                if ("发布".equals(warningOperation)) {
+                } else {
                     historyWarningMap.put(warningYear, 1);
                 }
             }
@@ -960,5 +984,16 @@ public class RealTimeControlTask {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    private String matchWarningLevel(int level) {
+        switch (level) {
+            case 5: return "red";
+            case 4: return "orange";
+            case 3: return "yellow";
+            case 2: return "blue";
+            case 1: return "normal";
+        }
+        return "normal";
     }
 }
