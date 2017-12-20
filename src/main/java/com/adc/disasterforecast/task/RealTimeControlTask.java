@@ -1,7 +1,10 @@
 package com.adc.disasterforecast.task;
 
+import com.adc.disasterforecast.dao.AirDataDAO;
 import com.adc.disasterforecast.dao.RealTimeControlDAO;
+import com.adc.disasterforecast.entity.AirDataEntity;
 import com.adc.disasterforecast.entity.RealTimeControlDataEntity;
+import com.adc.disasterforecast.global.AirTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.global.RealTimeControlTaskName;
 import com.adc.disasterforecast.tools.*;
@@ -28,6 +31,8 @@ public class RealTimeControlTask {
     // dao Autowired
     @Autowired
     private RealTimeControlDAO realTimeControlDAO;
+    @Autowired
+    private AirDataDAO airDataDAO;
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 600000)
     @PostConstruct
@@ -448,10 +453,22 @@ public class RealTimeControlTask {
             )).get();
             int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJo.get("Deatails")).get(0))).get("WarningLevel"));
 
+            // 获取航空预警
+            AirDataEntity airDataEntity = airDataDAO.findAirDataByName(AirTaskName.HKQX_AIRPORT_CAPACTIY);
+            JSONObject airData = (JSONObject) airDataEntity.getValue().get(0);
+            int pudongLevel = (int) ((JSONObject)((JSONObject) airData.get("pudong"))).get("level");
+            int hongqiaoLevel = (int) ((JSONObject)((JSONObject) airData.get("hongqiao"))).get("level");
+            int maxAirportLevel = Math.max(pudongLevel, hongqiaoLevel);
+            // 1,2,3,4 -> 5,4,3,1
+            int airLevel;
+            if (maxAirportLevel == 1) airLevel = 5;
+            else if (maxAirportLevel == 2) airLevel = 4;
+            else if (maxAirportLevel == 3) airLevel = 3;
+            else airLevel = 1;
 
             JSONObject data = new JSONObject();
             data.put("baoyuneilao", "normal");
-            data.put("hangkongqixiang", "normal");
+            data.put("hangkongqixiang", matchWarningLevel(airLevel));
             data.put("jiankangqixiang", matchWarningLevel(healthLevel));
             data.put("jiaotongqixiang", "normal");
             data.put("haiyangqixiang", "normal");
