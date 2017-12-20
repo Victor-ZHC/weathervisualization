@@ -59,16 +59,12 @@ public class HealthTask {
             today.put("minTemp", Integer.parseInt((String) todayJo.get("LowTmp")));
             today.put("maxTemp", Integer.parseInt((String) todayJo.get("HighTmp")));
             today.put("wind", (String) todayJo.get("Wind") + (String) todayJo.get("WindLev"));
-            today.put("pressure", 1021);
-            today.put("humidity", 65);
 
             tomorrow.put("date", DateHelper.getPostponeDateByDay(1));
             tomorrow.put("weather", tomorrowJo.get("Day"));
             tomorrow.put("minTemp", Integer.parseInt((String) tomorrowJo.get("LowTmp")));
             tomorrow.put("maxTemp", Integer.parseInt((String) tomorrowJo.get("HighTmp")));
             tomorrow.put("wind", (String) tomorrowJo.get("Wind") + (String) tomorrowJo.get("WindLev"));
-            tomorrow.put("pressure", 1024);
-            tomorrow.put("humidity", 75);
 
             healthDataDAO.updateHealthDataByName(healthDataEntity);
         } catch (Exception e) {
