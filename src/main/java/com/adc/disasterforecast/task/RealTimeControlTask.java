@@ -439,10 +439,20 @@ public class RealTimeControlTask {
         try {
             logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
 
+            // 获取健康预警
+            String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetHealthyMeteorological";
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray array = (JSONArray) obj.get("Data");
+            JSONObject healthJo = (JSONObject) array.stream().max(Comparator.comparing(
+                    o -> Integer.parseInt((String)((JSONObject)(((JSONArray)((JSONObject) o).get("Deatails")).get(0))).get("WarningLevel"))
+            )).get();
+            int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJo.get("Deatails")).get(0))).get("WarningLevel"));
+
+
             JSONObject data = new JSONObject();
             data.put("baoyuneilao", "normal");
             data.put("hangkongqixiang", "normal");
-            data.put("jiankangqixiang", "normal");
+            data.put("jiankangqixiang", matchWarningLevel(healthLevel));
             data.put("jiaotongqixiang", "normal");
             data.put("haiyangqixiang", "normal");
 
@@ -960,5 +970,16 @@ public class RealTimeControlTask {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    private String matchWarningLevel(int level) {
+        switch (level) {
+            case 5: return "red";
+            case 4: return "orange";
+            case 3: return "yellow";
+            case 2: return "blue";
+            case 1: return "normal";
+        }
+        return "normal";
     }
 }
