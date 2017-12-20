@@ -458,7 +458,7 @@ public class RealTimeControlTask {
             Map<String, Map<String, Object>> airData = (Map<String, Map<String, Object>>) airDataEntity.getValue().get(0);
             int pudongLevel = (int) airData.get("pudong").get("level");
             int hongqiaoLevel = (int) airData.get("hongqiao").get("level");
-            int maxAirportLevel = Math.max(pudongLevel, hongqiaoLevel);
+            int maxAirportLevel = Math.min(pudongLevel, hongqiaoLevel);
             // 1,2,3,4 -> 5,4,3,1
             int airLevel;
             if (maxAirportLevel == 1) airLevel = 5;
