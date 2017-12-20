@@ -332,8 +332,8 @@ public class HealthTask {
         }
     }
 
-//    @PostConstruct
-//    @Scheduled(cron = "0 0/10 * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchServicePublish() {
         try {
             logger.info(String.format("began task：%s", HealthTaskName.KPI_JKQX_SERVICE_PUBLISH));
