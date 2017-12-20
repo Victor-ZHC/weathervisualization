@@ -731,15 +731,12 @@ public class RealTimeControlTask {
         for (int i = 0; i < historyWarningArray.size(); i++) {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
-            int warningYear = Integer.valueOf(DateHelper.getYear((String) historyWarning.get("FORECASTDATE")));
-            String warningOperation = (String) historyWarning.get("OPERATION");
+            if ("发布".equals(historyWarning.get("OPERATION")) && (!"".equals(WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"))))){
+                int warningYear = Integer.valueOf(DateHelper.getYear((String) historyWarning.get("FORECASTDATE")));
 
-            if (historyWarningMap.containsKey(warningYear)) {
-                if ("发布".equals(warningOperation)) {
+                if (historyWarningMap.containsKey(warningYear)) {
                     historyWarningMap.put(warningYear, historyWarningMap.get(warningYear) + 1);
-                }
-            } else {
-                if ("发布".equals(warningOperation)) {
+                } else {
                     historyWarningMap.put(warningYear, 1);
                 }
             }
