@@ -407,7 +407,7 @@ public class HealthTask {
         todayData.put(userType, todayLevelData);
 
         int tomorrowLevel = Integer.parseInt((String)((JSONObject) details.get(1)).get("WarningLevel"));
-        String tomorrowPrevent = (String)((JSONObject) details.get(1)).get("Wat_guide");
+        String tomorrowPrevent = (String)((JSONObject) details.get(1)).get("Influ");
         String tomorrowDes = (String)((JSONObject) details.get(1)).get("Wat_guide");
         JSONObject tomorrowLevelData = new JSONObject();
         tomorrowLevelData.put("level", tomorrowLevel);
