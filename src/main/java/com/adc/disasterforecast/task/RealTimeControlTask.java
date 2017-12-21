@@ -50,7 +50,21 @@ public class RealTimeControlTask {
 
             JSONObject todayData = (JSONObject) todayDataList.get(0);
             todayLive.put("weather", todayData.get("Weather"));
-            todayLive.put("currentTemp", todayData.get("LowTmp"));
+
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+            String date = DateHelper.getCurrentTimeInString("hour");
+            String temUrl = baseUrl + date + "/" + date + "/1";
+
+            JSONObject tem = HttpHelper.getDataByURL(temUrl);
+            JSONArray temList = (JSONArray) tem.get("Data");
+
+            for (int i = 0; i < temList.size(); i++) {
+                JSONObject temData = (JSONObject) temList.get(i);
+                if ("58367".equals(temData.get("STATIONID"))) {
+                    todayLive.put("currentTemp", temData.get("TEMPERATURE"));
+                }
+
+            }
 
             String futureUrl = JsonServiceURL.FORECAST_JSON_SERVICE_URL + "Get10DayForecast";
             JSONObject future = HttpHelper.getDataByURL(futureUrl);

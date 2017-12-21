@@ -101,15 +101,17 @@ public class DisPreventTask {
     @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
-            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationData_Geliku/";
-            String date = DateHelper.getNow();
-            String url = baseUrl + date;
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+            String dateBegin = DateHelper.getCurrentTimeInString("day");
+            String dateEnd = DateHelper.getCurrentTimeInString("hour");
+            String url = baseUrl + dateBegin + "/" + dateEnd + "/1";
             JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
             JSONArray weatherStationData = (JSONArray) weatherStationJson.get("Data");
             int weatherCnt = weatherStationData.size();
             JSONObject stationData = new JSONObject();
             stationData.put("qixiangzidongzhan", weatherCnt);
 
+            String date = DateHelper.getNow();
             baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterOut_Geliku/";
             url = baseUrl + date;
             JSONObject waterOutStationJson = HttpHelper.getDataByURL(url);
