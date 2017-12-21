@@ -25,7 +25,7 @@ import java.util.List;
 import static com.adc.disasterforecast.task.HealthTask.AirQualityType.*;
 
 
-@Component
+//@Component
 public class HealthTask {
     // logger for HealthTask
     private static final Logger logger = LoggerFactory.getLogger(HealthTask.class);

@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
-@Component
+//@Component
 public class YPCaseTask {
     // logger for FeiteTask
     private static final Logger logger = LoggerFactory.getLogger(YPCaseTask.class);
