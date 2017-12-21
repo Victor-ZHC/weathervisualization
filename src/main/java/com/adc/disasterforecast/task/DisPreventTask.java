@@ -34,9 +34,9 @@ public class DisPreventTask {
     @Autowired
     private DisPreventDataDAO disPreventDataDAO;
 
-    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
         try {
             JSONObject disasterJsonYears;
@@ -98,8 +98,8 @@ public class DisPreventTask {
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationData_Geliku/";
