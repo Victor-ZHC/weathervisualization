@@ -35,8 +35,8 @@ public class DisPreventTask {
     private DisPreventDataDAO disPreventDataDAO;
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
         try {
             JSONObject disasterJsonYears;
@@ -97,8 +97,8 @@ public class DisPreventTask {
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationData_Geliku/";
@@ -493,7 +493,7 @@ public class DisPreventTask {
             if(disasterJson == null && disasterJson.get("Data") == null) continue;
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
             String month = DateHelper.getFormatDate((String)((JSONObject)disasterData.get(0)).get("DATETIME"));
-//            System.out.println(month);
+            System.out.println(month);
             Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
 //            System.out.println(monthVal);
             for (Object obj: disasterData) {
@@ -547,14 +547,21 @@ public class DisPreventTask {
         return currentYearVal;
     }
 
-//    @PostConstruct
-//    public void funcTest() {
-//        Map<Long, Integer> hs = getDisasterCurYear("大风");
-//        System.out.println(hs);
+    @PostConstruct
+    public void funcTest() {
+        Map<Long, Integer> hs = getDisasterCurYear("大风");
+        System.out.println(hs);
 //        hs = getDisasterCurYear("雷电");
 //        System.out.println(hs);
 //        Map<Long, Integer> hs = getThunderCurYear();
 //        System.out.println(hs);
-//    }
+        for (int i = 1; i <= 12; i++) {
+            String baseTime = "2017-";
+            if (i < 10) baseTime = baseTime + "0" + String.valueOf(i) + "-01T00:00:00";
+            else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
+            String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
+            Long monthVal = Long.parseLong(month);
+        }
+    }
 
 }
