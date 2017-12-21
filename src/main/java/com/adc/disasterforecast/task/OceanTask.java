@@ -43,15 +43,39 @@ public class OceanTask {
 
     private JSONArray createKPI_HYQX_SYNC_ROLLING() {
         JSONArray array = new JSONArray();
-        double upperBound = 1.5, lowerBound = 0.1;
-        array.add(createChart("A", upperBound, lowerBound));
-        array.add(createChart("B", upperBound, lowerBound));
-        array.add(createChart("C", upperBound, lowerBound));
-        array.add(createChart("D", upperBound, lowerBound));
+//        double upperBound = 1.5, lowerBound = 0.1;
+        List<Float> list1 = Arrays.asList(
+                2.2f, 4.1f, 4.1f, 3.9f, 3.8f, 3.7f,
+                3.6f, 3.8f, 3.7f, 3.7f, 3.8f, 3.6f,
+                2.7f, 3.9f, 3.6f, 3.7f, 3.4f, 3f,
+                1.2f, 1.2f, 1.7f, 1f, 1.4f, 1.7f
+        );
+        List<Float> list2 = Arrays.asList(
+                3.2f, 3.1f, 3.0f, 3.9f, 2.9f, 3.3f,
+                2.8f, 2.8f, 3.7f, 3.6f, 3.8f, 2.6f,
+                2.2f, 2.7f, 2.8f, 2.9f, 3.1f, 3.2f,
+                1f, 2.2f, 2.6f, 1.3f, 1.8f, 1.8f
+        );
+        List<Float> list3 = Arrays.asList(
+                3.0f, 4.0f, 3.3f, 3.8f, 3.8f, 3f,
+                2.9f, 2.8f, 2.7f, 2.8f, 3.8f, 2.6f,
+                3f, 2.9f, 2.2f, 2.8f, 3.2f, 3f,
+                2.9f, 2.2f, 2.5f, 1.9f, 2.4f, 1.7f
+        );
+        List<Float> list4 = Arrays.asList(
+                3.2f, 2.1f, 2.1f, 2.9f, 2.8f, 3f,
+                2.9f, 2.8f, 2.7f, 2.7f, 2.3f, 2.2f,
+                1.3f, 1.9f, 1.8f, 1.7f, 1f, 1f,
+                1.8f, 2.2f, 2.5f, 1.9f, 2.6f, 2.7f
+        );
+        array.add(createChart("A", list1));
+        array.add(createChart("B", list2));
+        array.add(createChart("C", list3));
+        array.add(createChart("D", list4));
         return  array;
     }
 
-    private JSONObject createChart(String siteName, double upperBound, double lowerBound) {
+    private JSONObject createRandomChart(String siteName, double upperBound, double lowerBound) {
         JSONObject jo = new JSONObject();
         jo.put("site", siteName);
         JSONArray value = new JSONArray();
@@ -70,9 +94,9 @@ public class OceanTask {
         return jo;
     }
 
-    private JSONObject createChart(String siteName, List<Integer> values) {
+    private JSONObject createRandomChart(String siteName, List<Integer> values) {
         JSONObject jo = new JSONObject();
-        jo.put("site", "A");
+        jo.put("site", siteName);
         JSONArray value = new JSONArray();
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -3);
@@ -82,6 +106,25 @@ public class OceanTask {
             JSONObject data = new JSONObject();
             data.put("date", cal.getTimeInMillis());
             data.put("value", values.get(rand.nextInt(values.size())));
+            cal.add(Calendar.HOUR_OF_DAY, 1);
+            value.add(data);
+        }
+        jo.put("value", value);
+        return jo;
+    }
+
+    private JSONObject createChart(String siteName, List<Float> values) {
+        JSONObject jo = new JSONObject();
+        jo.put("site", siteName);
+        JSONArray value = new JSONArray();
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, -1);
+        cal.add(Calendar.HOUR_OF_DAY, -1);
+        Random rand = new Random();
+        for (int i = 0; i < 24; ++i) {
+            JSONObject data = new JSONObject();
+            data.put("date", cal.getTimeInMillis());
+            data.put("value", values.get(i));
             cal.add(Calendar.HOUR_OF_DAY, 1);
             value.add(data);
         }
@@ -121,31 +164,104 @@ public class OceanTask {
 
     private JSONArray createKPI_HYQX_SURGE_PROPORTION() {
         JSONArray array = new JSONArray();
-        double upperBound = 2.8, lowerBound = 0.5;
-        array.add(createChart("A", upperBound, lowerBound));
-        array.add(createChart("B", upperBound, lowerBound));
-        array.add(createChart("C", upperBound, lowerBound));
-        array.add(createChart("D", upperBound, lowerBound));
+//        double upperBound = 2.8, lowerBound = 0.5;
+        List<Float> list1 = Arrays.asList(
+                2.2f, 2.1f, 2.1f, 2.9f, 2.8f, 3f,
+                2.9f, 2.8f, 2.7f, 2.7f, 2.8f, 2.6f,
+                2f, 2.9f, 2.6f, 2.7f, 3.4f, 3f,
+                1f, 1.2f, 1.7f, 1f, 1.4f, 1.7f
+        );
+        List<Float> list2 = Arrays.asList(
+                3.2f, 3.1f, 3.0f, 2.9f, 2.8f, 3f,
+                2.8f, 2.7f, 2.7f, 2.6f, 2.8f, 2.6f,
+                2.2f, 2.6f, 2.8f, 2.7f, 3f, 3f,
+                1f, 1.2f, 1.6f, 1.3f, 1.8f, 1.7f
+        );
+        List<Float> list3 = Arrays.asList(
+                3.0f, 3.0f, 3.3f, 2.8f, 2.8f, 3f,
+                2.9f, 2.8f, 2.7f, 2.8f, 2.8f, 2.6f,
+                2f, 2.9f, 2.2f, 2.8f, 3f, 3f,
+                1f, 1.2f, 1.5f, 1.9f, 1.4f, 1.7f
+        );
+        List<Float> list4 = Arrays.asList(
+                1.2f, 2.1f, 2.1f, 2.9f, 2.8f, 3f,
+                2.9f, 2.8f, 2.7f, 2.7f, 2.8f, 2.6f,
+                2f, 2.9f, 2.8f, 2.7f, 2f, 2f,
+                1.8f, 1.2f, 1.5f, 1.9f, 1.6f, 1.7f
+        );
+        array.add(createChart("A", list1));
+        array.add(createChart("B", list2));
+        array.add(createChart("C", list3));
+        array.add(createChart("D", list4));
         return  array;
     }
 
     private JSONArray createKPI_HYQX_SHOAL_EFFECT() {
         JSONArray array = new JSONArray();
-        double upperBound = 2.2, lowerBound = 0.2;
-        array.add(createChart("A", upperBound, lowerBound));
-        array.add(createChart("B", upperBound, lowerBound));
-        array.add(createChart("C", upperBound, lowerBound));
-        array.add(createChart("D", upperBound, lowerBound));
+//        double upperBound = 2.2, lowerBound = 0.2;
+        List<Float> list1 = Arrays.asList(
+                4.2f, 4.1f, 4.1f, 3.9f, 3.8f, 3.7f,
+                2.9f, 3.8f, 3.7f, 3.7f, 3.8f, 3.6f,
+                2.7f, 2.9f, 2.6f, 2.7f, 3.4f, 3f,
+                1.2f, 1.2f, 1.7f, 1f, 1.4f, 1.7f
+        );
+        List<Float> list2 = Arrays.asList(
+                3.2f, 3.1f, 3.0f, 2.9f, 2.9f, 3.3f,
+                2.8f, 2.8f, 2.7f, 2.6f, 2.8f, 2.6f,
+                2.2f, 2.7f, 2.8f, 2.9f, 3.1f, 3.2f,
+                1f, 1.2f, 1.6f, 1.3f, 1.8f, 1.8f
+        );
+        List<Float> list3 = Arrays.asList(
+                3.0f, 3.0f, 3.3f, 3.8f, 3.8f, 3f,
+                2.9f, 2.8f, 2.7f, 2.8f, 3.8f, 2.6f,
+                2f, 2.9f, 2.2f, 2.8f, 3.2f, 3f,
+                1.9f, 2.2f, 2.5f, 1.9f, 2.4f, 1.7f
+        );
+        List<Float> list4 = Arrays.asList(
+                2.2f, 2.1f, 2.1f, 2.9f, 2.8f, 3f,
+                3.9f, 2.8f, 2.7f, 2.7f, 2.8f, 2.6f,
+                2.3f, 2.9f, 2.8f, 2.7f, 2f, 2f,
+                2.8f, 2.2f, 2.5f, 2.9f, 2.6f, 2.7f
+        );
+        array.add(createChart("A", list1));
+        array.add(createChart("B", list2));
+        array.add(createChart("C", list3));
+        array.add(createChart("D", list4));
         return  array;
     }
 
     private JSONArray createKPI_HYQX_WAVE_STEEPNESS() {
         JSONArray array = new JSONArray();
-        List<Integer> list = Arrays.asList(0, 1, 2, 3);
-        array.add(createChart("A", list));
-        array.add(createChart("B", list));
-        array.add(createChart("C", list));
-        array.add(createChart("D", list));
+//        List<Integer> list = Arrays.asList(0, 1, 2, 3);
+        List<Float> list1 = Arrays.asList(
+                3f, 3f, 3f, 3f, 3f, 3f,
+                2f, 2f, 2f, 2f, 1f, 1f,
+                1f, 1f, 1f, 1f, 3f, 3f,
+                3f, 3f, 3f, 3f, 3f, 3f
+        );
+        List<Float> list2 = Arrays.asList(
+                2f, 2f, 2f, 3f, 3f, 3f,
+                2f, 2f, 1f, 1f, 1f, 1f,
+                1f, 1f, 1f, 1f, 3f, 3f,
+                3f, 3f, 3f, 2f, 2f, 3f
+        );
+        List<Float> list3 = Arrays.asList(
+                1f, 2f, 2f, 3f, 3f, 3f,
+                2f, 2f, 1f, 1f, 1f, 1f,
+                1f, 2f, 2f, 2f, 2f, 2f,
+                3f, 3f, 3f, 2f, 2f, 3f
+        );
+        List<Float> list4 = Arrays.asList(
+                1f, 1f, 1f, 1f, 1f, 3f,
+                2f, 2f, 1f, 1f, 1f, 1f,
+                1f, 3f, 3f, 3f, 3f, 3f,
+                3f, 3f, 3f, 2f, 2f, 3f
+        );
+        array.add(createChart("A", list1));
+        array.add(createChart("B", list2));
+        array.add(createChart("C", list3));
+        array.add(createChart("D", list4));
+
         return  array;
     }
 
@@ -222,15 +338,15 @@ public class OceanTask {
         JSONObject jo2 = new JSONObject();
         jo2.put("site", "B");
         jo2.put("level", 3);
-        jo2.put("jianglun", "较严重");
-        jo2.put("hailun", "严重");
+        jo2.put("jianglun", "严重");
+        jo2.put("hailun", "较严重");
         array.add(jo2);
 
         JSONObject jo3 = new JSONObject();
         jo3.put("site", "C");
         jo3.put("level", 2);
-        jo3.put("jianglun", "一般");
-        jo3.put("hailun", "较严重");
+        jo3.put("jianglun", "较严重");
+        jo3.put("hailun", "一般");
         array.add(jo3);
 
         JSONObject jo4 = new JSONObject();
