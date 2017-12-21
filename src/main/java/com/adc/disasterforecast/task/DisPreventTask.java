@@ -98,12 +98,12 @@ public class DisPreventTask {
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
-            String dateBegin = DateHelper.getCurrentTimeInString("day");
             String dateEnd = DateHelper.getCurrentTimeInString("hour");
+            String dateBegin = DateHelper.getPostponeDateByHour(dateEnd, -1);
             String url = baseUrl + dateBegin + "/" + dateEnd + "/1";
             JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
             JSONArray weatherStationData = (JSONArray) weatherStationJson.get("Data");
