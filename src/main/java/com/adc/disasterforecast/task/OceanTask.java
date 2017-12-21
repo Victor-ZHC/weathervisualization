@@ -215,7 +215,7 @@ public class OceanTask {
         JSONObject jo1 = new JSONObject();
         jo1.put("site", "A");
         jo1.put("level", 1);
-        jo1.put("jianglun", "较严重");
+        jo1.put("jianglun", "一般");
         jo1.put("hailun", "一般");
         array.add(jo1);
 
@@ -223,20 +223,20 @@ public class OceanTask {
         jo2.put("site", "B");
         jo2.put("level", 3);
         jo2.put("jianglun", "较严重");
-        jo2.put("hailun", "一般");
+        jo2.put("hailun", "严重");
         array.add(jo2);
 
         JSONObject jo3 = new JSONObject();
         jo3.put("site", "C");
         jo3.put("level", 2);
-        jo3.put("jianglun", "较严重");
-        jo3.put("hailun", "一般");
+        jo3.put("jianglun", "一般");
+        jo3.put("hailun", "较严重");
         array.add(jo3);
 
         JSONObject jo4 = new JSONObject();
         jo4.put("site", "D");
         jo4.put("level", 1);
-        jo4.put("jianglun", "较严重");
+        jo4.put("jianglun", "一般");
         jo4.put("hailun", "一般");
         array.add(jo4);
 

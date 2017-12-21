@@ -198,7 +198,7 @@ public class HealthTask {
             int oldFluCount = 0;
             int adultFluCount = 0;
             for (HistoryHealthData data : historyHealthDataList) {
-                if (data.WARNING_LEVEL > 4) {
+                if (data.WARNING_LEVEL >= 4) {
                     if (data.CROW.equals("COPD患者")) ++copdCount;
                     else if (data.CROW.equals("儿童感冒")) ++childFluCount;
                     else if (data.CROW.equals("儿童哮喘")) ++childAsthmaCount;
