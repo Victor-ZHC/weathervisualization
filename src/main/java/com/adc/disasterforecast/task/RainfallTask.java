@@ -187,6 +187,7 @@ public class RainfallTask {
             NLInfluenceTOP10.setName(RainfallTaskName.NL_INFLUENCE_TOP10);
             NLInfluenceTOP10.setValue(value);
             rainfallDataDAO.updateRainfallDataByName(NLInfluenceTOP10);
+
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -750,6 +751,14 @@ public class RainfallTask {
             seeperStationArea.setName(RainfallTaskName.SEEPER_SPREAD);
             seeperStationArea.setValue(value);
             rainfallDataDAO.updateRainfallDataByName(seeperStationArea);
+
+            logger.info(String.format("began task：%s", RainfallTaskName.SEEPER_SITE_COUNT));
+            RainfallDataEntity stationCountEntity = new RainfallDataEntity();
+            stationCountEntity.setName(RainfallTaskName.SEEPER_SITE_COUNT);
+            JSONArray countValue = new JSONArray();
+            countValue.add(array.size());
+            stationCountEntity.setValue(countValue);
+            rainfallDataDAO.updateRainfallDataByName(stationCountEntity);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -799,6 +808,14 @@ public class RainfallTask {
             disasterArea.setName(RainfallTaskName.RAIN_SPREAD);
             disasterArea.setValue(value);
             rainfallDataDAO.updateRainfallDataByName(disasterArea);
+
+            logger.info(String.format("began task：%s", RainfallTaskName.RAIN_SITE_COUNT));
+            RainfallDataEntity stationCountEntity = new RainfallDataEntity();
+            stationCountEntity.setName(RainfallTaskName.RAIN_SITE_COUNT);
+            JSONArray countValue = new JSONArray();
+            countValue.add(autoStationArray.size());
+            stationCountEntity.setValue(countValue);
+            rainfallDataDAO.updateRainfallDataByName(stationCountEntity);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }

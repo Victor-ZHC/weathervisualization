@@ -4,6 +4,8 @@ public class RainfallTaskName {
     public static String SEEPER_SITE_TOP10 = "KPI_BYNL_SEEPER_SITE_TOP10";
     public static String RAIN_SITE_TOP10 = "KPI_BYNL_RAIN_SITE_TOP10";
     public static String NL_INFLUENCE_TOP10 = "KPI_BYNL_NL_INFLUENCE_TOP10";
+    public static String RAIN_SITE_COUNT = "KPI_RAIN_SITE_COUNT";
+    public static String SEEPER_SITE_COUNT = "KPI_SEEPER_SITE_COUNT";
     public static String NL_TOP10 = "KPI_BYNL_NL_TOP10";
     public static String SEEPER_RANK_TOP10 = "KPI_BYNL_SEEPER_RANK_TOP10";
     public static String RAIN_RANK_TOP10 = "KPI_BYNL_RAIN_RANK_TOP10";
