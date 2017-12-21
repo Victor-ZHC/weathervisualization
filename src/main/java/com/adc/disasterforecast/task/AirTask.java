@@ -430,7 +430,9 @@ public class AirTask {
         for (int i = 0; i < data.size(); ++i) {
             JSONObject jo = new JSONObject();
             jo.put("date", i + 1);
-            jo.put("value", data.get(i));
+            int exposity = (int) (data.get(i) * 100);
+            if (exposity > 100) exposity = 100;
+            jo.put("value", exposity);
             array.add(jo);
         }
         return array;
