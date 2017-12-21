@@ -35,8 +35,8 @@ public class DisPreventTask {
     private DisPreventDataDAO disPreventDataDAO;
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
         try {
             JSONObject disasterJsonYears;
@@ -97,19 +97,21 @@ public class DisPreventTask {
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
-            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationData_Geliku/";
-            String date = DateHelper.getNow();
-            String url = baseUrl + date;
+            String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
+            String dateEnd = DateHelper.getCurrentTimeInString("hour");
+            String dateBegin = DateHelper.getPostponeDateByHour(dateEnd, -1);
+            String url = baseUrl + dateBegin + "/" + dateEnd + "/1";
             JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
             JSONArray weatherStationData = (JSONArray) weatherStationJson.get("Data");
             int weatherCnt = weatherStationData.size();
             JSONObject stationData = new JSONObject();
             stationData.put("qixiangzidongzhan", weatherCnt);
 
+            String date = DateHelper.getNow();
             baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterOut_Geliku/";
             url = baseUrl + date;
             JSONObject waterOutStationJson = HttpHelper.getDataByURL(url);
@@ -167,7 +169,7 @@ public class DisPreventTask {
 
             stationData.put("fengxianyujing", fxyjJson);
             stationData.put("shandiandingweiyi", 4);
-            stationData.put("jiaotongjiancedian", 789);
+            stationData.put("jiaotongjiancedian", 32);
             stationData.put("hangkongjiancedian", 2);
             stationData.put("shipinjiankongdian", 9876);
             beginDate = DateHelper.getPostponeDateByHour("20170101000000", 0);
@@ -547,7 +549,7 @@ public class DisPreventTask {
         return currentYearVal;
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void funcTest() {
         Map<Long, Integer> hs = getDisasterCurYear("大风");
         System.out.println(hs);

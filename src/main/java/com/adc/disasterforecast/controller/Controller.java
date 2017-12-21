@@ -41,6 +41,9 @@ public class Controller {
     @Autowired
     AirDataDAO airDataDAO;
 
+    @Autowired
+    MetroDataDAO metroDataDAO;
+
     /**
      * handle all GET request from "feite" page by name
      * @param name data name
@@ -186,5 +189,18 @@ public class Controller {
         logger.info("get request from /hangkongqixiang/" + name);
         AirDataEntity airDataEntity = airDataDAO.findAirDataByName(name);
         return airDataEntity;
+    }
+
+    /**
+     * handle all GET request from "guidaojiaotong" page by name
+     * @param name data name
+     * @return dataEntity
+     */
+    @RequestMapping(value = "/guidaojiaotong/{name}", method = RequestMethod.GET)
+    @ResponseBody
+    public MetroDataEntity getMetroData(@PathVariable("name") String name) {
+        logger.info("get request from /guidaojiaotong/" + name);
+        MetroDataEntity metroDataEntity = metroDataDAO.findMetroDataByName(name);
+        return metroDataEntity;
     }
 }
