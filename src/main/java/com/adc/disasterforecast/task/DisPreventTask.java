@@ -522,7 +522,7 @@ public class DisPreventTask {
     private Map<Long, Integer> getThunderCurYear() {
         Map<Long, Integer> currentYearVal = new HashMap<>();
 
-        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/ADTD/";
+        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/LS/";
         String endDate = DateHelper.getNow().substring(0, 8) + "000000";
         String beginDate = endDate;
         while (true) {
