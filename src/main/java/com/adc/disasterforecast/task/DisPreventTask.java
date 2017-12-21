@@ -102,8 +102,8 @@ public class DisPreventTask {
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
-            String dateBegin = DateHelper.getCurrentTimeInString("day");
             String dateEnd = DateHelper.getCurrentTimeInString("hour");
+            String dateBegin = DateHelper.getPostponeDateByHour(dateEnd, -1);
             String url = baseUrl + dateBegin + "/" + dateEnd + "/1";
             JSONObject weatherStationJson = HttpHelper.getDataByURL(url);
             JSONArray weatherStationData = (JSONArray) weatherStationJson.get("Data");
@@ -495,7 +495,7 @@ public class DisPreventTask {
             if(disasterJson == null && disasterJson.get("Data") == null) continue;
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
             String month = DateHelper.getFormatDate((String)((JSONObject)disasterData.get(0)).get("DATETIME"));
-//            System.out.println(month);
+            System.out.println(month);
             Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
 //            System.out.println(monthVal);
             for (Object obj: disasterData) {
@@ -522,7 +522,7 @@ public class DisPreventTask {
     private Map<Long, Integer> getThunderCurYear() {
         Map<Long, Integer> currentYearVal = new HashMap<>();
 
-        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/ADTD/";
+        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/LS/";
         String endDate = DateHelper.getNow().substring(0, 8) + "000000";
         String beginDate = endDate;
         while (true) {
@@ -550,13 +550,20 @@ public class DisPreventTask {
     }
 
 //    @PostConstruct
-//    public void funcTest() {
-//        Map<Long, Integer> hs = getDisasterCurYear("大风");
-//        System.out.println(hs);
+    public void funcTest() {
+        Map<Long, Integer> hs = getDisasterCurYear("大风");
+        System.out.println(hs);
 //        hs = getDisasterCurYear("雷电");
 //        System.out.println(hs);
 //        Map<Long, Integer> hs = getThunderCurYear();
 //        System.out.println(hs);
-//    }
+        for (int i = 1; i <= 12; i++) {
+            String baseTime = "2017-";
+            if (i < 10) baseTime = baseTime + "0" + String.valueOf(i) + "-01T00:00:00";
+            else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
+            String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
+            Long monthVal = Long.parseLong(month);
+        }
+    }
 
 }

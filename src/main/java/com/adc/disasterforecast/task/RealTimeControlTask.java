@@ -52,8 +52,9 @@ public class RealTimeControlTask {
             todayLive.put("weather", todayData.get("Weather"));
 
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
-            String date = DateHelper.getCurrentTimeInString("hour");
-            String temUrl = baseUrl + date + "/" + date + "/1";
+            String endDate = DateHelper.getCurrentTimeInString("hour");
+            String beginDate = DateHelper.getPostponeDateByHour(endDate, -1);
+            String temUrl = baseUrl + beginDate + "/" + endDate + "/1";
 
             JSONObject tem = HttpHelper.getDataByURL(temUrl);
             JSONArray temList = (JSONArray) tem.get("Data");

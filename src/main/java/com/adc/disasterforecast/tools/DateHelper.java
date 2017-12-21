@@ -286,6 +286,7 @@ public class DateHelper {
     public static String getFormatDate(String date) {
         String [] parts = date.split(" ");
         String [] days = parts[0].split("/");
+        if(days[1].length() < 2) days[1] = "0" + days[1];
         return days[0] + days[1] +"01000000";
     }
 
