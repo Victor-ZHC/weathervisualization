@@ -169,7 +169,7 @@ public class DisPreventTask {
 
             stationData.put("fengxianyujing", fxyjJson);
             stationData.put("shandiandingweiyi", 4);
-            stationData.put("jiaotongjiancedian", 789);
+            stationData.put("jiaotongjiancedian", 32);
             stationData.put("hangkongjiancedian", 2);
             stationData.put("shipinjiankongdian", 9876);
             beginDate = DateHelper.getPostponeDateByHour("20170101000000", 0);
