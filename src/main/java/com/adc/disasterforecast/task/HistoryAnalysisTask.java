@@ -25,7 +25,7 @@ import java.util.Map;
  * @Author lilin
  * @Create 2017-12-07 21:39
  **/
-//@Component
+@Component
 public class HistoryAnalysisTask {
     // logger for RealTimeControlTask
     private static final Logger logger = LoggerFactory.getLogger(HistoryAnalysisTask.class);
