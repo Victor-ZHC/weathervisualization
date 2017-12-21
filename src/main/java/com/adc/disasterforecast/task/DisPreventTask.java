@@ -98,8 +98,8 @@ public class DisPreventTask {
     }
 
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationData_Geliku/";
@@ -174,9 +174,11 @@ public class DisPreventTask {
             beginDate = DateHelper.getPostponeDateByHour("20170101000000", 0);
 
 
+            Calendar today = Calendar.getInstance();
+
             stationData.put("shehuiguancezhan", 97); // key ??
-            stationData.put("app", 54332);
-            stationData.put("weixin", 54332);
+            stationData.put("app", DateHelper.differentDays(beginDate, endDate));
+            stationData.put("weixin", DateHelper.differentDays(beginDate, endDate));
 
             stationData.put("liandongxiangying", stationData.get("zhongduanxitong"));
 
