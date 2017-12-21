@@ -15,8 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class MetroTask {
@@ -25,7 +24,23 @@ public class MetroTask {
 
     private static Map<Integer, Connection> lineMapping = new HashMap<>();
     private static Map<Integer, Station> stationMapping = new HashMap<>();
+    private static List<Integer> line2ConnectionOrder;
+    private static List<Integer> line16ConnectionOrder;
+    private static List<Integer> line2StationOrder;
+    private static List<Integer> line16StationOrder;
     static {
+        line2ConnectionOrder = Arrays.asList(
+                19, 18, 17, 16, 15, 14, 13, 20
+        );
+        line16ConnectionOrder = Arrays.asList(
+                1, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2
+        );
+        line2StationOrder = Arrays.asList(
+                22, 21, 20, 19, 18, 17, 16, 15, 14
+        );
+        line16StationOrder = Arrays.asList(
+                13, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1
+        );
         lineMapping.put(1, new Connection("华夏中路-龙阳路", "16"));
         lineMapping.put(2, new Connection("滴水湖-临港大道", "16"));
         lineMapping.put(3, new Connection("临港大道-书院", "16"));
@@ -48,7 +63,7 @@ public class MetroTask {
         lineMapping.put(19, new Connection("唐镇-广兰路", "2"));
         lineMapping.put(20, new Connection("浦东国际机场-海天三路", "2"));
 
-        stationMapping.put(13, new Station("龙阳路", "16", 121.552666, 31.204983));
+        stationMapping.put(13, new Station("龙阳路", "16"));
         stationMapping.put(2, new Station("华夏中路", "16"));
         stationMapping.put(3, new Station("罗山路", "16"));
         stationMapping.put(4, new Station("周浦东", "16"));
@@ -150,7 +165,7 @@ public class MetroTask {
 
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
-    public void fetchLineWindInflunce() {
+    public void fetchLineWindInfluence() {
         try {
             logger.info(String.format("began task：%s", MetroTaskName.GDJT_WIND_INFLUENCE));
             String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL
@@ -172,16 +187,29 @@ public class MetroTask {
             JSONArray line16Stations = new JSONArray();
             line2Jo.put("station", line2Stations);
             line16Jo.put("station", line16Stations);
+            Map<Integer, JSONObject> line16Map = new HashMap<>();
+            Map<Integer, JSONObject> line2Map = new HashMap<>();
 
+            Set<Integer> set = new HashSet<>();
             for (Object o : array) {
                 JSONObject one = (JSONObject) o;
                 int smcLineId = (int) (long)one.get("SMC_LINE_ID");
+                if (set.contains(smcLineId))
+                    continue;
+                set.add(smcLineId);
                 Connection connection = lineMapping.get(smcLineId);
                 JSONObject outputJo = new JSONObject();
                 outputJo.put("section", connection.name);
                 outputJo.put("level", one.get("LINECOLOR"));
-                if (connection.line.equals("16")) line16Stations.add(outputJo);
-                else if (connection.line.equals("2")) line2Stations.add(outputJo);
+                if (connection.line.equals("16")) line16Map.put(smcLineId, outputJo);
+                else if (connection.line.equals("2")) line2Map.put(smcLineId, outputJo);
+            }
+
+            for (int connectionId : line16ConnectionOrder) {
+                line16Stations.add(line16Map.get(connectionId));
+            }
+            for (int connectionId : line2ConnectionOrder) {
+                line2Stations.add(line2Map.get(connectionId));
             }
             metroDataDAO.updateMetroDataByName(metroDataEntity);
 
@@ -216,10 +244,35 @@ public class MetroTask {
             JSONObject jo = HttpHelper.getDataByURL(url);
             JSONArray array = (JSONArray) jo.get("Data");
 
+            Set<Integer> set = new HashSet<>();
+            Map<Integer, JSONObject> line16Map = new HashMap<>();
+            Map<Integer, JSONObject> line2Map = new HashMap<>();
             for (Object o : array) {
                 JSONObject one = (JSONObject) o;
-                int stationId = (int) (long) one.get("STATIONID");
+                int stationId = (int) (long)one.get("STATIONID");
+                if (set.contains(stationId))
+                    continue;
+                set.add(stationId);
+                Station station = stationMapping.get(stationId);
+                JSONObject outputJo = new JSONObject();
+                outputJo.put("site", station.name);
+                outputJo.put("value", one.get("WINDSPEED"));
+                int windSpeedClass = Integer.parseInt((String) one.get("WINDSPEED_CLASS"));
+                String level;
+                if (windSpeedClass == 4) level = "red";
+                else if (windSpeedClass == 3) level = "orange";
+                else if (windSpeedClass == 2) level = "yellow";
+                else level = "green";
+                outputJo.put("level", level);
+                if (station.line.equals("16")) line16Map.put(stationId, outputJo);
+                else if (station.line.equals("2")) line2Map.put(stationId, outputJo);
+            }
 
+            for (int stationId : line16StationOrder) {
+                line16Stations.add(line16Map.get(stationId));
+            }
+            for (int stationId : line2StationOrder) {
+                line2Stations.add(line2Map.get(stationId));
             }
 
             metroDataDAO.updateMetroDataByName(metroDataEntity);
@@ -242,7 +295,12 @@ public class MetroTask {
         String line;
         double longt;
         double latit;
-        public Station(String name, String line, long longt, long latit) {
+        public Station(String name, String line) {
+            this.name = name;
+            this.line = line;
+        }
+
+        public Station(String name, String line, double longt, double latit) {
             this.name = name;
             this.line = line;
             this.longt = longt;
