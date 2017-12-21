@@ -756,7 +756,7 @@ public class RainfallTask {
             RainfallDataEntity stationCountEntity = new RainfallDataEntity();
             stationCountEntity.setName(RainfallTaskName.SEEPER_SITE_COUNT);
             JSONArray countValue = new JSONArray();
-            countValue.add(array.size());
+            countValue.add(value.size());
             stationCountEntity.setValue(countValue);
             rainfallDataDAO.updateRainfallDataByName(stationCountEntity);
         } catch (Exception e) {
@@ -813,7 +813,7 @@ public class RainfallTask {
             RainfallDataEntity stationCountEntity = new RainfallDataEntity();
             stationCountEntity.setName(RainfallTaskName.RAIN_SITE_COUNT);
             JSONArray countValue = new JSONArray();
-            countValue.add(autoStationArray.size());
+            countValue.add(value.size());
             stationCountEntity.setValue(countValue);
             rainfallDataDAO.updateRainfallDataByName(stationCountEntity);
         } catch (Exception e) {
