@@ -80,6 +80,13 @@ public class RealTimeControlTask {
                     todayLive.put("date", DateHelper.getPostponeDateByDay(i));
                     todayLive.put("minTemp", futureData.get("LowTmp"));
                     todayLive.put("maxTemp", futureData.get("HighTmp"));
+                    // 如果徐家汇自动站拿不到温度，则显示最大值和最小值的平均值
+                    if (!todayLive.containsKey("currentTemp")) {
+                        double lowTmp = Double.parseDouble((String) futureData.get("LowTmp"));
+                        double highTmp = Double.parseDouble((String) futureData.get("HighTmp"));
+                        int middleTmp = (int) ((lowTmp + highTmp) / 2);
+                        todayLive.put("currentTemp", String.valueOf(middleTmp));
+                    }
 
                     weatherLiveValue.add(todayLive);
                 } else {
