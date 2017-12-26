@@ -1,8 +1,11 @@
 package com.adc.disasterforecast.task;
 
 import com.adc.disasterforecast.dao.DisPreventDataDAO;
+import com.adc.disasterforecast.dao.HistoryAnalysisDataDAO;
 import com.adc.disasterforecast.entity.DisPreventDataEntity;
+import com.adc.disasterforecast.entity.HistoryAnalysisDataEntity;
 import com.adc.disasterforecast.global.DisPreventTaskName;
+import com.adc.disasterforecast.global.HistoryAnalysisTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.tools.*;
 import com.mongodb.util.JSON;
@@ -33,6 +36,8 @@ public class DisPreventTask {
     // dao Autowired
     @Autowired
     private DisPreventDataDAO disPreventDataDAO;
+    @Autowired
+    private HistoryAnalysisDataDAO historyAnalysisDataDAO;
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
@@ -212,6 +217,13 @@ public class DisPreventTask {
             cnt = amountMap.get(type) == null ? 1 : amountMap.get(type) + 1;
             amountMap.put(type, cnt);
         }
+
+        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
+        List<Object> hisValue =  historyAnalysisDataEntity.getValue();
+        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
+        int hisTotal = (int) hisAmountMap.get("total");
+        int yearAvg = hisTotal / 10;
+        amountMap.put("yearAvg", yearAvg);
 
         JSONObject valData = new JSONObject();
         JSONArray valueData = new JSONArray();
