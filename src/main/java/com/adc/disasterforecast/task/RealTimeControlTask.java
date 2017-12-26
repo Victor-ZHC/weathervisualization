@@ -8,6 +8,7 @@ import com.adc.disasterforecast.global.AirTaskName;
 import com.adc.disasterforecast.global.JsonServiceURL;
 import com.adc.disasterforecast.global.RealTimeControlTaskName;
 import com.adc.disasterforecast.tools.*;
+import com.mongodb.util.JSON;
 import org.apache.poi.ss.usermodel.Row;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -470,10 +471,13 @@ public class RealTimeControlTask {
             String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL + "GetHealthyMeteorological";
             JSONObject obj = HttpHelper.getDataByURL(url);
             JSONArray array = (JSONArray) obj.get("Data");
-            JSONObject healthJo = (JSONObject) array.stream().max(Comparator.comparing(
+            JSONObject healthJ = (JSONObject) array.stream().max(Comparator.comparing(
                     o -> Integer.parseInt((String)((JSONObject)(((JSONArray)((JSONObject) o).get("Deatails")).get(0))).get("WarningLevel"))
             )).get();
-            int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJo.get("Deatails")).get(0))).get("WarningLevel"));
+            int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJ.get("Deatails")).get(0))).get("WarningLevel"));
+            JSONObject healthJo = new JSONObject();
+            healthJo.put("level", matchWarningLevel(healthLevel));
+            healthJo.put("des", "由AQI、PM2.5、PM10等引起的健康气象预警");
 
             // 获取航空预警
             AirDataEntity airDataEntity = airDataDAO.findAirDataByName(AirTaskName.HKQX_AIRPORT_CAPACTIY);
@@ -487,13 +491,32 @@ public class RealTimeControlTask {
             else if (maxAirportLevel == 2) airLevel = 4;
             else if (maxAirportLevel == 3) airLevel = 3;
             else airLevel = 1;
+            JSONObject airJo = new JSONObject();
+            airJo.put("level", matchWarningLevel(airLevel));
+            airJo.put("des", "由低云、大风、大雾、雷电等气象引起的航班延误预警");
+
+            // 获取暴雨内涝预警
+            JSONObject rainJo = new JSONObject();
+            rainJo.put("level", "normal");
+            rainJo.put("des", "暴雨内涝相关预警");
+
+            // 获取交通气象预警
+            JSONObject metroJo = new JSONObject();
+            metroJo.put("level", "normal");
+            metroJo.put("des", "大风引起的交通气象预警");
+
+            // 获取海洋气象预警
+            JSONObject oceanJo = new JSONObject();
+            oceanJo.put("level", "normal");
+            oceanJo.put("des", "海洋气象相关预警");
+
 
             JSONObject data = new JSONObject();
-            data.put("baoyuneilao", "normal");
-            data.put("hangkongqixiang", matchWarningLevel(airLevel));
-            data.put("jiankangqixiang", matchWarningLevel(healthLevel));
-            data.put("jiaotongqixiang", "normal");
-            data.put("haiyangqixiang", "normal");
+            data.put("baoyuneilao", rainJo);
+            data.put("hangkongqixiang", airJo);
+            data.put("jiankangqixiang", healthJo);
+            data.put("jiaotongqixiang", metroJo);
+            data.put("haiyangqixiang", oceanJo);
 
             JSONArray warningRiskForecastValue = new JSONArray();
             warningRiskForecastValue.add(data);
