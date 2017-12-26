@@ -463,6 +463,7 @@ public class RealTimeControlTask {
 
 //    @EventListener(ApplicationReadyEvent.class)
     @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void countWarningRiskForecast() {
         try {
             logger.info(String.format("began task：%s", RealTimeControlTaskName.WARNING_RISK_FORECAST));
