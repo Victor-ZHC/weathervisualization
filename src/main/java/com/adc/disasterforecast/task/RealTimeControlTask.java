@@ -478,7 +478,7 @@ public class RealTimeControlTask {
             int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJ.get("Deatails")).get(0))).get("WarningLevel"));
             JSONObject healthJo = new JSONObject();
             healthJo.put("level", matchWarningLevel(healthLevel));
-            healthJo.put("des", "由AQI、PM2.5、PM10等引起的健康气象预警");
+            healthJo.put("des", healthLevel == 1 ? "无预警" : String.format("健康气象风险%s预警", matchWarningLevelInChinese(healthLevel)));
 
             // 获取航空预警
             AirDataEntity airDataEntity = airDataDAO.findAirDataByName(AirTaskName.HKQX_AIRPORT_CAPACTIY);
@@ -494,22 +494,22 @@ public class RealTimeControlTask {
             else airLevel = 1;
             JSONObject airJo = new JSONObject();
             airJo.put("level", matchWarningLevel(airLevel));
-            airJo.put("des", "由低云、大风、大雾、雷电等气象引起的航班延误预警");
+            airJo.put("des", airLevel == 1 ? "无预警" : String.format("机场延误等级%s预警", matchWarningLevelInChinese(airLevel)));
 
             // 获取暴雨内涝预警
             JSONObject rainJo = new JSONObject();
             rainJo.put("level", "normal");
-            rainJo.put("des", "暴雨内涝相关预警");
+            rainJo.put("des", "无预警");
 
             // 获取交通气象预警
             JSONObject metroJo = new JSONObject();
             metroJo.put("level", "normal");
-            metroJo.put("des", "大风引起的交通气象预警");
+            metroJo.put("des", "无预警");
 
             // 获取海洋气象预警
             JSONObject oceanJo = new JSONObject();
             oceanJo.put("level", "normal");
-            oceanJo.put("des", "海洋气象相关预警");
+            oceanJo.put("des", "无预警");
 
 
             JSONObject data = new JSONObject();
@@ -1041,5 +1041,16 @@ public class RealTimeControlTask {
             case 1: return "normal";
         }
         return "normal";
+    }
+
+    private String matchWarningLevelInChinese(int level) {
+        switch (level) {
+            case 5: return "红色";
+            case 4: return "橙色";
+            case 3: return "黄色";
+            case 2: return "蓝色";
+            case 1: return "";
+        }
+        return "";
     }
 }
