@@ -848,7 +848,10 @@ public class RealTimeControlTask {
         for (int i = 0; i < historyWarningArray.size(); i++) {
             JSONObject historyWarning = (JSONObject) historyWarningArray.get(i);
 
-            if (String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1).equals(DateHelper.getMonth((String) historyWarning.get("FORECASTDATE")))) {
+            int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+            String monthString = month < 10 ? "0" + month : month + "";
+
+            if (monthString.equals(DateHelper.getMonth((String) historyWarning.get("FORECASTDATE")))) {
                 String warningType = WarningHelper.getWarningWeather((String) historyWarning.get("TYPE"));
                 String warningOperation = (String) historyWarning.get("OPERATION");
                 if (historyWarningMouthMap.containsKey(warningType) && "发布".equals(warningOperation)) {
@@ -973,7 +976,10 @@ public class RealTimeControlTask {
         for (int i = 0; i < historyDisasterArray.size(); i++) {
             JSONObject historyDisaster = (JSONObject) historyDisasterArray.get(i);
 
-            if (String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1).equals(DateHelper.getMonth((String) historyDisaster.get("DATETIME_DISASTER")))) {
+            int month = Calendar.getInstance().get(Calendar.MONTH) + 1;
+            String monthString = month < 10 ? "0" + month : month + "";
+
+            if (monthString.equals(DateHelper.getMonth((String) historyDisaster.get("DATETIME_DISASTER")))) {
                 String disasterType = DisasterTypeHelper.getDisasterTypeByCode(((Number) historyDisaster.get("CODE_DISASTER")).intValue());
 
                 if (historyDisasterMouthMap.containsKey(disasterType)) {

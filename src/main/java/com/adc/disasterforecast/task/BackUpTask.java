@@ -29,45 +29,46 @@ public class BackUpTask {
     private BackUpDataDAO backUpDataDAO;
 
 
-//    @PostConstruct
-//    public void getHistoryRainfall(){
-//        logger.info(String.format("began task：%s", BackUpDataName.RAINFALL));
-//
-//        String nowDate = DateHelper.getCurrentTimeInString("day");
-//        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/";
-//
-//        String beginDate = "";
-//        String endDate = "";
-//        int i = 0;
-//        JSONArray historyRainfallValue = new JSONArray();
-//        while (! nowDate.equals(endDate)) {
-//            beginDate = DateHelper.getPostponeDateByDay(2015, 1, 1, 0, 0, 0, i);
-//            endDate = DateHelper.getPostponeDateByDay(2015, 1, 2, 0, 0, 0, i);
-//
-//            String url = baseUrl + beginDate + "/" + endDate + "/1";
-//
-//            JSONObject obj = HttpHelper.getDataByURL(url);
-//            JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
-//
-//            double max = getMaxRainHour(autoStationDataArray);
-//
-//            JSONObject maxRainHourByDay = new JSONObject();
-//            maxRainHourByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
-//            maxRainHourByDay.put("value", max);
-//            historyRainfallValue.add(maxRainHourByDay);
-//            i++;
-//
-////            BackUpDataEntity historyRainfall = new BackUpDataEntity();
-////            historyRainfall.setName(BackUpDataName.RAINFALL);
-////            historyRainfall.setValue(historyRainfallValue);
-////            backUpDataDAO.updateBackUpDataByName(historyRainfall);
-//        }
-//
+    @PostConstruct
+    public void getHistoryRainfall(){
+        logger.info(String.format("began task：%s", BackUpDataName.RAINFALL));
+
+        String nowDate = DateHelper.getCurrentTimeInString("day");
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "/GetAutoStationDataByDatetime_5mi_SanWei/";
+
+        String beginDate = "";
+        String endDate = "";
+        int i = 0;
+        JSONArray historyRainfallValue = new JSONArray();
+        while (! nowDate.equals(endDate)) {
+            beginDate = DateHelper.getPostponeDateByDay(2015, 1, 1, 0, 0, 0, i);
+            endDate = DateHelper.getPostponeDateByDay(2015, 1, 2, 0, 0, 0, i);
+
+            String url = baseUrl + beginDate + "/" + endDate + "/1";
+
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
+
+            MaxRainHour max = getMaxRainHour(autoStationDataArray);
+
+            JSONObject maxRainHourByDay = new JSONObject();
+            maxRainHourByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
+            maxRainHourByDay.put("value", max.getValue());
+            maxRainHourByDay.put("siteName", max.getSiteName());
+            historyRainfallValue.add(maxRainHourByDay);
+            i++;
+
+            BackUpDataEntity historyRainfall = new BackUpDataEntity();
+            historyRainfall.setName(BackUpDataName.RAINFALL);
+            historyRainfall.setValue(historyRainfallValue);
+            backUpDataDAO.updateBackUpDataByName(historyRainfall);
+        }
+
 //        BackUpDataEntity historyRainfall = new BackUpDataEntity();
 //        historyRainfall.setName(BackUpDataName.RAINFALL);
 //        historyRainfall.setValue(historyRainfallValue);
 //        backUpDataDAO.updateBackUpDataByName(historyRainfall);
-//    }
+    }
 
 //    @PostConstruct
 //    public void getHistorySeeper(){
@@ -131,12 +132,13 @@ public class BackUpTask {
             JSONObject obj = HttpHelper.getDataByURL(url);
             JSONArray autoStationDataArray = (JSONArray) obj.get("Data");
 
-            double max = getMaxRainHour(autoStationDataArray);
+            MaxRainHour max = getMaxRainHour(autoStationDataArray);
 
             JSONArray historyRainfallValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.RAINFALL).getValue();
             JSONObject maxRainHourByDay = new JSONObject();
             maxRainHourByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
-            maxRainHourByDay.put("value", max);
+            maxRainHourByDay.put("value", max.getValue());
+            maxRainHourByDay.put("siteName", max.getSiteName());
             historyRainfallValue.add(maxRainHourByDay);
 
             BackUpDataEntity historyRainfall = new BackUpDataEntity();
@@ -183,19 +185,21 @@ public class BackUpTask {
         }
     }
 
-    private double getMaxRainHour(JSONArray autoStationDataArray) {
+    private MaxRainHour getMaxRainHour(JSONArray autoStationDataArray) {
         Set<String> autoStation = StationHelper.getYPAutoStation();
-        double max = 0.0;
+        MaxRainHour maxRainHour = new MaxRainHour();
         for (int j = 0; j < autoStationDataArray.size(); j++) {
             JSONObject autoStationData = (JSONObject) autoStationDataArray.get(j);
             String autoStationId = (String) autoStationData.get("STATIONID");
             double rainHour = RainfallHelper.getRainHour((String) autoStationData.get("RAINHOUR"));
+            String siteName = (String) autoStationData.get("STATIONNAME");
 
-            if (autoStation.contains(autoStationId) && rainHour > max) {
-                max = rainHour;
+            if (autoStation.contains(autoStationId) && rainHour >= maxRainHour.getValue()) {
+                maxRainHour.setValue(rainHour);
+                maxRainHour.setSiteName(siteName);
             }
         }
-        return max;
+        return maxRainHour;
     }
 
     private double getMaxWaterDepth(JSONArray waterStationDataArray) {
@@ -251,4 +255,26 @@ public class BackUpTask {
 //            backUpDataDAO.updateBackUpDataByName(historySeeper);
 //        }
 //    }
+}
+
+class MaxRainHour {
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    private String siteName = "";
+    private double value = 0.0;
+
 }
