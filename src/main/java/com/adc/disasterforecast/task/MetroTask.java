@@ -250,6 +250,7 @@ public class MetroTask {
             for (Object o : array) {
                 JSONObject one = (JSONObject) o;
                 int stationId = (int) (long)one.get("STATIONID");
+                String forecastTime = (String)one.get("FORECAST_TIME");
                 if (set.contains(stationId))
                     continue;
                 set.add(stationId);
@@ -257,6 +258,7 @@ public class MetroTask {
                 JSONObject outputJo = new JSONObject();
                 outputJo.put("site", station.name);
                 outputJo.put("value", one.get("WINDSPEED"));
+                outputJo.put("timestamp", forecastTime);
                 int windSpeedClass = Integer.parseInt((String) one.get("WINDSPEED_CLASS"));
                 String level;
                 if (windSpeedClass == 4) level = "red";
