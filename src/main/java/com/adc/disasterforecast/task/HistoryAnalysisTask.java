@@ -270,32 +270,34 @@ public class HistoryAnalysisTask {
                 Map<String, String> weatherWarningObject = (Map<String, String>) weatherWarningArray.get(i);
                 int year = Integer.parseInt(DateHelper.getYear((String) weatherWarningObject.get("FORECASTDATE")));
                 int month = Integer.parseInt(DateHelper.getMonth((String) weatherWarningObject.get("FORECASTDATE")));
-                if (WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))) {
-                    int yearWindNum = yearWindMap.get(year);
-                    yearWindNum ++;
-                    yearWindMap.put(year, yearWindNum);
+                if (year >= recent10Years[0] && year <= recent10Years[9]) {
+                    if (WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))) {
+                        int yearWindNum = yearWindMap.get(year);
+                        yearWindNum++;
+                        yearWindMap.put(year, yearWindNum);
 
-                    int monthWindNum = monthWindMap.get(month);
-                    monthWindNum ++;
-                    monthWindMap.put(month, monthWindNum);
-                }
-                if (WarningHelper.TYPE_RAIN.equals(weatherWarningObject.get("TYPE"))) {
-                    int yearRainNum = yearRainMap.get(year);
-                    yearRainNum ++;
-                    yearRainMap.put(year, yearRainNum);
+                        int monthWindNum = monthWindMap.get(month);
+                        monthWindNum++;
+                        monthWindMap.put(month, monthWindNum);
+                    }
+                    if (WarningHelper.TYPE_RAIN.equals(weatherWarningObject.get("TYPE"))) {
+                        int yearRainNum = yearRainMap.get(year);
+                        yearRainNum++;
+                        yearRainMap.put(year, yearRainNum);
 
-                    int monthRainNum = monthRainMap.get(month);
-                    monthRainNum ++;
-                    monthRainMap.put(month, monthRainNum);
-                }
-                if (WarningHelper.TYPE_THUNDER.equals(weatherWarningObject.get("TYPE"))) {
-                    int yearThunderNum = yearThunderMap.get(year);
-                    yearThunderNum ++;
-                    yearThunderMap.put(year, yearThunderNum);
+                        int monthRainNum = monthRainMap.get(month);
+                        monthRainNum++;
+                        monthRainMap.put(month, monthRainNum);
+                    }
+                    if (WarningHelper.TYPE_THUNDER.equals(weatherWarningObject.get("TYPE"))) {
+                        int yearThunderNum = yearThunderMap.get(year);
+                        yearThunderNum++;
+                        yearThunderMap.put(year, yearThunderNum);
 
-                    int monthThunderNum = monthThunderMap.get(month);
-                    monthThunderNum ++;
-                    monthThunderMap.put(month, monthThunderNum);
+                        int monthThunderNum = monthThunderMap.get(month);
+                        monthThunderNum++;
+                        monthThunderMap.put(month, monthThunderNum);
+                    }
                 }
             }
 

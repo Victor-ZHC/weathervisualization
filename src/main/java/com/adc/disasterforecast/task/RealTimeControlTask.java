@@ -477,8 +477,8 @@ public class RealTimeControlTask {
             )).get();
             int healthLevel = Integer.parseInt((String)((JSONObject)(((JSONArray)healthJ.get("Deatails")).get(0))).get("WarningLevel"));
             JSONObject healthJo = new JSONObject();
-            healthJo.put("level", matchWarningLevel(healthLevel));
-            healthJo.put("des", healthLevel == 1 ? "无预警" : String.format("健康气象风险%s预警", matchWarningLevelInChinese(healthLevel)));
+            healthJo.put("level", matchHealthWarningLevel(healthLevel));
+            healthJo.put("des", healthLevel == 1 ? "无预警" : String.format("健康气象风险%s预警", matchHealthWarningLevelInChinese(healthLevel)));
 
             // 获取航空预警
             AirDataEntity airDataEntity = airDataDAO.findAirDataByName(AirTaskName.HKQX_AIRPORT_CAPACTIY);
@@ -1055,6 +1055,28 @@ public class RealTimeControlTask {
             case 4: return "橙色";
             case 3: return "黄色";
             case 2: return "蓝色";
+            case 1: return "";
+        }
+        return "";
+    }
+
+    private String matchHealthWarningLevel(int level) {
+        switch (level) {
+            case 5: return "deep_red";
+            case 4: return "red";
+            case 3: return "orange";
+            case 2: return "yellow";
+            case 1: return "normal";
+        }
+        return "normal";
+    }
+
+    private String matchHealthWarningLevelInChinese(int level) {
+        switch (level) {
+            case 5: return "深红色";
+            case 4: return "红色";
+            case 3: return "橙色";
+            case 2: return "黄色";
             case 1: return "";
         }
         return "";
