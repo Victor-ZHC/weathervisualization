@@ -27,14 +27,12 @@ public class DateHelper {
                 delayHour);
     }
 
-    public static String getPostponeDateByMonth(String date, int delayMonth) {
-        return getPostponeDateByYear(Integer.valueOf(date.substring(0, 4)),
-                Integer.valueOf(date.substring(4, 6)),
-                Integer.valueOf(date.substring(6, 8)),
-                Integer.valueOf(date.substring(8, 10)),
-                Integer.valueOf(date.substring(10, 12)),
-                Integer.valueOf(date.substring(12, 14)),
-                delayMonth);
+    public static String getPostponeDateByMonth(String date, int delayMonth) throws ParseException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(simpleDateFormat.parse(date));
+        calendar.add(Calendar.MONTH, delayMonth);
+        return simpleDateFormat.format(calendar.getTime());
     }
 
 

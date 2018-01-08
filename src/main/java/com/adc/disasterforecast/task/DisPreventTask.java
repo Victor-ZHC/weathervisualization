@@ -77,9 +77,10 @@ public class DisPreventTask {
                 disasterJsonYears = HttpHelper.getDataByURL(url);
                 disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
             }
-            getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
-            getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
-            getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
+            //FIXME: 临时注释掉以下三行
+//            getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+//            getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
+//            getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
 
             baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
             endDate = DateHelper.getNow();
@@ -89,6 +90,12 @@ public class DisPreventTask {
             disasterData = (JSONArray) disasterJson.get("Data");
             getDisasterType(disasterData);
             getLocation(disasterData);
+
+            beginDate = DateHelper.getPostponeDateByMonth(endDate, -11);
+            url = baseUrl + beginDate + "/" + endDate;
+            disasterJson = HttpHelper.getDataByURL(url);
+            disasterData = (JSONArray) disasterJson.get("Data");
+
             beginDate = DateHelper.getPostponeDateByYear(endDate, -10);
             url = baseUrl + beginDate + "/" + endDate;
             disasterJsonYears = HttpHelper.getDataByURL(url);
@@ -461,7 +468,10 @@ public class DisPreventTask {
         for(Object obj: disasterData) {
             JSONObject disaster = (JSONObject) obj;
             String month = (String) disaster.get("DATETIME_DISASTER");
-            month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
+            String year = Calendar.getInstance().get(Calendar.MONTH) + 1 >= Integer.parseInt(month.substring(5, 7))
+                    ? String.valueOf(Calendar.getInstance().get(Calendar.YEAR))
+                    : String.valueOf(Calendar.getInstance().get(Calendar.YEAR) - 1);
+            month = DateHelper.getFormatWarningMonth(month, year);
             Long monthVal = Long.parseLong(month);
             Integer cnt = hs.get(monthVal) == null ? 1 : 1 + hs.get(monthVal);
             hs.put(monthVal, cnt);
@@ -471,7 +481,10 @@ public class DisPreventTask {
             String baseTime = DateHelper.getNow().substring(0, 4) + "-";
             if (i < 10) baseTime = baseTime + "0"+ String.valueOf(i) + "-01T00:00:00";
             else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
-            String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
+            String year = Calendar.getInstance().get(Calendar.MONTH) + 1 >= i
+                    ? String.valueOf(Calendar.getInstance().get(Calendar.YEAR))
+                    : String.valueOf(Calendar.getInstance().get(Calendar.YEAR) - 1);
+            String month = DateHelper.getFormatWarningMonth(baseTime, year);
             Long monthVal = Long.parseLong(month);
             Integer cnt = hs.get(monthVal) == null ? 0 : hs.get(monthVal);
             hs.put(monthVal, cnt);
