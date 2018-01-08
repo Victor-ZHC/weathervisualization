@@ -83,7 +83,7 @@ public class DisPreventTask {
 
             baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
             endDate = DateHelper.getNow();
-            beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
+            beginDate = endDate.substring(0, 4) + "0101000000";
             url = baseUrl + beginDate + "/" + endDate;
             disasterJson = HttpHelper.getDataByURL(url);
             disasterData = (JSONArray) disasterJson.get("Data");
@@ -175,7 +175,8 @@ public class DisPreventTask {
             stationData.put("jiaotongjiancedian", 32);
             stationData.put("hangkongjiancedian", 2);
             stationData.put("shipinjiankongdian", 9876);
-            beginDate = DateHelper.getPostponeDateByHour("20170101000000", 0);
+
+            beginDate = DateHelper.getPostponeDateByHour(DateHelper.getNow().substring(0, 4) + "0101000000", 0);
 
 
             Calendar today = Calendar.getInstance();
@@ -467,7 +468,7 @@ public class DisPreventTask {
         }
 
         for (int i = 1; i <= 12; i++){
-            String baseTime = "2017-";
+            String baseTime = DateHelper.getNow().substring(0, 4) + "-";
             if (i < 10) baseTime = baseTime + "0"+ String.valueOf(i) + "-01T00:00:00";
             else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
             String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
