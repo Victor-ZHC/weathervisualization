@@ -45,7 +45,7 @@ public class DisPreventTask {
             JSONArray disasterDataYears;
             String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
             String endDate = DateHelper.getNow();
-            String beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
+            String beginDate = endDate.substring(0, 4) + "0101000000";
             String url = baseUrl + beginDate + "/" + endDate;
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
