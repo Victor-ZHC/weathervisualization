@@ -134,10 +134,10 @@ public class DisPreventTask {
             String endDate = DateHelper.getNow();
             String beginDate = endDate.substring(0, 4) + "0101000000";
             url = baseUrl + beginDate + "/" + endDate;
-            int cnt = 2;
-            JSONObject YXYBJson = HttpHelper.getDataByURL(url);
-            JSONArray YXYBData = (JSONArray) YXYBJson.get("Data");
-            cnt = YXYBData.size();
+            int cnt = 0;
+//            JSONObject YXYBJson = HttpHelper.getDataByURL(url);
+//            JSONArray YXYBData = (JSONArray) YXYBJson.get("Data");
+//            cnt = YXYBData.size();
             JSONObject yxybJson = new JSONObject();
             yxybJson.put("total", cnt);
             cnt = 0;
