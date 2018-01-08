@@ -1112,8 +1112,8 @@ public class HistoryAnalysisTask {
     **/
 //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     //@Scheduled(cron = "*/5 * * * * ?")
-    //@PostConstruct
-    //@Scheduled(cron = "0 0 0 * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsHistoryIncident() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT));
