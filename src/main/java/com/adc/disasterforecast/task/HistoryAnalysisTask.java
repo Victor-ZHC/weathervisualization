@@ -81,6 +81,19 @@ public class HistoryAnalysisTask {
             JSONArray warnings = (JSONArray) obj.get("Data");
             for (int i = 0; i < warnings.size(); i++) {
                 JSONObject warning = (JSONObject) warnings.get(i);
+
+                // 如果不是风雨雷，就跳过
+                if (!WarningHelper.TYPE_WIND.equals(warning.get("TYPE"))
+                        && !WarningHelper.TYPE_RAIN.equals(warning.get("TYPE"))
+                        && !WarningHelper.TYPE_THUNDER.equals(warning.get("TYPE")))
+                    continue;
+                // 如果不是红橙黄蓝，就跳过
+                if (!WarningHelper.LEVEL_BLUE.equals(warning.get("LEVEL"))
+                       && !WarningHelper.LEVEL_ORANGE.equals(warning.get("LEVEL"))
+                       && !WarningHelper.LEVEL_RED.equals(warning.get("LEVEL"))
+                       && !WarningHelper.LEVEL_YELLOW.equals(warning.get("LEVEL")))
+                    continue;
+
                 if (WarningHelper.TYPE_WIND.equals(warning.get("TYPE"))) {
                     windNum ++;
                 }
@@ -110,6 +123,19 @@ public class HistoryAnalysisTask {
             int size = weatherWarningArray.size();
             for (int i = 0; i < size; i++) {
                 Map<String, String> weatherWarningObject = (Map<String, String>) weatherWarningArray.get(i);
+
+                // 如果不是风雨雷，就跳过
+                if (!WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))
+                       && !WarningHelper.TYPE_RAIN.equals(weatherWarningObject.get("TYPE"))
+                       && !WarningHelper.TYPE_THUNDER.equals(weatherWarningObject.get("TYPE")))
+                    continue;
+                // 如果不是红橙黄蓝，就跳过
+                if (!WarningHelper.LEVEL_BLUE.equals(weatherWarningObject.get("LEVEL"))
+                        && !WarningHelper.LEVEL_ORANGE.equals(weatherWarningObject.get("LEVEL"))
+                        && !WarningHelper.LEVEL_RED.equals(weatherWarningObject.get("LEVEL"))
+                        && !WarningHelper.LEVEL_YELLOW.equals(weatherWarningObject.get("LEVEL")))
+                    continue;
+
                 if (WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))) {
                     windNum ++;
                 }
@@ -133,7 +159,8 @@ public class HistoryAnalysisTask {
                 }
             }
 
-            amountObject.put("total", warnings.size() + weatherWarningArray.size());
+            int total = windNum + rainNum + thunderNum;
+            amountObject.put("total", total);
             amountObject.put("wind", windNum);
             amountObject.put("rain", rainNum);
             amountObject.put("thunder", thunderNum);
@@ -177,10 +204,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/7 23:05
     **/
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+////    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    //@Scheduled(cron = "*/5 * * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsWarningTrend() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WARNING_TREND_YEAR));
@@ -488,10 +515,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/8 22:47
     **/
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+////    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    //@Scheduled(cron = "*/5 * * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsWeatherDisaster() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_WEATHER_DISASTER));
@@ -751,10 +778,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/9 0:38
     **/
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+////    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    //@Scheduled(cron = "*/5 * * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsDisasterFrequency() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_FREQUENCY));
@@ -854,10 +881,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/8 0:07
     **/
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+////    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    //@Scheduled(cron = "*/5 * * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsDisaster() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_AVG));
@@ -1110,10 +1137,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/8 12:39
     **/
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+////    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    //@Scheduled(cron = "*/5 * * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsHistoryIncident() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_HISTORY_INCIDENT));
@@ -1146,10 +1173,10 @@ public class HistoryAnalysisTask {
     * @Author lilin
     * @Create 2017/12/10 11:40
     **/
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    //@Scheduled(cron = "*/5 * * * * ?")
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+////    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    //@Scheduled(cron = "*/5 * * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void countRecent10YearsDisasterType() {
         try {
             logger.info(String.format("began task：%s", HistoryAnalysisTaskName.LSSJ_DISASTER_TYPE));
