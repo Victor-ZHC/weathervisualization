@@ -1186,15 +1186,15 @@ public class HistoryAnalysisTask {
             for (int i = 0; i < size; i++) {
                 JSONObject incident = (JSONObject) incidents.get(i);
                 // 需要分两行显示
-                JSONArray displayRows = new JSONArray();
-                displayRows.add((String) incident.get("NAME"));
-                displayRows.add(String.format("此次过程最大累积雨量%smm（%s站点），最大小时雨强%smm（%s站点），引发灾情%s起",
+                JSONObject displayRow = new JSONObject();
+                displayRow.put("row1", (String) incident.get("NAME"));
+                displayRow.put("row2", String.format("此次过程最大累积雨量%smm（%s站点），最大小时雨强%smm（%s站点），引发灾情%s起",
                         incident.get("MAXRAINTOTAL"),
                         incident.get("MAXTOTALNAME"),
                         incident.get("MAXRAINHOUR"),
                         incident.get("MAXHOURNAME"),
                         incident.get("AMOUNT")));
-                resultArray.add(displayRows);
+                resultArray.add(displayRow);
             }
 
             HistoryAnalysisDataEntity recent10YearsHistoryIncident = new HistoryAnalysisDataEntity();
