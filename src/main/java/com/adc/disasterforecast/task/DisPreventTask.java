@@ -156,6 +156,8 @@ public class DisPreventTask {
             JSONObject weatherWarnningJson = HttpHelper.getDataByURL(url);
             JSONArray weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
             cnt = weatherWarnningData.size();
+            //FIXME: 风险预警读错接口了，临时先改成0
+            cnt = 0;
 
             JSONObject fxyjJson = new JSONObject();
             fxyjJson.put("total", cnt);
@@ -168,7 +170,8 @@ public class DisPreventTask {
             weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
 //            System.out.println(weatherWarnningData);
             cnt = weatherWarnningData.size();
-//            cnt = 2;
+            //FIXME: 风险预警读错接口了，临时先改成0
+            cnt = 0;
             fxyjJson.put("add", cnt);
 
             baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetMessageCount/";
