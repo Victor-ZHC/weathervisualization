@@ -123,6 +123,10 @@ public class HistoryAnalysisTask {
             int size = weatherWarningArray.size();
             for (int i = 0; i < size; i++) {
                 Map<String, String> weatherWarningObject = (Map<String, String>) weatherWarningArray.get(i);
+                int year = Integer.parseInt(DateHelper.getYear((String) weatherWarningObject.get("FORECASTDATE")));
+                int[] recent10Years = getRecent10Years();
+                if (year < recent10Years[0] || year > recent10Years[9])
+                    continue;
 
                 // 如果不是风雨雷，就跳过
                 if (!WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))
@@ -258,6 +262,19 @@ public class HistoryAnalysisTask {
             int size = warnings.size();
             for (int i = 0; i < size; i++) {
                 JSONObject warning = (JSONObject) warnings.get(i);
+
+                // 如果不是风雨雷，就跳过
+                if (!WarningHelper.TYPE_WIND.equals(warning.get("TYPE"))
+                        && !WarningHelper.TYPE_RAIN.equals(warning.get("TYPE"))
+                        && !WarningHelper.TYPE_THUNDER.equals(warning.get("TYPE")))
+                    continue;
+                // 如果不是红橙黄蓝，就跳过
+                if (!WarningHelper.LEVEL_BLUE.equals(warning.get("LEVEL"))
+                        && !WarningHelper.LEVEL_ORANGE.equals(warning.get("LEVEL"))
+                        && !WarningHelper.LEVEL_RED.equals(warning.get("LEVEL"))
+                        && !WarningHelper.LEVEL_YELLOW.equals(warning.get("LEVEL")))
+                    continue;
+
                 int year = Integer.parseInt(DateHelper.getYear((String) warning.get("FORECASTDATE")));
                 int month = Integer.parseInt(DateHelper.getMonth((String) warning.get("FORECASTDATE")));
                 if (WarningHelper.TYPE_WIND.equals(warning.get("TYPE"))) {
@@ -295,6 +312,19 @@ public class HistoryAnalysisTask {
             int weatherWarningArraySize = weatherWarningArray.size();
             for (int i = 0; i < weatherWarningArraySize; i++) {
                 Map<String, String> weatherWarningObject = (Map<String, String>) weatherWarningArray.get(i);
+
+                // 如果不是风雨雷，就跳过
+                if (!WarningHelper.TYPE_WIND.equals(weatherWarningObject.get("TYPE"))
+                        && !WarningHelper.TYPE_RAIN.equals(weatherWarningObject.get("TYPE"))
+                        && !WarningHelper.TYPE_THUNDER.equals(weatherWarningObject.get("TYPE")))
+                    continue;
+                // 如果不是红橙黄蓝，就跳过
+                if (!WarningHelper.LEVEL_BLUE.equals(weatherWarningObject.get("LEVEL"))
+                        && !WarningHelper.LEVEL_ORANGE.equals(weatherWarningObject.get("LEVEL"))
+                        && !WarningHelper.LEVEL_RED.equals(weatherWarningObject.get("LEVEL"))
+                        && !WarningHelper.LEVEL_YELLOW.equals(weatherWarningObject.get("LEVEL")))
+                    continue;
+
                 int year = Integer.parseInt(DateHelper.getYear((String) weatherWarningObject.get("FORECASTDATE")));
                 int month = Integer.parseInt(DateHelper.getMonth((String) weatherWarningObject.get("FORECASTDATE")));
                 if (year >= recent10Years[0] && year <= recent10Years[9]) {
