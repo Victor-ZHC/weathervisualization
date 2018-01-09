@@ -213,11 +213,23 @@ public class DisPreventTask {
 
         for (Object obj: curWarningData) {
             JSONObject curWarning = (JSONObject) obj;
+
+            // 如果不是风雨雷，就跳过
+            if (!WarningHelper.TYPE_WIND.equals(curWarning.get("TYPE"))
+                    && !WarningHelper.TYPE_RAIN.equals(curWarning.get("TYPE"))
+                    && !WarningHelper.TYPE_THUNDER.equals(curWarning.get("TYPE")))
+                continue;
+            // 如果不是红橙黄蓝，就跳过
+            if (!WarningHelper.LEVEL_BLUE.equals(curWarning.get("LEVEL"))
+                    && !WarningHelper.LEVEL_ORANGE.equals(curWarning.get("LEVEL"))
+                    && !WarningHelper.LEVEL_RED.equals(curWarning.get("LEVEL"))
+                    && !WarningHelper.LEVEL_YELLOW.equals(curWarning.get("LEVEL")))
+                continue;
+
             String level = WarningHelper.getWarningLevel((String) curWarning.get("LEVEL"));
             String type = WarningHelper.getWarningWeather((String) curWarning.get("TYPE"));
             Integer cnt = levelMap.get(level) == null ? 1 : levelMap.get(level) + 1;
             levelMap.put(level, cnt);
-            if ("".compareTo(type) == 0) continue;
             cnt = amountMap.get("total") == null ? 1 : 1 + amountMap.get("total");
             amountMap.put("total", cnt);
             cnt = amountMap.get(type) == null ? 1 : amountMap.get(type) + 1;
