@@ -1188,7 +1188,7 @@ public class HistoryAnalysisTask {
                 // 需要分两行显示
                 JSONObject displayRow = new JSONObject();
                 displayRow.put("row1", (String) incident.get("NAME"));
-                int amount = (int) Float.parseFloat((String) incident.get("AMOUNT"));
+                int amount = (int) Math.round((Double) incident.get("AMOUNT"));
                 displayRow.put("row2", String.format("此次过程最大累积雨量%smm（%s站点），最大小时雨强%smm（%s站点），引发灾情%d起",
                         incident.get("MAXRAINTOTAL"),
                         incident.get("MAXTOTALNAME"),
