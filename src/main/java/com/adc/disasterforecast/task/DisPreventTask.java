@@ -243,7 +243,7 @@ public class DisPreventTask {
         List<Object> hisValue =  historyAnalysisDataEntity.getValue();
         Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
         int hisTotal = (int) hisAmountMap.get("total");
-        int yearAvg = hisTotal / 10;
+        int yearAvg = (int) Math.round(hisTotal / 10.0);
         amountMap.put("yearAvg", yearAvg);
 
         JSONObject valData = new JSONObject();
