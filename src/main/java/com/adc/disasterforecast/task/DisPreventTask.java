@@ -162,7 +162,7 @@ public class DisPreventTask {
             stationData.put("zhongduanxitong", (int)((JSONObject)stationData.get("yingxiangyubao")).get("total") + cnt);
 
             endDate = DateHelper.getNow();
-            beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
+            beginDate = endDate.substring(0, 8) + "000000";
             url = baseUrl + beginDate + "/" + endDate;
             weatherWarnningJson = HttpHelper.getDataByURL(url);
             weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
