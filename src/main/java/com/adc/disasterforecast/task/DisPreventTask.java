@@ -189,8 +189,8 @@ public class DisPreventTask {
             Calendar today = Calendar.getInstance();
 
             stationData.put("shehuiguancezhan", 97); // key ??
-            stationData.put("app", DateHelper.differentDays(beginDate, endDate));
-            stationData.put("weixin", DateHelper.differentDays(beginDate, endDate));
+            stationData.put("app", DateHelper.differentDays(beginDate, endDate) + 1);
+            stationData.put("weixin", DateHelper.differentDays(beginDate, endDate) + 1);
 
             stationData.put("liandongxiangying", stationData.get("zhongduanxitong"));
 
