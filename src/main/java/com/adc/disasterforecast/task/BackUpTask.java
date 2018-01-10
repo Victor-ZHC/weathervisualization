@@ -29,7 +29,7 @@ public class BackUpTask {
     private BackUpDataDAO backUpDataDAO;
 
 
-    @PostConstruct
+//    @PostConstruct
     public void getHistoryRainfall(){
         logger.info(String.format("began task：%s", BackUpDataName.RAINFALL));
 
@@ -70,50 +70,51 @@ public class BackUpTask {
 //        backUpDataDAO.updateBackUpDataByName(historyRainfall);
     }
 
-//    @PostConstruct
-//    public void getHistorySeeper(){
-//        logger.info(String.format("began task：%s", BackUpDataName.SEEPER));
-//
-//        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
-//        String beginDate = "";
-//        String endDate = "";
-//
-//        String nowDate = DateHelper.getCurrentTimeInString("day");
-//
-//        int i = 0;
-//        JSONArray historySeeperValue = new JSONArray();
-//        while (! nowDate.equals(endDate)) {
-//            beginDate = DateHelper.getPostponeDateByDay(2016, 1, 1, 0, 0, 0, i);
-//            endDate = DateHelper.getPostponeDateByDay(2016, 1, 2, 0, 0, 0, i);
-//
-//            String url = baseUrl + beginDate + "/" + endDate;
-//
-//            JSONObject obj = HttpHelper.getDataByURL(url);
-//            JSONArray waterStationDataArray = (JSONArray) obj.get("Data");
-//
-//            if (waterStationDataArray == null) {
-//                i++;
-//                continue;
-//            }
-//
-//            double max = getMaxWaterDepth(waterStationDataArray);
-//
-//            JSONObject maxWaterDepthByDay = new JSONObject();
-//            maxWaterDepthByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
-//            maxWaterDepthByDay.put("value", max);
-//            historySeeperValue.add(maxWaterDepthByDay);
-//            i++;
-//
-//            BackUpDataEntity historySeeper = new BackUpDataEntity();
-//            historySeeper.setName(BackUpDataName.SEEPER);
-//            historySeeper.setValue(historySeeperValue);
-//            backUpDataDAO.updateBackUpDataByName(historySeeper);
-//        }
-////        BackUpDataEntity historyRainfall = new BackUpDataEntity();
-////        historyRainfall.setName(BackUpDataName.RAINFALL);
-////        historyRainfall.setValue(historyRainfallValue);
-////        backUpDataDAO.updateBackUpDataByName(historyRainfall);
-//    }
+    @PostConstruct
+    public void getHistorySeeper(){
+        logger.info(String.format("began task：%s", BackUpDataName.SEEPER));
+
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetYPWaterStationDataByTime/";
+        String beginDate = "";
+        String endDate = "";
+
+        String nowDate = DateHelper.getCurrentTimeInString("day");
+
+        int i = 0;
+        JSONArray historySeeperValue = new JSONArray();
+        while (! nowDate.equals(endDate)) {
+            beginDate = DateHelper.getPostponeDateByDay(2016, 1, 1, 0, 0, 0, i);
+            endDate = DateHelper.getPostponeDateByDay(2016, 1, 2, 0, 0, 0, i);
+
+            String url = baseUrl + beginDate + "/" + endDate;
+
+            JSONObject obj = HttpHelper.getDataByURL(url);
+            JSONArray waterStationDataArray = (JSONArray) obj.get("Data");
+
+            if (waterStationDataArray == null) {
+                i++;
+                continue;
+            }
+
+            MaxWaterDepth max = getMaxWaterDepth(waterStationDataArray);
+
+            JSONObject maxWaterDepthByDay = new JSONObject();
+            maxWaterDepthByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
+            maxWaterDepthByDay.put("value", max.getValue());
+            maxWaterDepthByDay.put("siteName", max.getSiteName());
+            historySeeperValue.add(maxWaterDepthByDay);
+            i++;
+
+            BackUpDataEntity historySeeper = new BackUpDataEntity();
+            historySeeper.setName(BackUpDataName.SEEPER);
+            historySeeper.setValue(historySeeperValue);
+            backUpDataDAO.updateBackUpDataByName(historySeeper);
+        }
+//        BackUpDataEntity historyRainfall = new BackUpDataEntity();
+//        historyRainfall.setName(BackUpDataName.RAINFALL);
+//        historyRainfall.setValue(historyRainfallValue);
+//        backUpDataDAO.updateBackUpDataByName(historyRainfall);
+    }
 
 //    @Scheduled(initialDelay = 86400000, fixedDelay = 86400000)
     @Scheduled(cron = "0 0 0 * * ?")
@@ -167,13 +168,14 @@ public class BackUpTask {
             JSONObject obj = HttpHelper.getDataByURL(url);
             JSONArray waterStationDataArray = (JSONArray) obj.get("Data");
 
-            double max = getMaxWaterDepth(waterStationDataArray);
+            MaxWaterDepth max = getMaxWaterDepth(waterStationDataArray);
 
             JSONArray historySeeperValue = backUpDataDAO.findBackUpDataByName(BackUpDataName.SEEPER).getValue();
 
             JSONObject maxWaterDepthByDay = new JSONObject();
             maxWaterDepthByDay.put("date", DateHelper.getPostponeDateByHourInLong(beginDate, 0));
-            maxWaterDepthByDay.put("value", max);
+            maxWaterDepthByDay.put("value", max.getValue());
+            maxWaterDepthByDay.put("siteName", max.getSiteName());
             historySeeperValue.add(maxWaterDepthByDay);
 
             BackUpDataEntity historySeeper = new BackUpDataEntity();
@@ -202,17 +204,19 @@ public class BackUpTask {
         return maxRainHour;
     }
 
-    private double getMaxWaterDepth(JSONArray waterStationDataArray) {
-        double max = 0.0;
+    private MaxWaterDepth getMaxWaterDepth(JSONArray waterStationDataArray) {
+        MaxWaterDepth maxWaterDepth = new MaxWaterDepth();
         for (int j = 0; j < waterStationDataArray.size(); j++) {
             JSONObject waterStationData = (JSONObject) waterStationDataArray.get(j);
             double waterDepth = ((Number) waterStationData.get("WATERDEPTH")).doubleValue();
+            String siteName = (String) waterStationData.get("STATIONNAME");
 
-            if (waterDepth > max) {
-                max = waterDepth;
+            if (waterDepth >= maxWaterDepth.getValue()) {
+                maxWaterDepth.setValue(waterDepth);
+                maxWaterDepth.setSiteName(siteName);
             }
         }
-        return max;
+        return maxWaterDepth;
     }
 
 //    @PostConstruct
@@ -277,4 +281,25 @@ class MaxRainHour {
     private String siteName = "";
     private double value = 0.0;
 
+}
+
+class MaxWaterDepth {
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    private String siteName = "";
+    private double value = 0.0;
 }
