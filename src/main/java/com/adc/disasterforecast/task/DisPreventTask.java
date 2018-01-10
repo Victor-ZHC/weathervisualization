@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
 import javax.annotation.PostConstruct;
 import java.util.*;
 
@@ -45,7 +44,7 @@ public class DisPreventTask {
             JSONArray disasterDataYears;
             String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
             String endDate = DateHelper.getNow();
-            String beginDate = endDate.substring(0, 4) + "0101000000";
+            String beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
             String url = baseUrl + beginDate + "/" + endDate;
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
@@ -77,10 +76,9 @@ public class DisPreventTask {
                 disasterJsonYears = HttpHelper.getDataByURL(url);
                 disasterDataYears = (JSONArray) disasterJsonYears.get("Data");
             }
-            //FIXME: 临时注释掉以下三行
-//            getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
-//            getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
-//            getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
+            getDisasterAvg(disasterDataYears, disasterData, "大风", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+            getDisasterAvg(disasterDataYears, disasterData, "暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
+            getDisasterAvg(disasterDataYears, disasterData, "雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
 
             baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
             endDate = DateHelper.getNow();
@@ -151,13 +149,12 @@ public class DisPreventTask {
             yxybJson.put("add", cnt);
             stationData.put("yingxiangyubao", yxybJson);
 
-            baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
+            baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRiskAlarmByTime/";
             url = baseUrl + beginDate + "/" + endDate;
             JSONObject weatherWarnningJson = HttpHelper.getDataByURL(url);
             JSONArray weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
             cnt = weatherWarnningData.size();
-            //FIXME: 风险预警读错接口了，临时先改成0
-            cnt = 0;
+//            cnt = 0;
 
             JSONObject fxyjJson = new JSONObject();
             fxyjJson.put("total", cnt);
@@ -170,8 +167,7 @@ public class DisPreventTask {
             weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
 //            System.out.println(weatherWarnningData);
             cnt = weatherWarnningData.size();
-            //FIXME: 风险预警读错接口了，临时先改成0
-            cnt = 0;
+//            cnt = 0;
             fxyjJson.put("add", cnt);
 
             baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetMessageCount/";
@@ -192,8 +188,13 @@ public class DisPreventTask {
             Calendar today = Calendar.getInstance();
 
             stationData.put("shehuiguancezhan", 97); // key ??
-            stationData.put("app", DateHelper.differentDays(beginDate, endDate) + 1);
-            stationData.put("weixin", DateHelper.differentDays(beginDate, endDate) + 1);
+
+            cnt = DateHelper.differentDays(beginDate, endDate).intValue();
+            if("180000".compareTo(endDate.substring(8, 14)) <= 0) cnt++;
+
+            stationData.put("app", cnt);
+            stationData.put("weixin", cnt);
+            System.out.println(cnt);
 
             stationData.put("liandongxiangying", stationData.get("zhongduanxitong"));
 
@@ -239,12 +240,12 @@ public class DisPreventTask {
             amountMap.put(type, cnt);
         }
 
-        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
-        List<Object> hisValue =  historyAnalysisDataEntity.getValue();
-        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
-        int hisTotal = (int) hisAmountMap.get("total");
-        int yearAvg = (int) Math.round(hisTotal / 10.0);
-        amountMap.put("yearAvg", yearAvg);
+//        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
+//        List<Object> hisValue =  historyAnalysisDataEntity.getValue();
+//        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
+//        int hisTotal = (int) hisAmountMap.get("total");
+//        int yearAvg = (int) Math.round(hisTotal / 10.0);
+//        amountMap.put("yearAvg", yearAvg);
 
         JSONObject valData = new JSONObject();
         JSONArray valueData = new JSONArray();
@@ -530,10 +531,10 @@ public class DisPreventTask {
 //            System.out.println(beginDate + " " + endDate);
             endDate = beginDate;
             beginDate =  DateHelper.getPostponeDateByDay(endDate, -1);
-            if(beginDate.compareTo(DateHelper.getNow().substring(0, 4)) < 0) break;
+            if(beginDate.compareTo(DateHelper.getPostponeDateByYear(endDate, -1)) < 0) break;
             String url = baseUrl + beginDate + "/" + endDate + "/1";
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
-            if(disasterJson == null && disasterJson.get("Data") == null) continue;
+            if(disasterJson == null || disasterJson.get("Data") == null) continue;
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
             String month = DateHelper.getFormatDate((String)((JSONObject)disasterData.get(0)).get("DATETIME"));
             System.out.println(month);
@@ -570,7 +571,7 @@ public class DisPreventTask {
             int cnt = 0;
             endDate = beginDate;
             beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
-            if(beginDate.compareTo(DateHelper.getNow().substring(0, 4)) < 0) break;
+            if(beginDate.compareTo(DateHelper.getPostponeDateByYear(endDate, -1)) < 0) break;
             String url = baseUrl + beginDate + "/" + endDate;
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             if(disasterJson != null && disasterJson.get("Data") != null) {
