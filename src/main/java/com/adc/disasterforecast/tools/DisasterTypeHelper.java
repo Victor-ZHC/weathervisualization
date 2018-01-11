@@ -98,35 +98,32 @@ public class DisasterTypeHelper {
 
     public static JSONArray getDisasterTypeInJsonArray(List<JSONObject> disasters) {
         int[] disasterType = new int[10];
-        String[] disasterTypeName = {"树倒", "房屋进水", "工商业区域进水", "车辆受损", "交通受阻", "电力系统受损", "农作区进水", "建筑受损", "小区进水", "其他"};
+        String[] disasterTypeName = {"房屋进水", "工商业区域进水", "车辆受损", "交通受阻", "电力系统受损", "农作区进水", "建筑受损","道路积水", "小区进水", "其他"};
 
         for (JSONObject disaster : disasters) {
-            String code = (String) disaster.get("Disaster_Code");
-            if ("2".equals(code)) {
+            String description = (String) disaster.get("CASE_DESC");
+            if (description.contains("室进水") || description.contains("漏水")) {
                 disasterType[0] += 1;
-            } else {
-                String description = (String) disaster.get("Disaster_Description");
-                if (description.contains("室进水") || description.contains("漏水")) {
-                    disasterType[1] += 1;
-                } else if (description.contains("商场") || description.contains("厂房") || description.contains("仓库") || description.contains("店面") || description.contains("门面")) {
-                    disasterType[2] += 1;
-                } else if (description.contains("车辆")) {
-                    disasterType[3] += 1;
-                } else if (description.contains("堵塞")) {
-                    disasterType[4] += 1;
-                } else if (description.contains("漏电") || description.contains("断电")) {
-                    disasterType[5] += 1;
-                } else if (description.contains("农田") || description.contains("池塘") || description.contains("鱼塘")){
-                    disasterType[6] += 1;
-                } else if (description.contains("房屋") || description.contains("围墙倒塌")) {
-                    disasterType[7] += 1;
+            } else if (description.contains("商场") || description.contains("厂房") || description.contains("仓库") || description.contains("店面") || description.contains("门面")) {
+                disasterType[1] += 1;
+            } else if (description.contains("车辆")) {
+                disasterType[2] += 1;
+            } else if (description.contains("堵塞")) {
+                disasterType[3] += 1;
+            } else if (description.contains("漏电") || description.contains("断电")) {
+                disasterType[4] += 1;
+            } else if (description.contains("农田") || description.contains("池塘") || description.contains("鱼塘")){
+                disasterType[5] += 1;
+            } else if (description.contains("房屋") || description.contains("围墙倒塌")) {
+                disasterType[6] += 1;
+            } else if (description.contains("路口") || description.contains("道路") || description.contains("马路")) {
+                disasterType[7] += 1;
+            }else {
+                String address = (String) disaster.get("CASE_ADDR");
+                if (address.contains("弄") || address.contains("苑") || address.contains("村") || address.contains("城") || address.contains("小区")) {
+                    disasterType[8] += 1;
                 } else {
-                    String address = (String) disaster.get("Disaster_Adrress");
-                    if (address.contains("弄") || address.contains("苑") || address.contains("村") || address.contains("城") || address.contains("小区")) {
-                        disasterType[8] += 1;
-                    } else {
-                        disasterType[9] += 1;
-                    }
+                    disasterType[9] += 1;
                 }
             }
         }
