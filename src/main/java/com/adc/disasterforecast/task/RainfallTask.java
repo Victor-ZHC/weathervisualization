@@ -440,7 +440,7 @@ public class RainfallTask {
     public void countHistoryDisaster(){
         try {
             logger.info(String.format("began task：%s", RainfallTaskName.HISTORY_DISASTER));
-            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
             String beginDate = "20150101000000";
             String endDate = DateHelper.getCurrentTimeInString("day");
@@ -471,7 +471,7 @@ public class RainfallTask {
     public void countDisaster(){
         try {
             logger.info(String.format("began task：%s", RainfallTaskName.DISASTER));
-            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/";
+            String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
 
             String beginDate = DateHelper.getCurrentTimeInString("day");
             String endDate = DateHelper.getCurrentTimeInString("minute");

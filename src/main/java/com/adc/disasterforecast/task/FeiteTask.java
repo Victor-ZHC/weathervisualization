@@ -170,7 +170,7 @@ public class FeiteTask {
     }
 
     private void countRegionDisasterDiffByAlarmId(String beginDate, String endDate, String alarmId) {
-        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetDisasterHistory/" + beginDate + "/" + endDate;
+        String url = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/" + beginDate + "/" + endDate;
 
         JSONObject obj = HttpHelper.getDataByURL(url);
 
@@ -181,7 +181,7 @@ public class FeiteTask {
         JSONArray disasters = (JSONArray) obj.get("Data");
         for (Object disaster : disasters) {
             JSONObject disasterData = (JSONObject) disaster;
-            String disasterDistrict = (String) disasterData.get("Disaster_District");
+            String disasterDistrict = String.valueOf(disasterData.get("DISTRICT"));
 
             if (FeiteRegionInfo.CM_DISTRICT.equals(disasterDistrict)) {
                 cmDisasters.add(disasterData);
