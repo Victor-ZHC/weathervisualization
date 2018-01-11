@@ -45,7 +45,7 @@ public class DisPreventTask {
             JSONArray disasterDataYears;
             String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
             String endDate = DateHelper.getNow();
-            String beginDate = DateHelper.getPostponeDateByYear(endDate, -1);
+            String beginDate = endDate.substring(0, 4) + "0101000000";
             String url = baseUrl + beginDate + "/" + endDate;
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
@@ -125,7 +125,7 @@ public class DisPreventTask {
             url = baseUrl + date;
             JSONObject waterOutStationJson = HttpHelper.getDataByURL(url);
             JSONArray waterOutStationData = (JSONArray) waterOutStationJson.get("Data");
-            int waterOutCnt = waterOutStationData.size();
+            int waterOutCnt = waterOutStationData == null ? 0 : waterOutStationData.size();
             stationData.put("shuiwenzhan", waterOutCnt);
 
             baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetWaterStationData/";
@@ -361,14 +361,19 @@ public class DisPreventTask {
             String type = (String) disaster.get("TYPE");
             if (!type.equals(disasterType)) continue;
             String month = (String) disaster.get("FORECASTDATE");
-            month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
+            if(DateHelper.getMonth(month).compareTo(DateHelper.getNow().substring(4, 6)) > 0)
+                month = DateHelper.getFormatWarningMonth(month, DateHelper.getPostponeDateByYear(DateHelper.getNow(), -1).substring(0, 4));
+            else
+                month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
+//            if(month.substring(4, 6).compareTo(DateHelper.getNow().substring(4, 6)) > 0)
+//                DateHelper.getPostponeDateByYear(month, -1);
 //            System.out.println(month + " " + String.valueOf(type));
             Long monthVal = Long.parseLong(month);
             Integer cnt = weekAvgYearVal.get(monthVal) == null ? 1 : 1 + weekAvgYearVal.get(monthVal);
             weekAvgYearVal.put(monthVal, cnt);
         }
-        addLocalData(weekAvgYearVal, "wind_rain_17", disasterType, DateHelper.getNow().substring(0, 4));
-        addLocalData(currentYearVal, "wind_rain_17", disasterType, DateHelper.getNow());
+        addLocalData(weekAvgYearVal, "wind_rain_17", disasterType, DateHelper.getPostponeDateByYear(DateHelper.getNow(), -2));
+        addLocalData(currentYearVal, "wind_rain_17", disasterType, DateHelper.getPostponeDateByYear(DateHelper.getNow(), -1));
 
 
         JSONObject valueObject = new JSONObject();
@@ -376,17 +381,32 @@ public class DisPreventTask {
         JSONArray currentYearArray = new JSONArray();
         JSONArray weekAvgYearArray = new JSONArray();
 
-        for (int i = 1; i <= 12; i++){
-            String baseTime = DateHelper.getNow().substring(0, 4) + "-";
-            if (i < 10) baseTime = baseTime + "0"+ String.valueOf(i) + "-01T00:00:00";
-            else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
-            String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
-            Long monthVal = Long.parseLong(month);
+        for(int i = 0; i < 12; i++){
+            String BaseTime = DateHelper.getNow().substring(0, 6) + "01000000";
+            String month = null;
+            try {
+                month = DateHelper.getPostponeDateByMonth(BaseTime, -i);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
             Integer cnt = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal);
             weekAvgYearVal.put(monthVal, cnt);
             cnt = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
             currentYearVal.put(monthVal, cnt);
         }
+
+//        for (int i = 1; i <= 12; i++){
+//            String baseTime = DateHelper.getNow().substring(0, 4) + "-";
+//            if (i < 10) baseTime = baseTime + "0"+ String.valueOf(i) + "-01T00:00:00";
+//            else baseTime = baseTime + String.valueOf(i) + "-01T00:00:00";
+//            String month = DateHelper.getFormatWarningMonth(baseTime, DateHelper.getNow().substring(0, 4));
+//            Long monthVal = Long.parseLong(month);
+//            Integer cnt = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal);
+//            weekAvgYearVal.put(monthVal, cnt);
+//            cnt = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
+//            currentYearVal.put(monthVal, cnt);
+//        }
 //        System.out.println(currentYearVal);
         // sort
         List<Map.Entry<Long, Integer> > entryList = sortHashMap(currentYearVal);
@@ -542,7 +562,6 @@ public class DisPreventTask {
             if(disasterJson == null || disasterJson.get("Data") == null) continue;
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
             String month = DateHelper.getFormatDate((String)((JSONObject)disasterData.get(0)).get("DATETIME"));
-            month = DateHelper.getNow().substring(0, 4) + month.substring(4, 13);
             Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
 //            System.out.println(monthVal);
             for (Object obj: disasterData) {
@@ -584,12 +603,10 @@ public class DisPreventTask {
                 JSONArray disasterData = (JSONArray) disasterJson.get("Data");
                 if(disasterData.size() > 0) {
                     cnt++;
-//                    System.out.println(disasterData);
                 }
             }else continue;
-            String month = DateHelper.getTimeMillis(DateHelper.getNow().substring(0, 4) + beginDate.substring(4, 6) + "01000000");
+            String month = DateHelper.getTimeMillis(beginDate.substring(0, 6) + "01000000");
             Long monthVal = Long.parseLong(month);
-//            System.out.println(monthVal);
             Integer num = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
             if(cnt > 0) num++;
             currentYearVal.put(monthVal, num);
@@ -600,20 +617,17 @@ public class DisPreventTask {
     private void addLocalData(Map<Long, Integer> weekAvgYearVal, String name, String type, String stopDate){
         JSONArray localDataArrray = disPreventDataDAO.findDisPreventDataByName(name).getValue();
         type = "大风".equals(type) ? "wind" : "雷电".equals(type) ? "thunder" : "rain";
-//        System.out.println(localDataArrray.get(0));
+        stopDate = DateHelper.getTimeMillis(stopDate);
         for(Object obj: localDataArrray){
             Map<String, String> localData = (Map<String, String>) obj;
             String month = localData.get("FORECASTDATE");
-            month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
-            if (stopDate.compareTo(month) < 0) continue;
-//            System.out.println(month + " " + String.valueOf(type));
+            month = DateHelper.getFormatWarningMonth(month, month.substring(0, 4));
+            if (stopDate.compareTo(month) > 0) continue;
             Long monthVal = Long.parseLong(month);
             Integer localCnt = Integer.parseInt(localData.get(type));
-            System.out.println(localCnt + " " + String.valueOf(type));
             Integer cnt = weekAvgYearVal.get(monthVal) == null ? localCnt : localCnt + weekAvgYearVal.get(monthVal);
             weekAvgYearVal.put(monthVal, cnt);
         }
-        System.out.println(weekAvgYearVal);
     }
 
 //    @PostConstruct
