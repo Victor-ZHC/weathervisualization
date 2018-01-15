@@ -3,6 +3,7 @@ package com.adc.disasterforecast.task;
 import com.adc.disasterforecast.dao.DisPreventDataDAO;
 import com.adc.disasterforecast.dao.HistoryAnalysisDataDAO;
 import com.adc.disasterforecast.entity.DisPreventDataEntity;
+import com.adc.disasterforecast.global.DisPrventRegionName;
 import com.adc.disasterforecast.entity.HistoryAnalysisDataEntity;
 import com.adc.disasterforecast.global.DisPreventTaskName;
 import com.adc.disasterforecast.global.HistoryAnalysisTaskName;
@@ -567,6 +568,14 @@ public class DisPreventTask {
             for (Object obj: disasterData) {
                 JSONObject disaster = (JSONObject) obj;
 //                System.out.println(disaster);
+                boolean isok = false;
+                for(int i = 0; i < DisPrventRegionName.BASE_STATION_NAME.length; i++){
+                    if(DisPrventRegionName.BASE_STATION_NAME.equals(disaster.get("STATIONNAME"))){
+                        isok = true;
+                        break;
+                    }
+                }
+                if(!isok) continue;
                 if("大风".equals(disasterType)) {
                     String speedData = (String)disaster.get("WINDSPEED");
                     if("".equals(speedData)) continue;
