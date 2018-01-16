@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Component
@@ -218,11 +219,23 @@ public class MetroTask {
         }
     }
 
+    private String readPublishTime() {
+        String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL
+                + "GetLastestMetroLineWindAlarm";
+        JSONObject jo = HttpHelper.getDataByURL(url);
+        JSONArray array = (JSONArray) jo.get("Data");
+        JSONObject jo1 = (JSONObject) array.get(0);
+        return (String) jo1.get("PUBLIST_TIME");
+    }
+
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void fetchLineWindMonitor() {
         try {
             logger.info(String.format("began task：%s", MetroTaskName.GDJT_WIND_MONITOR));
+
+            String publishTime = readPublishTime();
+            long publishDate = new SimpleDateFormat("yyyy-MM-ddTHH:mm::ss").parse(publishTime).getTime();
 
             MetroDataEntity metroDataEntity = new MetroDataEntity();
             metroDataEntity.setName(MetroTaskName.GDJT_WIND_MONITOR);
@@ -233,7 +246,9 @@ public class MetroTask {
             value.add(line2Jo);
             value.add(line16Jo);
             line2Jo.put("line", "line2");
+            line2Jo.put("time", publishDate);
             line16Jo.put("line", "line16");
+            line16Jo.put("time", publishDate);
             JSONArray line2Stations = new JSONArray();
             JSONArray line16Stations = new JSONArray();
             line2Jo.put("station", line2Stations);
