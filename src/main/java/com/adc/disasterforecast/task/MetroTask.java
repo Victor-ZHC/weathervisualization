@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -174,6 +175,8 @@ public class MetroTask {
             JSONObject jo = HttpHelper.getDataByURL(url);
             JSONArray array = (JSONArray) jo.get("Data");
 
+            long publishDate = readPublishTime();
+
             MetroDataEntity metroDataEntity = new MetroDataEntity();
             metroDataEntity.setName(MetroTaskName.GDJT_WIND_INFLUENCE);
             JSONArray value = new JSONArray();
@@ -183,7 +186,9 @@ public class MetroTask {
             value.add(line2Jo);
             value.add(line16Jo);
             line2Jo.put("line", "line2");
+            line2Jo.put("time", publishDate);
             line16Jo.put("line", "line16");
+            line16Jo.put("time", publishDate);
             JSONArray line2Stations = new JSONArray();
             JSONArray line16Stations = new JSONArray();
             line2Jo.put("station", line2Stations);
@@ -219,13 +224,14 @@ public class MetroTask {
         }
     }
 
-    private String readPublishTime() {
+    private long readPublishTime() throws ParseException {
         String url = JsonServiceURL.METEOROLOGICAL_JSON_SERVICE_URL
-                + "GetLastestMetroLineWindAlarm";
+                + "GetLastestMetroStationForecast";
         JSONObject jo = HttpHelper.getDataByURL(url);
         JSONArray array = (JSONArray) jo.get("Data");
         JSONObject jo1 = (JSONObject) array.get(0);
-        return (String) jo1.get("PUBLIST_TIME");
+        String publishTime = (String) jo1.get("PUBLIST_TIME");
+        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(publishTime).getTime();
     }
 
     @PostConstruct
@@ -233,9 +239,6 @@ public class MetroTask {
     public void fetchLineWindMonitor() {
         try {
             logger.info(String.format("began task：%s", MetroTaskName.GDJT_WIND_MONITOR));
-
-            String publishTime = readPublishTime();
-            long publishDate = new SimpleDateFormat("yyyy-MM-ddTHH:mm::ss").parse(publishTime).getTime();
 
             MetroDataEntity metroDataEntity = new MetroDataEntity();
             metroDataEntity.setName(MetroTaskName.GDJT_WIND_MONITOR);
@@ -246,9 +249,7 @@ public class MetroTask {
             value.add(line2Jo);
             value.add(line16Jo);
             line2Jo.put("line", "line2");
-            line2Jo.put("time", publishDate);
             line16Jo.put("line", "line16");
-            line16Jo.put("time", publishDate);
             JSONArray line2Stations = new JSONArray();
             JSONArray line16Stations = new JSONArray();
             line2Jo.put("station", line2Stations);
