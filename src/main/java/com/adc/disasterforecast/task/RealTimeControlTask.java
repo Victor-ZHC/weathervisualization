@@ -631,21 +631,23 @@ public class RealTimeControlTask {
 
     private void addDisasterLive(JSONArray disasterArray) {
         Map<String, Integer> disasterMap = DisasterTypeHelper.getDisasterMap();
-        int totalNum = 0;
+        disasterMap.put("other", 0);
+
         for (int i = 0; i < disasterArray.size(); i++) {
             JSONObject disasterObject = (JSONObject) disasterArray.get(i);
 
             String disasterType = DisasterTypeHelper.getDisasterTypeByCode(((Number) disasterObject.get("CODE_DISASTER")).intValue());
 
             if (disasterMap.containsKey(disasterType)) {
-                totalNum++;
                 disasterMap.put(disasterType, disasterMap.get(disasterType) + 1);
+            } else {
+                disasterMap.put("other", disasterMap.get("other") + 1);
             }
         }
 
         JSONObject disasterLiveObject = new JSONObject();
         disasterMap.forEach((String k, Integer v) -> disasterLiveObject.put(k, v));
-        disasterLiveObject.put("total", totalNum);
+        disasterLiveObject.put("total", disasterArray.size());
         JSONArray disasterLiveValue = new JSONArray();
         disasterLiveValue.add(disasterLiveObject);
 
