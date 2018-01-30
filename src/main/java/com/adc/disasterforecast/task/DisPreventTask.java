@@ -595,11 +595,12 @@ public class DisPreventTask {
                     cnt++;
                 }
             }else continue;
-            String month = DateHelper.getTimeMillis(beginDate.substring(0, 6) + "01000000");
+            String month = beginDate.substring(0, 6) + "01000000";
             if(DateHelper.getNow().substring(4, 6).compareTo(month.substring(4, 6)) < 0)
                 month = DateHelper.getPostponeDateByYear(DateHelper.getNow(), -1).substring(0, 4) + month.substring(4, 6) + "01000000";
             else
                 month = DateHelper.getNow().substring(0, 4) + month.substring(4, 6) + "01000000";
+            month = DateHelper.getTimeMillis(month);
             Long monthVal = Long.parseLong(month);
             Integer num = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
             if(cnt > 0) num++;
