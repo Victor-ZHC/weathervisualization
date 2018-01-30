@@ -81,8 +81,8 @@ public class DisPreventTask {
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
@@ -216,12 +216,12 @@ public class DisPreventTask {
             amountMap.put(type, cnt);
         }
 
-        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
-        List<Object> hisValue =  historyAnalysisDataEntity.getValue();
-        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
-        int hisTotal = (int) hisAmountMap.get("total");
-        int yearAvg = (int) Math.round(hisTotal / 10.0);
-        amountMap.put("yearAvg", yearAvg);
+//        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
+//        List<Object> hisValue =  historyAnalysisDataEntity.getValue();
+//        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
+//        int hisTotal = (int) hisAmountMap.get("total");
+//        int yearAvg = (int) Math.round(hisTotal / 10.0);
+//        amountMap.put("yearAvg", yearAvg);
 
         JSONObject valData = new JSONObject();
         JSONArray valueData = new JSONArray();
@@ -323,8 +323,8 @@ public class DisPreventTask {
             weekAvgYearVal = getHistory("thunder_08_14", disasterType);
 //            getThunderHistory(weekAvgYearVal, "20140101000000");
         }
-        System.out.println(currentYearVal);
-        System.out.println(weekAvgYearVal);
+//        System.out.println(currentYearVal);
+//        System.out.println(weekAvgYearVal);
 //        Map<Long, Integer> weekAvgYearVal = new HashMap<>();
 //        for(Object obj: disasterData) {
 //            JSONObject disaster = (JSONObject) obj;
@@ -375,7 +375,7 @@ public class DisPreventTask {
                 e.printStackTrace();
             }
             Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
-            Integer cnt = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal) / year;
+            Integer cnt = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal);
             weekAvgYearVal.put(monthVal, cnt);
             cnt = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
             currentYearVal.put(monthVal, cnt);
@@ -406,7 +406,7 @@ public class DisPreventTask {
         entryList = sortHashMap(weekAvgYearVal);
         for (Map.Entry<Long, Integer> entry: entryList) {
             JSONObject weekAvgYearObject = new JSONObject();
-            weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()));
+            weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()) / year);
             weekAvgYearObject.put("month", entry.getKey());
             weekAvgYearArray.add(weekAvgYearObject);
         }
