@@ -81,8 +81,8 @@ public class DisPreventTask {
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
@@ -246,20 +246,21 @@ public class DisPreventTask {
             int codeDisaster = ((Long) disaster.get("CODE_DISASTER")).intValue();
             String typeDetail = (String) disaster.get("ACCEPTER");
             Integer cnt;
-            if (codeDisaster == 1) {
+            if (codeDisaster == DisasterTypeHelper.DISASTER_RAIN_CODE) {
                 cnt = rainDisasterMap.get(typeDetail) == null ? 1 : 1 + rainDisasterMap.get(typeDetail);
                 rainDisasterMap.put(typeDetail, cnt);
-            } else if (codeDisaster == 2){
+            } else if (codeDisaster == DisasterTypeHelper.DISASTER_WIND_CODE){
                 cnt = windDisasterMap.get(typeDetail) == null ? 1 : 1 + windDisasterMap.get(typeDetail);
                 windDisasterMap.put(typeDetail, cnt);
-            } else if (codeDisaster == 3){
+            } else if (codeDisaster == DisasterTypeHelper.DISASTER_THUNDER_CODE){
                 cnt = thunderDisasterMap.get(typeDetail) == null ? 1 : 1 + thunderDisasterMap.get(typeDetail);
                 thunderDisasterMap.put(typeDetail, cnt);
-            } else continue;
+            }
 
             cnt = disasterMap.get("total") == null ? 1 : 1 + disasterMap.get("total");
             disasterMap.put("total", cnt);
-            String type = WarningHelper.getWarningWeather(DisasterTypeHelper.CODE_DISASTER[codeDisaster]);
+            String type = DisasterTypeHelper.getDisasterTypeByCode(codeDisaster);
+            if ("".equals(type)) type = DisasterTypeHelper.DISASTER_OTHER;
             cnt = disasterMap.get(type) == null ? 1 : 1 + disasterMap.get(type);
             disasterMap.put(type, cnt);
         }
@@ -627,7 +628,7 @@ public class DisPreventTask {
 
 //    @PostConstruct
     public void funcTest() {
-        getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_WIND_YEAR);
+        getDisasterCurYear("大风");
     }
 
 //    @PostConstruct
