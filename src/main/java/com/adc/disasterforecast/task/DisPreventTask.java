@@ -321,7 +321,8 @@ public class DisPreventTask {
         }
         else{
             currentYearVal = getThunderCurYear();
-            weekAvgYearVal = getHistory("thunder_08_14", disasterType);
+            weekAvgYearVal = getThunderHisroty();
+//            weekAvgYearVal = getHistory("thunder_08_14", disasterType);
 //            getThunderHistory(weekAvgYearVal, "20140101000000");
         }
 //        System.out.println(currentYearVal);
@@ -608,6 +609,40 @@ public class DisPreventTask {
             currentYearVal.put(monthVal, num);
         }
         return currentYearVal;
+    }
+
+    private Map<Long, Integer> getThunderHisroty(){
+        Map<Long, Integer> weekAvgYearVal = new HashMap<>();
+        String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/LS/";
+        String endDate = DateHelper.getNow().substring(0, 8) + "000000";
+        String beginDate = endDate;
+        String stopDate = DateHelper.getPostponeDateByYear(DateHelper.getNow(), -10);
+        while (true) {
+            int cnt = 0;
+            endDate = beginDate;
+            beginDate = DateHelper.getPostponeDateByDay(endDate, -1);
+            if(beginDate.compareTo(stopDate) < 0) break;
+            String url = baseUrl + beginDate + "/" + endDate;
+            JSONObject disasterJson = HttpHelper.getDataByURL(url);
+            if(disasterJson != null && disasterJson.get("Data") != null) {
+                JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+                if(disasterData.size() > 0) {
+                    cnt++;
+                }
+            }else continue;
+            String month = beginDate.substring(0, 6) + "01000000";
+            if(DateHelper.getNow().substring(4, 6).compareTo(month.substring(4, 6)) < 0) {
+                month = DateHelper.getPostponeDateByYear(DateHelper.getNow(), -1).substring(0, 4) + month.substring(4, 6) + "01000000";
+            } else {
+                month = DateHelper.getNow().substring(0, 4) + month.substring(4, 6) + "01000000";
+            }
+            month = DateHelper.getTimeMillis(month);
+            Long monthVal = Long.parseLong(month);
+            Integer num = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal);
+            if(cnt > 0) num++;
+            weekAvgYearVal.put(monthVal, num);
+        }
+        return weekAvgYearVal;
     }
 
     private void addLocalData(Map<Long, Integer> weekAvgYearVal, String name, String type, String stopDate){
