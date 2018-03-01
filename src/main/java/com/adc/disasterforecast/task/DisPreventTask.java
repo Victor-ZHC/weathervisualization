@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
+import java.io.File;
 import java.util.*;
 
 
@@ -37,7 +38,7 @@ public class DisPreventTask {
     @Autowired
     private HistoryAnalysisDataDAO historyAnalysisDataDAO;
 
-//        @Scheduled(initialDelay = 0, fixedDelay = 86400000)
+//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
@@ -309,13 +310,16 @@ public class DisPreventTask {
     }
 
     private void getDisasterAvg(String disasterType, String taskName){
-        Map<Long, Integer> currentYearVal;
-        Map<Long, Integer> weekAvgYearVal;
-        int year;
-        if("大风".equals(disasterType) || "暴雨".equals(disasterType)) {
-            year = 10;
-        }else year = 6;
-        if("大风".equals(disasterType) || "暴雨".equals(disasterType)) {
+        // TODO: filepath edit
+        String csvFilePath = "/root/weather_visualization_crawler/file_output/wind";
+        Map<Long, Integer> currentYearVal  = new HashMap<>();;
+        Map<Long, Double> weekAvgYearVal;
+        int year = 10;
+        if(WarningHelper.TYPE_WIND.equals(disasterType)) {
+            currentYearVal = getDisasterCurYearByCsvFile(disasterType, csvFilePath);
+            weekAvgYearVal = getHistory("wind_rain_08_17", disasterType);
+        }
+        else if (WarningHelper.TYPE_RAIN.equals(disasterType)) {
             currentYearVal = getDisasterCurYear(disasterType);
             weekAvgYearVal = getHistory("wind_rain_08_17", disasterType);
         }
@@ -377,10 +381,10 @@ public class DisPreventTask {
                 e.printStackTrace();
             }
             Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
-            Integer cnt = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal);
+            Double cnt = weekAvgYearVal.get(monthVal) == null ? 0.0 : weekAvgYearVal.get(monthVal);
             weekAvgYearVal.put(monthVal, cnt);
-            cnt = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
-            currentYearVal.put(monthVal, cnt);
+            Integer cnt_tmp = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
+            currentYearVal.put(monthVal, cnt_tmp);
         }
 
 //        for (int i = 1; i <= 12; i++){
@@ -396,7 +400,7 @@ public class DisPreventTask {
 //        }
 //        System.out.println(currentYearVal);
         // sort
-        List<Map.Entry<Long, Integer> > entryList = sortHashMap(currentYearVal);
+        List<Map.Entry<Long, Integer> > entryList = sortIntegerHashMap(currentYearVal);
 
         for (Map.Entry<Long, Integer> entry: entryList) {
             JSONObject currentYearObject = new JSONObject();
@@ -405,8 +409,8 @@ public class DisPreventTask {
             currentYearArray.add(currentYearObject);
         }
 
-        entryList = sortHashMap(weekAvgYearVal);
-        for (Map.Entry<Long, Integer> entry: entryList) {
+        List<Map.Entry<Long, Double> > entryList_tmp = sortDoubleHashMap(weekAvgYearVal);
+        for (Map.Entry<Long, Double> entry: entryList_tmp) {
             JSONObject weekAvgYearObject = new JSONObject();
             weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()) / year);
             weekAvgYearObject.put("month", entry.getKey());
@@ -431,7 +435,7 @@ public class DisPreventTask {
         JSONObject valueObject = new JSONObject();
         JSONArray valueArray = new JSONArray();
 
-        List<Map.Entry<Long, Integer> > entrylist = sortHashMap(currentYearVal);
+        List<Map.Entry<Long, Integer> > entrylist = sortIntegerHashMap(currentYearVal);
 
         for (Map.Entry<Long, Integer> entry: entrylist) {
             JSONObject currentYearObject = new JSONObject();
@@ -440,7 +444,7 @@ public class DisPreventTask {
             currentYearArray.add(currentYearObject);
         }
 
-        entrylist = sortHashMap(weekAvgYearVal);
+        entrylist = sortIntegerHashMap(weekAvgYearVal);
 
         for (Map.Entry<Long, Integer> entry: entrylist) {
             JSONObject weekAvgYearObject = new JSONObject();
@@ -519,7 +523,18 @@ public class DisPreventTask {
         return hs;
     }
 
-    private List<Map.Entry<Long, Integer> > sortHashMap(Map<Long, Integer> hs) {
+    private List<Map.Entry<Long, Double> > sortDoubleHashMap(Map<Long, Double> hs) {
+        List<Map.Entry<Long, Double> > entryList = new ArrayList<>(hs.entrySet());
+        Collections.sort(entryList, new Comparator<Map.Entry<Long, Double>>() {
+            @Override
+            public int compare(Map.Entry<Long, Double> o1, Map.Entry<Long, Double> o2) {
+                return (o1.getKey()).toString().compareTo(o2.getKey().toString());
+            }
+        });
+        return entryList;
+    }
+
+    private List<Map.Entry<Long, Integer> > sortIntegerHashMap(Map<Long, Integer> hs) {
         List<Map.Entry<Long, Integer> > entryList = new ArrayList<>(hs.entrySet());
         Collections.sort(entryList, new Comparator<Map.Entry<Long, Integer>>() {
             @Override
@@ -561,14 +576,14 @@ public class DisPreventTask {
                     }
                 }
                 if(!isok) continue;
-                if("大风".equals(disasterType)) {
+                if(WarningHelper.TYPE_WIND.equals(disasterType)) {
                     String speedData = (String)disaster.get("WINDSPEED");
                     if("".equals(speedData)) continue;
                     Double speed = Double.parseDouble(speedData);
-                    if (speed > 13.9) cnt++;
-                }else if ("暴雨".equals(disasterType)) {
+                    if (speed > DisasterTypeHelper.WIND_THRESHOLD) cnt++;
+                }else if (WarningHelper.TYPE_RAIN.equals(disasterType)) {
                     Double rainhour = Double.parseDouble((String)disaster.get("RAINHOUR"));
-                    if (rainhour > 50) cnt++;
+                    if (rainhour > DisasterTypeHelper.RAIN_THRESHOLD) cnt++;
                 }
             }
             Integer num = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
@@ -576,6 +591,54 @@ public class DisPreventTask {
             currentYearVal.put(monthVal, num);
         }
         return currentYearVal;
+    }
+
+    private Map<Long, Integer> getDisasterCurYearByCsvFile(String disasterType, String inputCsvDir) {
+        Map<Long, Integer> currentYearVal = new HashMap<>();
+        try {
+            File csvDir = new File(inputCsvDir);
+            File [] allCsvFile = csvDir.listFiles();
+            if (allCsvFile == null) return null;
+            for(File csvFile: allCsvFile) {
+                JSONArray csvData = CsvHelper.parseCsvFile(csvFile.getCanonicalPath());
+                System.out.println(csvFile.getName());
+                if(csvData == null) {
+                    logger.info("csvFile: " + csvFile.getCanonicalPath() + " has nothing.");
+                    continue;
+                }
+                String month = csvFile.getName().split("-")[0];
+                if(DateHelper.getNow().substring(4, 6).compareTo(month.substring(4, 6)) < 0)
+                    month = DateHelper.getPostponeDateByYear(DateHelper.getNow(), -1).substring(0, 4) + month.substring(4, 6) + "01000000";
+                else
+                    month = DateHelper.getNow().substring(0, 4) + month.substring(4, 6) + "01000000";
+                Long monthVal = Long.parseLong(DateHelper.getTimeMillis(month));
+                Double maxVal = Double.MIN_VALUE;
+                String type = WarningHelper.TYPE_RAIN.compareTo(disasterType) == 0 ? "RAINHOUR" : "WINDSPEED";
+                Double threshold = WarningHelper.TYPE_RAIN.compareTo(disasterType) == 0 ?
+                        DisasterTypeHelper.RAIN_THRESHOLD : DisasterTypeHelper.WIND_THRESHOLD;
+                for (Object obj: csvData) {
+                    JSONObject item = (JSONObject) obj;
+                    if (item.get(type) == null) continue;
+                    String stationName = (String) item.get("STATIONNAME");
+                    boolean isok = false;
+                    for (String baseStationName: DisPrventRegionName.BASE_STATION_NAME){
+                        if (baseStationName.compareTo(stationName) == 0 && (isok = true)) break;
+                    }
+                    if(!isok) continue;
+                    Double tmp = Double.parseDouble((String) item.get(type));
+                    maxVal = Math.max(maxVal, tmp);
+                    if(maxVal > threshold) break;
+                }
+                System.out.println(maxVal.toString() + " " + csvFile.getName().split("-")[0] + " " + threshold.toString());
+                Integer num = currentYearVal.get(monthVal) == null ? 0 : currentYearVal.get(monthVal);
+                if(maxVal > threshold) num++;
+                currentYearVal.put(monthVal, num);
+                System.out.println(currentYearVal);
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private Map<Long, Integer> getThunderCurYear() {
@@ -593,9 +656,21 @@ public class DisPreventTask {
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             if(disasterJson != null && disasterJson.get("Data") != null) {
                 JSONArray disasterData = (JSONArray) disasterJson.get("Data");
-                if(disasterData.size() > 0) {
-                    cnt++;
+                if (disasterData.size() <= 0) continue;
+                boolean isok = false;
+                for (Object obj: disasterData) {
+                    JSONObject item = (JSONObject) obj;
+                    Double lon = (Double) item.get("LON");
+                    Double lat = (Double) item.get("LAT");
+                    if (lon > AreaHelper.SHANGHAI_LON_MIN &&
+                            lon < AreaHelper.SHANGHAI_LON_MAX &&
+                            lat > AreaHelper.SHANGHAI_LAT_MIN &&
+                            lat < AreaHelper.SHANGHAI_LAT_MAX){
+                        isok = true;
+                        break;
+                    }
                 }
+                if(isok) cnt++;
             }else continue;
             String month = beginDate.substring(0, 6) + "01000000";
             if(DateHelper.getNow().substring(4, 6).compareTo(month.substring(4, 6)) < 0)
@@ -611,8 +686,9 @@ public class DisPreventTask {
         return currentYearVal;
     }
 
-    private Map<Long, Integer> getThunderHisroty(){
-        Map<Long, Integer> weekAvgYearVal = new HashMap<>();
+    private Map<Long, Double> getThunderHisroty(){
+        int year = 10;
+        Map<Long, Double> weekAvgYearVal = new HashMap<>();
         String baseUrl = JsonServiceURL.THUNDER_JSON_SERVICE_URL + "GetThunderData/LS/";
         String endDate = DateHelper.getNow().substring(0, 8) + "000000";
         String beginDate = endDate;
@@ -626,9 +702,21 @@ public class DisPreventTask {
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             if(disasterJson != null && disasterJson.get("Data") != null) {
                 JSONArray disasterData = (JSONArray) disasterJson.get("Data");
-                if(disasterData.size() > 0) {
-                    cnt++;
+                boolean isok = false;
+                if (disasterData.size() <= 0) continue;
+                for (Object obj: disasterData) {
+                    JSONObject item = (JSONObject) obj;
+                    Double lat = (Double) item.get("LAT");
+                    Double lon = (Double) item.get("LON");
+                    if (lon > AreaHelper.SHANGHAI_LON_MIN &&
+                            lon < AreaHelper.SHANGHAI_LON_MAX &&
+                            lat > AreaHelper.SHANGHAI_LAT_MIN &&
+                            lat < AreaHelper.SHANGHAI_LAT_MAX){
+                        isok = true;
+                        break;
+                    }
                 }
+                if(isok) cnt++;
             }else continue;
             String month = beginDate.substring(0, 6) + "01000000";
             if(DateHelper.getNow().substring(4, 6).compareTo(month.substring(4, 6)) < 0) {
@@ -638,10 +726,14 @@ public class DisPreventTask {
             }
             month = DateHelper.getTimeMillis(month);
             Long monthVal = Long.parseLong(month);
-            Integer num = weekAvgYearVal.get(monthVal) == null ? 0 : weekAvgYearVal.get(monthVal);
+            Double num = weekAvgYearVal.get(monthVal) == null ? 0.0 : weekAvgYearVal.get(monthVal);
             if(cnt > 0) num++;
             weekAvgYearVal.put(monthVal, num);
         }
+//        for(Map.Entry<Long, Double> entry: weekAvgYearVal.entrySet()){
+//            Long monthVal = entry.getKey();
+//            weekAvgYearVal.put(monthVal, weekAvgYearVal.get(monthVal) / year);
+//        }
         return weekAvgYearVal;
     }
 
@@ -663,12 +755,12 @@ public class DisPreventTask {
 
 //    @PostConstruct
     public void funcTest() {
-        getDisasterCurYear("大风");
+        getDisasterCurYearByCsvFile("大风", "G:\\work\\crawler\\file_output\\wind");
     }
 
 //    @PostConstruct
-    private Map<Long, Integer> getHistory(String name, String type) {
-        Map<Long, Integer> res = new HashMap<>();
+    private Map<Long, Double> getHistory(String name, String type) {
+        Map<Long, Double> res = new HashMap<>();
         JSONArray localDataArrray = disPreventDataDAO.findDisPreventDataByName(name).getValue();
         type = "大风".equals(type) ? "wind" : "雷电".equals(type) ? "thunder" : "rain";
         for(Object obj: localDataArrray){
@@ -680,7 +772,7 @@ public class DisPreventTask {
                 month = DateHelper.getFormatWarningMonth(month, DateHelper.getNow().substring(0, 4));
             Long monthVal = Long.parseLong(month);
             Integer localCnt = Integer.parseInt(localData.get(type));
-            Integer cnt = res.get(monthVal) == null ? localCnt : localCnt + res.get(monthVal);
+            Double cnt = res.get(monthVal) == null ? localCnt : localCnt + res.get(monthVal);
             res.put(monthVal, cnt);
         }
         System.out.println(res);

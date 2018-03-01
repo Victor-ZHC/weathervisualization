@@ -9,6 +9,9 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 
 /**
@@ -68,5 +71,32 @@ public class CsvHelper {
 
         }
         return csvData;
+    }
+    /**
+    * @description:
+    * @author: zhichengliu
+    * @date: 18/2/28
+    **/
+    public static JSONArray parseCsvFile(String filepath) {
+        try {
+            File csvFile = new File(filepath);
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(csvFile));
+            JSONArray retArray = new JSONArray();
+            String line = bufferedReader.readLine();
+            String [] keys;
+            if (line != null){
+                keys = line.split(",");
+            } else return null;
+            while((line = bufferedReader.readLine()) != null) {
+                String [] valArray = line.split(",");
+                JSONObject retObj = new JSONObject();
+                for (int i = 0; i < valArray.length; i++) retObj.put(keys[i], valArray[i]);
+                retArray.add(retObj);
+            }
+            return retArray;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
