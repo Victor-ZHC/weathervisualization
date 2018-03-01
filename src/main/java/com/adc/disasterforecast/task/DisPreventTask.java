@@ -312,7 +312,8 @@ public class DisPreventTask {
     private void getDisasterAvg(String disasterType, String taskName){
         // TODO: filepath edit
         String csvFilePath = "/root/weather_visualization_crawler/file_output/wind";
-        Map<Long, Integer> currentYearVal  = new HashMap<>();;
+//        String csvFilePath = "G:\\work\\crawler\\file_output\\wind";
+        Map<Long, Integer> currentYearVal;
         Map<Long, Double> weekAvgYearVal;
         int year = 10;
         if(WarningHelper.TYPE_WIND.equals(disasterType)) {
@@ -635,6 +636,7 @@ public class DisPreventTask {
                 currentYearVal.put(monthVal, num);
                 System.out.println(currentYearVal);
             }
+            return currentYearVal;
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -755,7 +757,8 @@ public class DisPreventTask {
 
 //    @PostConstruct
     public void funcTest() {
-        getDisasterCurYearByCsvFile("大风", "G:\\work\\crawler\\file_output\\wind");
+        getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
+//        getDisasterCurYearByCsvFile("大风", "G:\\work\\crawler\\file_output\\wind");
     }
 
 //    @PostConstruct
