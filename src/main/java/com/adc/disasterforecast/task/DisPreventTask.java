@@ -311,13 +311,14 @@ public class DisPreventTask {
 
     private void getDisasterAvg(String disasterType, String taskName){
         // TODO: filepath edit
-        String csvFilePath = "/root/weather_visualization_crawler/file_output/wind";
+//        String csvFilePath = "/root/weather_visualization_crawler/file_output/wind";
 //        String csvFilePath = "G:\\work\\crawler\\file_output\\wind";
         Map<Long, Integer> currentYearVal;
         Map<Long, Double> weekAvgYearVal;
         int year = 10;
         if(WarningHelper.TYPE_WIND.equals(disasterType)) {
-            currentYearVal = getDisasterCurYearByCsvFile(disasterType, csvFilePath);
+//            currentYearVal = getDisasterCurYearByCsvFile(disasterType, csvFilePath);
+            currentYearVal = getDisasterCurYear(disasterType);
             weekAvgYearVal = getHistory("wind_rain_08_17", disasterType);
         }
         else if (WarningHelper.TYPE_RAIN.equals(disasterType)) {
@@ -555,12 +556,13 @@ public class DisPreventTask {
         while (true) {
             int cnt = 0;
             endDate = beginDate;
-            beginDate =  DateHelper.getPostponeDateByDay(endDate, -1);
+            beginDate =  DateHelper.getPostponeDateByHour(endDate, -1);
             if(beginDate.compareTo(stopDate) < 0) break;
             String url = baseUrl + beginDate + "/" + endDate + "/1";
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             if(disasterJson == null || disasterJson.get("Data") == null) continue;
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+            if(disasterData == null || disasterData.size() < 1) continue;
             String month = DateHelper.getFormatDate((String)((JSONObject)disasterData.get(0)).get("DATETIME"));
             if(DateHelper.getNow().substring(4, 6).compareTo(month.substring(4, 6)) < 0)
                 month = DateHelper.getPostponeDateByYear(DateHelper.getNow(), -1).substring(0, 4) + month.substring(4, 6) + "01000000";
@@ -755,9 +757,10 @@ public class DisPreventTask {
         }
     }
 
-//    @PostConstruct
+    @PostConstruct
     public void funcTest() {
-        getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
+//        getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
+//        getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
 //        getDisasterCurYearByCsvFile("大风", "G:\\work\\crawler\\file_output\\wind");
     }
 
