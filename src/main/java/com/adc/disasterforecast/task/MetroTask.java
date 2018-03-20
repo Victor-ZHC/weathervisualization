@@ -30,6 +30,12 @@ public class MetroTask {
     private static List<Integer> line16ConnectionOrder;
     private static List<Integer> line2StationOrder;
     private static List<Integer> line16StationOrder;
+
+    private static final int noneLevel = 0;
+    private static final int blueLevel = 1;
+    private static final int yellowLevel = 2;
+    private static final int orangeLevel = 3;
+    private static final int redLevel = 4;
     static {
         line2ConnectionOrder = Arrays.asList(
                 19, 18, 17, 16, 15, 14, 13, 20
@@ -109,27 +115,45 @@ public class MetroTask {
             JSONObject jo = HttpHelper.getDataByURL(url);
             JSONArray array = (JSONArray) jo.get("Data");
 
+            int warningLevel = 0;
+
             for (Object o : array) {
                 JSONObject input = (JSONObject) o;
                 JSONObject output = new JSONObject();
                 if (input.get("TYPE").equals("大风")) {
                     output.put("type", "wind");
                     output.put("des", input.get("CONTENT"));
-                    if (input.get("LEVEL").equals("红色")) output.put("level", "red");
-                    else if (input.get("LEVEL").equals("橙色")) output.put("level", "orange");
-                    else if (input.get("LEVEL").equals("黄色")) output.put("level", "yellow");
+                    if (input.get("LEVEL").equals("红色")) {
+                        output.put("level", "red");
+                        warningLevel = Math.max(warningLevel, redLevel);
+                    } else if (input.get("LEVEL").equals("橙色")) {
+                        output.put("level", "orange");
+                        warningLevel = Math.max(warningLevel, orangeLevel);
+                    } else if (input.get("LEVEL").equals("黄色")) {
+                        output.put("level", "yellow");
+                        warningLevel = Math.max(warningLevel, yellowLevel);
+                    }
                     array.add(output);
                 } else if (input.get("TYPE").equals("台风")) {
                     output.put("type", "typhoon");
                     output.put("des", input.get("CONTENT"));
-                    if (input.get("LEVEL").equals("红色")) output.put("level", "red");
-                    else if (input.get("LEVEL").equals("橙色")) output.put("level", "orange");
-                    else if (input.get("LEVEL").equals("黄色")) output.put("level", "yellow");
+                    if (input.get("LEVEL").equals("红色")) {
+                        output.put("level", "red");
+                        warningLevel = Math.max(warningLevel, redLevel);
+                    } else if (input.get("LEVEL").equals("橙色")) {
+                        output.put("level", "orange");
+                        warningLevel = Math.max(warningLevel, orangeLevel);
+                    } else if (input.get("LEVEL").equals("黄色")) {
+                        output.put("level", "yellow");
+                        warningLevel = Math.max(warningLevel, yellowLevel);
+                    }
                     array.add(output);
                 }
             }
 
             metroDataDAO.updateMetroDataByName(metroDataEntity);
+
+            generateLinkageResponse(warningLevel);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
@@ -298,6 +322,40 @@ public class MetroTask {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    public void generateLinkageResponse(int warningLevel) {
+        String responseLevel = "", carriageStatus = "", peopleStream = "";
+        if (warningLevel == blueLevel) {
+            responseLevel = "IV级应急响应，地铁大风风险一般";
+            carriageStatus = "建议加强监测，做好地面、高架区段安全行车条件的检查和人流监控";
+            peopleStream = "关注人流变化";
+        } else if (warningLevel == yellowLevel) {
+            responseLevel = "III级应急响应，地铁大风风险较重";
+            carriageStatus = "对应的高架区段限速40km/h、地面区段限速，在高架与地面区段运行中的列车停车改为手动驾驶模式";
+            peopleStream = "建议启动大客流响应预警III级。加强高价区段站、地面区段站的在站点出入口、通道内滞的现象，要及时疏导；同时做好信息发布";
+        } else if (warningLevel == orangeLevel) {
+            responseLevel = "II级应急响应，地铁大风风险严重";
+            carriageStatus = "对应的高架区段限速40km/h、地面区段限速，在高架与地面区段运行中的列车停车改为手动驾驶模式";
+            peopleStream = "建议启动大客流响应预警II级。加强高价区段站、地面区段站的在站点出入口、通道内滞的现象，要及时疏导；同时做好信息发布";
+        } else if (warningLevel == redLevel) {
+            responseLevel = "I级应急响应，地铁大风风险非常严重";
+            carriageStatus = "对应的高架、地面区段列车暂停行驶；在高架与地面区段运行中的列车停车改为手动驾驶模式，以限速运行至就近车站清客，暂停行驶";
+            peopleStream = "建议启动大客流响应预警II级+公交应急配套（短驳）。加强交路变更后的车站现场行车、客运组织工作，维保中心加强重点行车设备的保驾力量组织";
+        }
+
+        MetroDataEntity metroDataEntity = new MetroDataEntity();
+        metroDataEntity.setName(MetroTaskName.GDJT_LINKAGE_RESPONSE);
+        JSONArray value = new JSONArray();
+        metroDataEntity.setValue(value);
+
+        JSONObject jo = new JSONObject();
+        jo.put("responseLevel", responseLevel);
+        jo.put("cheliangyunxing", carriageStatus);
+        jo.put("renliuchuli", peopleStream);
+        value.add(jo);
+
+        metroDataDAO.updateMetroDataByName(metroDataEntity);
     }
 
     private static class Connection {
