@@ -81,9 +81,13 @@ public class DisPreventTask {
         }
     }
 
+    public static void main(String[] args) {
+        new DisPreventTask().getStationData();
+    }
+
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
     @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
