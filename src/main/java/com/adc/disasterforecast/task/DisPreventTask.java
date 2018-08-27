@@ -51,6 +51,7 @@ public class DisPreventTask {
             String url = baseUrl + beginDate + "/" + endDate;
             JSONObject disasterJson = HttpHelper.getDataByURL(url);
             JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+
             getCurWarning(disasterData);
 
             getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
@@ -82,7 +83,8 @@ public class DisPreventTask {
     }
 
     public static void main(String[] args) {
-        new DisPreventTask().getStationData();
+        int count = new DisPreventTask().getPastTenYearWarning();
+        System.out.println(count);
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
@@ -227,6 +229,9 @@ public class DisPreventTask {
 //        int hisTotal = (int) hisAmountMap.get("total");
 //        int yearAvg = (int) Math.round(hisTotal / 10.0);
 //        amountMap.put("yearAvg", yearAvg);
+
+        int yearAvg = getPastTenYearWarning();
+        amountMap.put("yearAvg", yearAvg);
 
         JSONObject valData = new JSONObject();
         JSONArray valueData = new JSONArray();
@@ -825,5 +830,42 @@ public class DisPreventTask {
             res.put(monthVal, num);
         }
         return res;
+    }
+
+    public int getPastTenYearWarning() {
+        String baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetWeatherWarnningByDatetime/";
+        int total = 0, count = 0;
+        for (int i = 0; i < 10; ++i) {
+            String endDate = DateHelper.getPostponeDateByYear(DateHelper.getNow(), -i).substring(0, 4) + "1231235959";
+            String beginDate = endDate.substring(0, 4) + "0101000000";
+            String url = baseUrl + beginDate + "/" + endDate;
+            JSONObject disasterJson = HttpHelper.getDataByURL(url);
+            JSONArray disasterData = (JSONArray) disasterJson.get("Data");
+            int amount = 0;
+            for (Object obj: disasterData) {
+                JSONObject curWarning = (JSONObject) obj;
+
+                // 如果不是风雨雷，就跳过
+                if (!WarningHelper.TYPE_WIND.equals(curWarning.get("TYPE"))
+                        && !WarningHelper.TYPE_RAIN.equals(curWarning.get("TYPE"))
+                        && !WarningHelper.TYPE_THUNDER.equals(curWarning.get("TYPE")))
+                    continue;
+                // 如果不是红橙黄蓝，就跳过
+                if (!WarningHelper.LEVEL_BLUE.equals(curWarning.get("LEVEL"))
+                        && !WarningHelper.LEVEL_ORANGE.equals(curWarning.get("LEVEL"))
+                        && !WarningHelper.LEVEL_RED.equals(curWarning.get("LEVEL"))
+                        && !WarningHelper.LEVEL_YELLOW.equals(curWarning.get("LEVEL")))
+                    continue;
+
+                ++amount;
+            }
+            if (amount != 0) {
+                total += amount;
+                ++count;
+            }
+        }
+
+        if (count == 0) return 0;
+        return total / count;
     }
 }
