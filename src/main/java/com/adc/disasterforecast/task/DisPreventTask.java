@@ -83,8 +83,7 @@ public class DisPreventTask {
     }
 
     public static void main(String[] args) {
-        int count = new DisPreventTask().getPastTenYearWarning();
-        System.out.println(count);
+        new DisPreventTask().getStationData();
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
@@ -136,8 +135,16 @@ public class DisPreventTask {
             url = baseUrl + beginDate + "/" + endDate;
             JSONObject weatherWarnningJson = HttpHelper.getDataByURL(url);
             JSONArray weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
-            cnt = weatherWarnningData.size();
-//            cnt = 0;
+//            cnt = weatherWarnningData.size();
+            // 计算年度风险预警
+            Set<String> yearRiskAlert = new HashSet<>();
+            for (int i = 0; i < weatherWarnningData.size(); ++i) {
+                JSONObject jo = (JSONObject) weatherWarnningData.get(i);
+                if ("发布".equals(jo.get("State"))) {
+                    yearRiskAlert.add((String) jo.get("ForecastTime"));
+                }
+            }
+            cnt = yearRiskAlert.size();
 
             JSONObject fxyjJson = new JSONObject();
             fxyjJson.put("total", cnt);
@@ -148,9 +155,16 @@ public class DisPreventTask {
             url = baseUrl + beginDate + "/" + endDate;
             weatherWarnningJson = HttpHelper.getDataByURL(url);
             weatherWarnningData = (JSONArray) weatherWarnningJson.get("Data");
-//            System.out.println(weatherWarnningData);
-            cnt = weatherWarnningData.size();
-//            cnt = 0;
+//            cnt = weatherWarnningData.size();
+            // 计算当日风险预警
+            Set<String> dayRiskAlert = new HashSet<>();
+            for (int i = 0; i < weatherWarnningData.size(); ++i) {
+                JSONObject jo = (JSONObject) weatherStationData.get(i);
+                if ("发布".equals(jo.get("State"))) {
+                    dayRiskAlert.add((String) jo.get("ForecastTime"));
+                }
+            }
+            cnt = dayRiskAlert.size();
             fxyjJson.put("add", cnt);
 
             baseUrl = JsonServiceURL.VERIFY_USER_URL + "GetMessageCount/";
