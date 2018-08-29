@@ -54,8 +54,10 @@ public class DisPreventTask {
 
             getCurWarning(disasterData);
 
-            getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
-            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+//            getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
+//            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+            getNewDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
+            getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
             getDisasterAvg("雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
 
             baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
@@ -330,6 +332,38 @@ public class DisPreventTask {
         disPreventDataEntity.setValue(valArray);
         disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
 
+    }
+
+    private void getNewDisasterAvg(String disasterType, String taskName){
+        // 先获取上次计算的
+
+        JSONObject valueObject = new JSONObject();
+        JSONArray valueArray = new JSONArray();
+        JSONArray currentYearArray = new JSONArray();
+        JSONArray weekAvgYearArray = new JSONArray();
+
+        for (Map.Entry<Long, Integer> entry: entryList) {
+            JSONObject currentYearObject = new JSONObject();
+            currentYearObject.put("month", entry.getKey());
+            currentYearObject.put("value", entry.getValue());
+            currentYearArray.add(currentYearObject);
+        }
+
+        List<Map.Entry<Long, Double> > entryList_tmp = sortDoubleHashMap(weekAvgYearVal);
+        for (Map.Entry<Long, Double> entry: entryList_tmp) {
+            JSONObject weekAvgYearObject = new JSONObject();
+            weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()) / year);
+            weekAvgYearObject.put("month", entry.getKey());
+            weekAvgYearArray.add(weekAvgYearObject);
+        }
+        valueObject.put("currentYear", currentYearArray);
+        valueObject.put("weekavgYear", weekAvgYearArray);
+        valueArray.add(valueObject);
+
+        DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
+        disPreventDataEntity.setName(taskName);
+        disPreventDataEntity.setValue(valueArray);
+        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
     }
 
     private void getDisasterAvg(String disasterType, String taskName){
