@@ -2,7 +2,9 @@ package com.adc.disasterforecast.task;
 
 import com.adc.disasterforecast.dao.DisPreventDataDAO;
 import com.adc.disasterforecast.dao.HistoryAnalysisDataDAO;
+import com.adc.disasterforecast.dao.WeatherDayDAO;
 import com.adc.disasterforecast.entity.DisPreventDataEntity;
+import com.adc.disasterforecast.entity.po.WeatherDay;
 import com.adc.disasterforecast.global.DisPrventRegionName;
 import com.adc.disasterforecast.entity.HistoryAnalysisDataEntity;
 import com.adc.disasterforecast.global.DisPreventTaskName;
@@ -20,6 +22,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -37,10 +41,11 @@ public class DisPreventTask {
     private DisPreventDataDAO disPreventDataDAO;
     @Autowired
     private HistoryAnalysisDataDAO historyAnalysisDataDAO;
+    @Autowired
+    private WeatherDayDAO weatherDayDAO;
 
-//    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0 0 * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
         try {
             JSONObject disasterJsonYears;
@@ -85,7 +90,7 @@ public class DisPreventTask {
     }
 
     public static void main(String[] args) {
-        new DisPreventTask().getStationData();
+        new DisPreventTask().updateRainHistoryData();
     }
 
     //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
@@ -214,7 +219,7 @@ public class DisPreventTask {
         Map<String, Integer> amountMap = new HashMap<>();
         Map<String, Integer> levelMap = new HashMap<>();
 
-        for (Object obj: curWarningData) {
+        for (Object obj : curWarningData) {
             JSONObject curWarning = (JSONObject) obj;
 
             // 如果不是风雨雷，就跳过
@@ -240,8 +245,8 @@ public class DisPreventTask {
         }
 
         HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
-        List<Object> hisValue =  historyAnalysisDataEntity.getValue();
-        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>)(hisValue.get(0))).get("amount");
+        List<Object> hisValue = historyAnalysisDataEntity.getValue();
+        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>) (hisValue.get(0))).get("amount");
         int hisTotal = (int) hisAmountMap.get("total");
         int yearAvg = (int) Math.round(hisTotal / 10.0);
         amountMap.put("yearAvg", yearAvg);
@@ -259,7 +264,6 @@ public class DisPreventTask {
         DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
         disPreventDataEntity.setName(DisPreventTaskName.FZJZ_WARNING_YEAR);
         disPreventDataEntity.setValue(valueData);
-        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
     }
 
     private void getDisasterType(JSONArray disasterData) {
@@ -334,36 +338,87 @@ public class DisPreventTask {
 
     }
 
+    @PostConstruct
+    public void updateRainHistoryData() {
+        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
+        LocalDateTime startTime = LocalDateTime.of(2018, 1, 1, 20,0,0);
+        LocalDateTime endTime = LocalDateTime.of(2018, 1, 10, 20,0,0);
+        for (LocalDateTime timeIter = startTime; timeIter.compareTo(endTime) < 0; timeIter = timeIter.plusDays(1)) {
+            Map<String, Float> station2Value = new HashMap<>();
+            station2Value.put("闵行", 0f);
+            station2Value.put("宝山", 0f);
+            station2Value.put("嘉定", 0f);
+            station2Value.put("崇明", 0f);
+            station2Value.put("徐家汇", 0f);
+            station2Value.put("惠南", 0f);
+            station2Value.put("浦东", 0f);
+            station2Value.put("金山", 0f);
+            station2Value.put("青浦", 0f);
+            station2Value.put("松江", 0f);
+            station2Value.put("奉贤", 0f);
+            for (int i = 0; i < 12 * 24; ++i) {
+                LocalDateTime fiveMinuteIter = timeIter.plusMinutes(i * 5);
+                String url = String.format("%s/%s/%s/1", baseUrl,
+                        DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(fiveMinuteIter),
+                        DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(fiveMinuteIter.plusMinutes(5)));
+
+                JSONObject json = HttpHelper.getDataByURL(url);
+                JSONArray dataJson = (JSONArray) json.get("Data");
+                for (int j = 0; j < dataJson.size(); ++j) {
+                    JSONObject oneData = (JSONObject) dataJson.get(j);
+                    String stationName = (String) oneData.get("STATIONNAME");
+                    if (!station2Value.containsKey(stationName)) continue;
+                    String rainStr = (String) oneData.get("RAINHOUR");
+                    float rain = Float.valueOf(rainStr);
+                    station2Value.put(stationName, station2Value.get(stationName) + rain);
+                }
+            }
+            WeatherDay weatherDay = new WeatherDay();
+            weatherDay.setYear(timeIter.getYear());
+            weatherDay.setMonth(timeIter.getMonthValue());
+            weatherDay.setDay(timeIter.getDayOfYear());
+            weatherDay.setType("rain");
+            weatherDay.setValue(0);
+            for (String stationName : station2Value.keySet()) {
+                if (station2Value.get(stationName) > 50) {
+                    weatherDay.setValue(1);
+                    break;
+                }
+            }
+            weatherDayDAO.upsertWeatherDay(weatherDay);
+            logger.info("weather day finished: "
+                    + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(timeIter));
+        }
+    }
+
     private void getNewDisasterAvg(String disasterType, String taskName){
-        // 先获取上次计算的
-
-        JSONObject valueObject = new JSONObject();
-        JSONArray valueArray = new JSONArray();
-        JSONArray currentYearArray = new JSONArray();
-        JSONArray weekAvgYearArray = new JSONArray();
-
-        for (Map.Entry<Long, Integer> entry: entryList) {
-            JSONObject currentYearObject = new JSONObject();
-            currentYearObject.put("month", entry.getKey());
-            currentYearObject.put("value", entry.getValue());
-            currentYearArray.add(currentYearObject);
-        }
-
-        List<Map.Entry<Long, Double> > entryList_tmp = sortDoubleHashMap(weekAvgYearVal);
-        for (Map.Entry<Long, Double> entry: entryList_tmp) {
-            JSONObject weekAvgYearObject = new JSONObject();
-            weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()) / year);
-            weekAvgYearObject.put("month", entry.getKey());
-            weekAvgYearArray.add(weekAvgYearObject);
-        }
-        valueObject.put("currentYear", currentYearArray);
-        valueObject.put("weekavgYear", weekAvgYearArray);
-        valueArray.add(valueObject);
-
-        DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
-        disPreventDataEntity.setName(taskName);
-        disPreventDataEntity.setValue(valueArray);
-        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
+//        JSONObject valueObject = new JSONObject();
+//        JSONArray valueArray = new JSONArray();
+//        JSONArray currentYearArray = new JSONArray();
+//        JSONArray weekAvgYearArray = new JSONArray();
+//
+//        for (Map.Entry<Long, Integer> entry: entryList) {
+//            JSONObject currentYearObject = new JSONObject();
+//            currentYearObject.put("month", entry.getKey());
+//            currentYearObject.put("value", entry.getValue());
+//            currentYearArray.add(currentYearObject);
+//        }
+//
+//        List<Map.Entry<Long, Double> > entryList_tmp = sortDoubleHashMap(weekAvgYearVal);
+//        for (Map.Entry<Long, Double> entry: entryList_tmp) {
+//            JSONObject weekAvgYearObject = new JSONObject();
+//            weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()) / year);
+//            weekAvgYearObject.put("month", entry.getKey());
+//            weekAvgYearArray.add(weekAvgYearObject);
+//        }
+//        valueObject.put("currentYear", currentYearArray);
+//        valueObject.put("weekavgYear", weekAvgYearArray);
+//        valueArray.add(valueObject);
+//
+//        DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
+//        disPreventDataEntity.setName(taskName);
+//        disPreventDataEntity.setValue(valueArray);
+//        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
     }
 
     private void getDisasterAvg(String disasterType, String taskName){

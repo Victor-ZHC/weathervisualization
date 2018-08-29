@@ -16,7 +16,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
-@Component
+//@Component
 public class OceanTask {
     // logger for OceanTask
     private static final Logger logger = LoggerFactory.getLogger(OceanTask.class);

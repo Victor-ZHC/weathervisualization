@@ -19,7 +19,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-@Component
+//@Component
 public class MetroTask {
     // logger for MetroTask
     private static final Logger logger = LoggerFactory.getLogger(MetroTask.class);
