@@ -341,8 +341,8 @@ public class DisPreventTask {
     @PostConstruct
     public void updateRainHistoryData() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
-        LocalDateTime startTime = LocalDateTime.of(2018, 1, 1, 20,0,0);
-        LocalDateTime endTime = LocalDateTime.of(2018, 1, 10, 20,0,0);
+        LocalDateTime startTime = LocalDateTime.of(2007, 1, 1, 20,0,0);
+        LocalDateTime endTime = LocalDateTime.of(2018, 8, 29, 20,0,0);
         for (LocalDateTime timeIter = startTime; timeIter.compareTo(endTime) < 0; timeIter = timeIter.plusDays(1)) {
             Map<String, Float> station2Value = new HashMap<>();
             station2Value.put("闵行", 0f);
