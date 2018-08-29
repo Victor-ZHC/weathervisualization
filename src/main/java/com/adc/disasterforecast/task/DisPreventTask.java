@@ -875,8 +875,8 @@ public class DisPreventTask {
             }
             if (amount != 0) {
                 total += amount;
-                ++count;
             }
+            ++count;
         }
 
         if (count == 0) return 0;
