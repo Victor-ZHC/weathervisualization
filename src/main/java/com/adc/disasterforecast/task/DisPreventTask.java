@@ -377,7 +377,7 @@ public class DisPreventTask {
             WeatherDay weatherDay = new WeatherDay();
             weatherDay.setYear(timeIter.getYear());
             weatherDay.setMonth(timeIter.getMonthValue());
-            weatherDay.setDay(timeIter.plusDays(1).getDayOfYear());
+            weatherDay.setDay(timeIter.plusDays(1).getDayOfMonth());
             weatherDay.setType("rain");
             weatherDay.setValue(0);
             for (String stationName : station2Value.keySet()) {
