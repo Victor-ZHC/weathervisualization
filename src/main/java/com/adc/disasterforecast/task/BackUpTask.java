@@ -19,7 +19,7 @@ import javax.annotation.PostConstruct;
 import java.util.Map;
 import java.util.Set;
 
-@Component
+//@Component
 public class BackUpTask {
     // logger for RealTimeControlTask
     private static final Logger logger = LoggerFactory.getLogger(BackUpTask.class);
