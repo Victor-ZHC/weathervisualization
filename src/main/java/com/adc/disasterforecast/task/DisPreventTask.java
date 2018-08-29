@@ -370,7 +370,8 @@ public class DisPreventTask {
                     if (!station2Value.containsKey(stationName)) continue;
                     String rainStr = (String) oneData.get("RAINHOUR");
                     float rain = Float.valueOf(rainStr);
-                    station2Value.put(stationName, station2Value.get(stationName) + rain);
+                    station2Value.put(stationName,
+                            Math.max(station2Value.get(stationName), rain));
                 }
             }
             WeatherDay weatherDay = new WeatherDay();
