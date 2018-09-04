@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-//@Component
+@Component
 public class AirTask {
     // logger for AirTask
     private static final Logger logger = LoggerFactory.getLogger(AirTask.class);

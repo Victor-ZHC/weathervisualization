@@ -45,8 +45,8 @@ public class DisPreventTask {
     private WeatherDayDAO weatherDayDAO;
 
     // FIXME
-//    @PostConstruct
-//    @Scheduled(cron = "0 0 0 * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
         try {
             JSONObject disasterJsonYears;
@@ -61,8 +61,8 @@ public class DisPreventTask {
             getCurWarning(disasterData);
 
             getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
-//            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
-            getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+//            getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
             getDisasterAvg("雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
 
             baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
@@ -95,8 +95,8 @@ public class DisPreventTask {
     }
 
     // FIXME
-//    @PostConstruct
-//    @Scheduled(cron = "0 0/10 * * * ?")
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
@@ -340,7 +340,7 @@ public class DisPreventTask {
     }
 
     // FIXME
-    @PostConstruct
+//    @PostConstruct
     public void updateRainHistoryData() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
         LocalDateTime startTime = LocalDateTime.of(2007, 1, 1, 20,0,0);
