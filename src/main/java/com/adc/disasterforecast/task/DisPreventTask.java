@@ -44,6 +44,7 @@ public class DisPreventTask {
     @Autowired
     private WeatherDayDAO weatherDayDAO;
 
+    // FIXME
 //    @PostConstruct
 //    @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
@@ -59,9 +60,8 @@ public class DisPreventTask {
 
             getCurWarning(disasterData);
 
-//            getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
+            getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
 //            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
-            getNewDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
             getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
             getDisasterAvg("雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
 
@@ -91,11 +91,12 @@ public class DisPreventTask {
 
     public static void main(String[] args) {
         new DisPreventTask().updateRainHistoryData();
+//        new DisPreventTask().getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
     }
 
-    //    @Scheduled(initialDelay = 0, fixedDelay = 86400000)
-    @PostConstruct
-    @Scheduled(cron = "0 0/10 * * * ?")
+    // FIXME
+//    @PostConstruct
+//    @Scheduled(cron = "0 0/10 * * * ?")
     public void getStationData() {
         try {
             String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei/";
@@ -338,11 +339,12 @@ public class DisPreventTask {
 
     }
 
+    // FIXME
     @PostConstruct
     public void updateRainHistoryData() {
         String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
         LocalDateTime startTime = LocalDateTime.of(2007, 1, 1, 20,0,0);
-        LocalDateTime endTime = LocalDateTime.of(2018, 8, 29, 20,0,0);
+        LocalDateTime endTime = LocalDateTime.of(2018, 9, 4, 20,0,0);
         for (LocalDateTime timeIter = startTime; timeIter.compareTo(endTime) < 0; timeIter = timeIter.plusDays(1)) {
             Map<String, Float> station2Value = new HashMap<>();
             station2Value.put("闵行", 0f);
@@ -371,7 +373,9 @@ public class DisPreventTask {
                     String rainStr = (String) oneData.get("RAINHOUR");
                     float rain = Float.valueOf(rainStr);
                     station2Value.put(stationName,
-                            Math.max(station2Value.get(stationName), rain));
+                            station2Value.getOrDefault(stationName, 0f) + rain);
+//                    station2Value.put(stationName,
+//                            Math.max(station2Value.get(stationName), rain));
                 }
             }
             WeatherDay weatherDay = new WeatherDay();
@@ -393,33 +397,66 @@ public class DisPreventTask {
     }
 
     private void getNewDisasterAvg(String disasterType, String taskName){
-//        JSONObject valueObject = new JSONObject();
-//        JSONArray valueArray = new JSONArray();
-//        JSONArray currentYearArray = new JSONArray();
-//        JSONArray weekAvgYearArray = new JSONArray();
-//
-//        for (Map.Entry<Long, Integer> entry: entryList) {
-//            JSONObject currentYearObject = new JSONObject();
-//            currentYearObject.put("month", entry.getKey());
-//            currentYearObject.put("value", entry.getValue());
-//            currentYearArray.add(currentYearObject);
-//        }
-//
-//        List<Map.Entry<Long, Double> > entryList_tmp = sortDoubleHashMap(weekAvgYearVal);
-//        for (Map.Entry<Long, Double> entry: entryList_tmp) {
-//            JSONObject weekAvgYearObject = new JSONObject();
-//            weekAvgYearObject.put("value", Double.parseDouble(entry.getValue().toString()) / year);
-//            weekAvgYearObject.put("month", entry.getKey());
-//            weekAvgYearArray.add(weekAvgYearObject);
-//        }
-//        valueObject.put("currentYear", currentYearArray);
-//        valueObject.put("weekavgYear", weekAvgYearArray);
-//        valueArray.add(valueObject);
-//
-//        DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
-//        disPreventDataEntity.setName(taskName);
-//        disPreventDataEntity.setValue(valueArray);
-//        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
+        if (!disasterType.equals("暴雨"))
+            return;
+
+        List<WeatherDay> allWeatherDays = weatherDayDAO.findWeatherDay();
+
+        Map<Integer, Integer> month2ThisYearCount = new HashMap<>();
+        for (WeatherDay weatherDay : allWeatherDays) {
+            if (weatherDay.getYear() != LocalDateTime.now().getYear())
+                continue;
+            if (weatherDay.getValue() <= 0)
+                continue;
+            if (weatherDay.getYear() == LocalDateTime.now().getYear() - 1
+                    && weatherDay.getMonth() >= LocalDateTime.now().getMonthValue()) {
+                month2ThisYearCount.put(weatherDay.getMonth(),
+                        month2ThisYearCount.getOrDefault(weatherDay.getMonth(), 0) + 1);
+            }
+        }
+
+        Map<Integer, Integer> month2Past10YearCount = new HashMap<>();
+        for (WeatherDay weatherDay : allWeatherDays) {
+            if (weatherDay.getYear() == LocalDateTime.now().getYear())
+                continue;
+            if (weatherDay.getValue() <= 0)
+                continue;
+            month2Past10YearCount.put(weatherDay.getMonth(),
+                    month2Past10YearCount.getOrDefault(weatherDay.getMonth(), 0) + 1);
+        }
+
+        JSONObject valueObject = new JSONObject();
+        JSONArray valueArray = new JSONArray();
+        JSONArray currentYearArray = new JSONArray();
+        JSONArray weekAvgYearArray = new JSONArray();
+
+        LocalDateTime begin = LocalDateTime.now().minusYears(1).plusMonths(1)
+                .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+
+        for (int i = 1; i <= 12; ++i) {
+            LocalDateTime time = begin.plusMonths(i - 1);
+            JSONObject currentYearObject = new JSONObject();
+            currentYearObject.put("month", DateHelper.convertLocalDateTime2Date(time));
+            currentYearObject.put("value", month2ThisYearCount.getOrDefault(i, 0));
+            currentYearArray.add(currentYearObject);
+        }
+
+        for (int i = 1; i <= 12; ++i) {
+            LocalDateTime time = begin.plusMonths(i - 1);
+            JSONObject weekAvgYearObject = new JSONObject();
+            weekAvgYearObject.put("month", DateHelper.convertLocalDateTime2Date(time));
+            weekAvgYearObject.put("value", month2Past10YearCount.getOrDefault(i, 0) / 10f);
+            weekAvgYearArray.add(weekAvgYearObject);
+        }
+
+        valueObject.put("currentYear", currentYearArray);
+        valueObject.put("weekavgYear", weekAvgYearArray);
+        valueArray.add(valueObject);
+
+        DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
+        disPreventDataEntity.setName(taskName);
+        disPreventDataEntity.setValue(valueArray);
+        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
     }
 
     private void getDisasterAvg(String disasterType, String taskName){
@@ -870,10 +907,9 @@ public class DisPreventTask {
         }
     }
 
-    @PostConstruct
     public void funcTest() {
 //        getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
-//        getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+        getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
 //        getDisasterCurYearByCsvFile("大风", "G:\\work\\crawler\\file_output\\wind");
     }
 

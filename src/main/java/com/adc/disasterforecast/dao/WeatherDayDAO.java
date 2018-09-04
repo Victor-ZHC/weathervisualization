@@ -28,8 +28,7 @@ public class WeatherDayDAO {
         mongoTemplate.save(weatherDay);
     }
 
-    public List<HistoryHealthData> findHistoryHealthData(String beginTime) {
-        Query query = new Query(where("FORECAST_TIME").gt(beginTime));
-        return mongoTemplate.find(query, HistoryHealthData.class);
+    public List<WeatherDay> findWeatherDay() {
+        return mongoTemplate.findAll(WeatherDay.class);
     }
 }
