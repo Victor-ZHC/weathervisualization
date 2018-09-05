@@ -245,12 +245,12 @@ public class DisPreventTask {
             amountMap.put(type, cnt);
         }
 
-        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
-        List<Object> hisValue = historyAnalysisDataEntity.getValue();
-        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>) (hisValue.get(0))).get("amount");
-        int hisTotal = (int) hisAmountMap.get("total");
-        int yearAvg = (int) Math.round(hisTotal / 10.0);
-        amountMap.put("yearAvg", yearAvg);
+//        HistoryAnalysisDataEntity historyAnalysisDataEntity = historyAnalysisDataDAO.findHistoryAnalysisDataByName(HistoryAnalysisTaskName.LSSJ_WARNING_YEAR);
+//        List<Object> hisValue = historyAnalysisDataEntity.getValue();
+//        Map<String, Object> hisAmountMap = (Map<String, Object>) ((Map<String, Object>) (hisValue.get(0))).get("amount");
+//        int hisTotal = (int) hisAmountMap.get("total");
+//        int yearAvg = (int) Math.round(hisTotal / 10.0);
+        amountMap.put("yearAvg", 81);
 
 //        int yearAvg = getPastTenYearWarning();
 //        amountMap.put("yearAvg", yearAvg);
