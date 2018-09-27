@@ -5,6 +5,7 @@ import com.adc.disasterforecast.dao.HistoryAnalysisDataDAO;
 import com.adc.disasterforecast.dao.WeatherDayDAO;
 import com.adc.disasterforecast.entity.DisPreventDataEntity;
 import com.adc.disasterforecast.entity.po.WeatherDay;
+import com.adc.disasterforecast.entity.po.WeatherDayForVerification;
 import com.adc.disasterforecast.global.DisPrventRegionName;
 import com.adc.disasterforecast.entity.HistoryAnalysisDataEntity;
 import com.adc.disasterforecast.global.DisPreventTaskName;
@@ -22,6 +23,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -44,7 +47,6 @@ public class DisPreventTask {
     @Autowired
     private WeatherDayDAO weatherDayDAO;
 
-    // FIXME
     @PostConstruct
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateJsonData() {
@@ -61,8 +63,8 @@ public class DisPreventTask {
             getCurWarning(disasterData);
 
             getDisasterAvg("大风", DisPreventTaskName.FZJZ_WIND_YEAR);
-            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
-//            getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+//            getDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+            getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
             getDisasterAvg("雷电", DisPreventTaskName.FZJZ_THUNDER_YEAR);
 
             baseUrl = JsonServiceURL.ALARM_JSON_SERVICE_URL + "GetRealDisasterDetailData_Geliku/";
@@ -90,11 +92,9 @@ public class DisPreventTask {
     }
 
     public static void main(String[] args) {
-        new DisPreventTask().updateRainHistoryData();
-//        new DisPreventTask().getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+        new DisPreventTask().updateRainHistoryDataForVerification();
     }
 
-    // FIXME
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void getStationData() {
@@ -339,10 +339,84 @@ public class DisPreventTask {
 
     }
 
-    // FIXME
-//    @PostConstruct
+    @PostConstruct
+    @Scheduled(cron = "0 0 * * * ?")
     public void updateRainHistoryData() {
-        String baseUrl = JsonServiceURL.AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
+        // 找到最近一次没有计算的日期
+        List<WeatherDay> allWeatherDays = weatherDayDAO.findWeatherDay();
+        LocalDateTime startTime;
+        if (allWeatherDays == null || allWeatherDays.size() == 0) {
+            startTime = LocalDateTime.of(2007, 1, 1, 20,0,0);
+        } else {
+            WeatherDay latestWeatherDay = Collections.max(allWeatherDays, (o1, o2) -> {
+                if (o1.getYear() > o2.getYear())
+                    return 1;
+                if (o1.getYear() < o2.getYear())
+                    return -1;
+                if (o1.getMonth() > o2.getMonth())
+                    return 1;
+                if (o1.getMonth() < o2.getMonth())
+                    return -1;
+                return o1.getDay() - o2.getDay();
+            });
+            startTime = LocalDateTime.of(latestWeatherDay.getYear(), latestWeatherDay.getMonth(), latestWeatherDay.getDay(), 20, 0, 0)
+                    .plusDays(1);
+        }
+        LocalDateTime endTime = LocalDateTime.now().minusDays(1).withHour(20).withMinute(0).withSecond(0);
+
+        String AUTO_STATION_JSON_SERVICE_URL = "http://116.239.25.38/JsonService_V2/AutoStationJsonService.svc/";
+        String baseUrl = AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
+        for (LocalDateTime timeIter = startTime; timeIter.compareTo(endTime) < 0; timeIter = timeIter.plusDays(1)) {
+            Map<String, Float> station2Value = new HashMap<>();
+            station2Value.put("闵行", 0f);
+            station2Value.put("宝山", 0f);
+            station2Value.put("嘉定", 0f);
+            station2Value.put("崇明", 0f);
+            station2Value.put("徐家汇", 0f);
+            station2Value.put("惠南", 0f);
+            station2Value.put("浦东", 0f);
+            station2Value.put("金山", 0f);
+            station2Value.put("青浦", 0f);
+            station2Value.put("松江", 0f);
+            station2Value.put("奉贤", 0f);
+
+            String url = String.format("%s/%s/%s/1", baseUrl,
+                    DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(timeIter),
+                    DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(timeIter.plusDays(1)));
+
+            JSONObject json = HttpHelper.getDataByURL(url);
+            JSONArray dataJson = (JSONArray) json.get("Data");
+            for (int j = 0; j < dataJson.size(); ++j) {
+                JSONObject oneData = (JSONObject) dataJson.get(j);
+                String stationName = (String) oneData.get("STATIONNAME");
+                if (!station2Value.containsKey(stationName)) continue;
+                String rainStr = (String) oneData.get("RAINHOUR");
+                float rain = Float.valueOf(rainStr);
+                station2Value.put(stationName, rain);
+            }
+
+            WeatherDay weatherDay = new WeatherDay();
+            LocalDateTime time = timeIter.plusDays(1);
+            weatherDay.setYear(time.getYear());
+            weatherDay.setMonth(time.getMonthValue());
+            weatherDay.setDay(time.getDayOfMonth());
+            weatherDay.setType("rain");
+            weatherDay.setValue(0);
+            for (String stationName : station2Value.keySet()) {
+                if (station2Value.get(stationName) > 50) {
+                    weatherDay.setValue(1);
+                    break;
+                }
+            }
+            weatherDayDAO.upsertWeatherDay(weatherDay);
+            logger.info("weather day finished: "
+                    + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(timeIter));
+        }
+    }
+
+    public void updateRainHistoryDataForCheck() {
+        String AUTO_STATION_JSON_SERVICE_URL = "http://116.239.25.38/JsonService_V2/AutoStationJsonService.svc/";
+        String baseUrl = AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
         LocalDateTime startTime = LocalDateTime.of(2007, 1, 1, 20,0,0);
         LocalDateTime endTime = LocalDateTime.of(2018, 9, 4, 20,0,0);
         for (LocalDateTime timeIter = startTime; timeIter.compareTo(endTime) < 0; timeIter = timeIter.plusDays(1)) {
@@ -374,8 +448,6 @@ public class DisPreventTask {
                     float rain = Float.valueOf(rainStr);
                     station2Value.put(stationName,
                             station2Value.getOrDefault(stationName, 0f) + rain);
-//                    station2Value.put(stationName,
-//                            Math.max(station2Value.get(stationName), rain));
                 }
             }
             WeatherDay weatherDay = new WeatherDay();
@@ -393,6 +465,91 @@ public class DisPreventTask {
             weatherDayDAO.upsertWeatherDay(weatherDay);
             logger.info("weather day finished: "
                     + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(timeIter));
+        }
+    }
+
+
+    // FIXME: （需要删除）统计所有站点在18年8月份的统计结果
+    public void updateRainHistoryDataForVerification() {
+        String AUTO_STATION_JSON_SERVICE_URL = "http://116.239.25.38/JsonService_V2/AutoStationJsonService.svc/";
+        String baseUrl = AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
+        LocalDateTime startTime = LocalDateTime.of(2018, 7, 31, 20,0,0);
+        LocalDateTime endTime = LocalDateTime.of(2018, 9, 1, 20,0,0);
+        List<WeatherDayForVerification> weatherDayForVerifications = new ArrayList<>();
+        for (LocalDateTime timeIter = startTime; timeIter.compareTo(endTime) < 0; timeIter = timeIter.plusDays(1)) {
+            Map<String, Float> station2Value = new HashMap<>();
+            station2Value.put("闵行", 0f);
+            station2Value.put("宝山", 0f);
+            station2Value.put("嘉定", 0f);
+            station2Value.put("崇明", 0f);
+            station2Value.put("徐家汇", 0f);
+            station2Value.put("惠南", 0f);
+            station2Value.put("浦东", 0f);
+            station2Value.put("金山", 0f);
+            station2Value.put("青浦", 0f);
+            station2Value.put("松江", 0f);
+            station2Value.put("奉贤", 0f);
+
+            String url = String.format("%s/%s/%s/1", baseUrl,
+                    DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(timeIter),
+                    DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(timeIter.plusDays(1)));
+
+            JSONObject json = HttpHelper.getDataByURL(url);
+            JSONArray dataJson = (JSONArray) json.get("Data");
+            for (int j = 0; j < dataJson.size(); ++j) {
+                JSONObject oneData = (JSONObject) dataJson.get(j);
+                String stationName = (String) oneData.get("STATIONNAME");
+                if (!station2Value.containsKey(stationName)) continue;
+                String rainStr = (String) oneData.get("RAINHOUR");
+                float rain = Float.valueOf(rainStr);
+                station2Value.put(stationName, rain);
+            }
+
+            WeatherDayForVerification weatherDay = new WeatherDayForVerification();
+            weatherDay.setYear(timeIter.getYear());
+            weatherDay.setMonth(timeIter.getMonthValue());
+            weatherDay.setDay(timeIter.plusDays(1).getDayOfMonth());
+            weatherDay.setStationValue(new ArrayList<>());
+            for (String stationName : station2Value.keySet()) {
+                weatherDay.getStationValue().add(weatherDay.new StationValue(stationName, station2Value.getOrDefault(stationName ,0f)));
+            }
+            weatherDayForVerifications.add(weatherDay);
+            logger.info("weather day finished: "
+                    + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(timeIter));
+        }
+
+//        WeatherDayForVerification weatherDayForVerification = new WeatherDayForVerification();
+//        weatherDayForVerification.setDay(1);
+//        weatherDayForVerification.setMonth(1);
+//        weatherDayForVerification.setYear(1);
+//        weatherDayForVerification.setStationValue(new ArrayList<>());
+//        weatherDayForVerification.getStationValue().add(weatherDayForVerification. new StationValue("aaa", 1));
+//        weatherDayForVerifications.add(weatherDayForVerification);
+
+        JSONArray jsonArray = new JSONArray();
+        for (WeatherDayForVerification weatherDay : weatherDayForVerifications) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("year", weatherDay.getYear());
+            jsonObject.put("month", weatherDay.getMonth());
+            jsonObject.put("day", weatherDay.getDay());
+            JSONArray data = new JSONArray();
+            for (WeatherDayForVerification.StationValue stationValue : weatherDay.getStationValue()) {
+                JSONObject oneData = new JSONObject();
+                oneData.put("stationName", stationValue.getStationName());
+                oneData.put("value", stationValue.getValue());
+                data.add(oneData);
+            }
+            jsonObject.put("stationValue", data);
+            jsonArray.add(jsonObject);
+        }
+
+        try {
+            try (FileWriter file = new FileWriter("D:/weatherday.txt")) {
+                String str = JSONArray.toJSONString(jsonArray);
+                file.write(str);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
