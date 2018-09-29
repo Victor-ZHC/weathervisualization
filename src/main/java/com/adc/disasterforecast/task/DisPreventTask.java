@@ -92,7 +92,6 @@ public class DisPreventTask {
     }
 
     public static void main(String[] args) {
-        new DisPreventTask().updateRainHistoryDataForVerification();
     }
 
     @PostConstruct
@@ -553,6 +552,11 @@ public class DisPreventTask {
         }
     }
 
+    @PostConstruct
+    public void test() {
+        getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
+    }
+
     private void getNewDisasterAvg(String disasterType, String taskName){
         if (!disasterType.equals("暴雨"))
             return;
@@ -561,12 +565,14 @@ public class DisPreventTask {
 
         Map<Integer, Integer> month2ThisYearCount = new HashMap<>();
         for (WeatherDay weatherDay : allWeatherDays) {
-            if (weatherDay.getYear() != LocalDateTime.now().getYear())
-                continue;
             if (weatherDay.getValue() <= 0)
                 continue;
             if (weatherDay.getYear() == LocalDateTime.now().getYear() - 1
-                    && weatherDay.getMonth() >= LocalDateTime.now().getMonthValue()) {
+                    && weatherDay.getMonth() > LocalDateTime.now().getMonthValue()) {
+                month2ThisYearCount.put(weatherDay.getMonth(),
+                        month2ThisYearCount.getOrDefault(weatherDay.getMonth(), 0) + 1);
+            } else if (weatherDay.getYear() == LocalDateTime.now().getYear()
+                    && weatherDay.getMonth() <= LocalDateTime.now().getMonthValue()) {
                 month2ThisYearCount.put(weatherDay.getMonth(),
                         month2ThisYearCount.getOrDefault(weatherDay.getMonth(), 0) + 1);
             }
@@ -594,15 +600,17 @@ public class DisPreventTask {
             LocalDateTime time = begin.plusMonths(i - 1);
             JSONObject currentYearObject = new JSONObject();
             currentYearObject.put("month", DateHelper.convertLocalDateTime2Date(time));
-            currentYearObject.put("value", month2ThisYearCount.getOrDefault(i, 0));
+            currentYearObject.put("value", month2ThisYearCount.getOrDefault(time.getMonthValue(), 0));
             currentYearArray.add(currentYearObject);
         }
+
+        int pastYearCount = LocalDateTime.now().getYear() - 2013;
 
         for (int i = 1; i <= 12; ++i) {
             LocalDateTime time = begin.plusMonths(i - 1);
             JSONObject weekAvgYearObject = new JSONObject();
             weekAvgYearObject.put("month", DateHelper.convertLocalDateTime2Date(time));
-            weekAvgYearObject.put("value", month2Past10YearCount.getOrDefault(i, 0) / 10f);
+            weekAvgYearObject.put("value", month2Past10YearCount.getOrDefault(time.getMonthValue(), 0) / (float)pastYearCount);
             weekAvgYearArray.add(weekAvgYearObject);
         }
 
