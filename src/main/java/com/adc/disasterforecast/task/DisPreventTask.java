@@ -604,7 +604,8 @@ public class DisPreventTask {
             currentYearArray.add(currentYearObject);
         }
 
-        int pastYearCount = LocalDateTime.now().getYear() - 2013;
+        int pastYearCount = 10;
+//        int pastYearCount = LocalDateTime.now().getYear() - 2013;
 
         for (int i = 1; i <= 12; ++i) {
             LocalDateTime time = begin.plusMonths(i - 1);
