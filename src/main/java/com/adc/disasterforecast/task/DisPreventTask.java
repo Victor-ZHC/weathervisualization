@@ -92,6 +92,7 @@ public class DisPreventTask {
     }
 
     public static void main(String[] args) {
+        new DisPreventTask().updateRainHistoryData();
     }
 
     @PostConstruct
@@ -264,6 +265,7 @@ public class DisPreventTask {
         DisPreventDataEntity disPreventDataEntity = new DisPreventDataEntity();
         disPreventDataEntity.setName(DisPreventTaskName.FZJZ_WARNING_YEAR);
         disPreventDataEntity.setValue(valueData);
+        disPreventDataDAO.updateDisPreventDataByName(disPreventDataEntity);
     }
 
     private void getDisasterType(JSONArray disasterData) {
@@ -338,8 +340,8 @@ public class DisPreventTask {
 
     }
 
-    @PostConstruct
-    @Scheduled(cron = "0 0 * * * ?")
+//    @PostConstruct
+//    @Scheduled(cron = "0 0 * * * ?")
     public void updateRainHistoryData() {
         // 找到最近一次没有计算的日期
         List<WeatherDay> allWeatherDays = weatherDayDAO.findWeatherDay();
@@ -362,6 +364,8 @@ public class DisPreventTask {
                     .plusDays(1);
         }
         LocalDateTime endTime = LocalDateTime.now().minusDays(1).withHour(20).withMinute(0).withSecond(0);
+//        LocalDateTime startTime = LocalDateTime.of(2018, 8, 21, 20, 0, 0);
+//        LocalDateTime endTime = LocalDateTime.of(2018, 8, 22, 20, 0, 0);
 
         String AUTO_STATION_JSON_SERVICE_URL = "http://116.239.25.38/JsonService_V2/AutoStationJsonService.svc/";
         String baseUrl = AUTO_STATION_JSON_SERVICE_URL + "GetAutoStationDataByDatetime_5mi_SanWei";
@@ -550,11 +554,6 @@ public class DisPreventTask {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @PostConstruct
-    public void test() {
-        getNewDisasterAvg("暴雨", DisPreventTaskName.FZJZ_RAINFALL_YEAR);
     }
 
     private void getNewDisasterAvg(String disasterType, String taskName){
